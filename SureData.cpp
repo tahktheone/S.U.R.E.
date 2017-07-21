@@ -441,50 +441,63 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                 normals++;
 
             }else if ( strcmp( line, "f" ) == 0 ){
-                int v1,v2,v3,v4,vt1=0,vt2=0,vt3=0,vt4=0,vn1,vn2,vn3,vn4;
-                fscanf(fl,"%d",&v1);
-                char rc[5];
-                fscanf(fl,"%c",rc);
-                vt1 = -1;
-                vn1 = -1;
-                if(strcmp(rc,"/")==0)
+                int v1=-1;
+                int v2=-1;
+                int v3=-1;
+                int v4=-1;
+                int vt1=-1;
+                int vt2=-1;
+                int vt3=-1;
+                int vt4=-1;
+                int vn1=-1;
+                int vn2=-1;
+                int vn3=-1;
+                int vn4=-1;
+
+                fpos_t pos;
+                fgetpos(fl,&pos);
+
+                int lr = 0;
+
+                lr = fscanf(fl,"%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",&v1,&vt1,&vn1,&v2,&vt2,&vn2,&v3,&vt3,&vn3,&v4,&vt4,&vn4);
+                if(lr!=12)
                 {
-                    fscanf(fl,"%d",&vt1);
-                    fscanf(fl,"%c",rc);
-                    if(strcmp(rc,"/")==0)
+                fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                lr = fscanf(fl,"%d/%d/%d %d/%d/%d %d/%d/%d\n",&v1,&vt1,&vn1,&v2,&vt2,&vn2,&v3,&vt3,&vn3);
+                    if(lr!=9)
                     {
-                        fscanf(fl,"%d",&vn1);
+                        fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                        lr = fscanf(fl,"%d//%d %d//%d %d//%d %d//%d\n",&v1,&vn1,&v2,&vn2,&v3,&vn3,&v4,&vn4);
+                        if(lr!=8)
+                        {
+                            fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                            lr = fscanf(fl,"%d//%d %d//%d %d//%d\n",&v1,&vn1,&v2,&vn2,&v3,&vn3);
+                            if(lr!=6)
+                            {
+                                fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                                lr = fscanf(fl,"%d %d %d %d\n",&v1,&v2,&v3,&v4);
+                                if(lr!=4)
+                                {
+                                    fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                                    lr= fscanf(fl,"%d %d %d\n",&v1,&v2,&v3);
+                                    if(lr!=3)
+                                    {
+                                        fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                                        lr = fscanf(fl,"%d/%d %d/%d %d/%d %d/%d\n",&v1,&vt1,&v2,&vt2,&v3,&vt3,&v4,&vt4);
+                                        if(lr!=8)
+                                        {
+                                            fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
+                                            lr = fscanf(fl,"%d/%d %d/%d %d/%d\n",&v1,&vt1,&v2,&vt2,&v3,&vt3);
+                                        };
+                                    };
+                                };
+                            };
+                        };
                     };
                 };
 
-                fscanf(fl,"%d",&v2);
-                fscanf(fl,"%c",rc);
-                vt2 = -1;
-                vn2 = -1;
-                if(strcmp(rc,"/")==0)
+                if(lr>2)
                 {
-                    fscanf(fl,"%d",&vt2);
-                    fscanf(fl,"%c",rc);
-                    if(strcmp(rc,"/")==0)
-                    {
-                        fscanf(fl,"%d",&vn2);
-                    };
-                };
-
-                fscanf(fl,"%d",&v3);
-                fscanf(fl,"%c",rc);
-                vt3 = -1;
-                vn3 = -1;
-                if(strcmp(rc,"/")==0)
-                {
-                    fscanf(fl,"%d",&vt3);
-                    fscanf(fl,"%c",rc);
-                    if(strcmp(rc,"/")==0)
-                    {
-                        fscanf(fl,"%d",&vn3);
-                    };
-                };
-
                 f[faces][0][0] = v1;
                 f[faces][0][1] = vt1;
                 f[faces][0][2] = vn1;
@@ -495,46 +508,22 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                 f[faces][2][1] = vt3;
                 f[faces][2][2] = vn3;
                 faces++;
-                fpos_t pos;
-                fgetpos(fl,&pos);
-                fscanf(fl,"%c",rc);
-
-                if(!feof(fl)&&(strcmp(rc,"f")!=0))
-                {
-                    fsetpos(fl,&pos);
-                    v4 = -1;
-                    fscanf(fl,"%d",&v4);
-                    fscanf(fl,"%c",rc);
-                    vt4 = -1;
-                    vn4 = -1;
-                    if(strcmp(rc,"/")==0)
-                    {
-                        fscanf(fl,"%d",&vt4);
-                        fscanf(fl,"%c",rc);
-                        if(strcmp(rc,"/")==0)
-                        {
-                            fscanf(fl,"%d",&vn4);
-                        };
-                    };
-
-                    if(v4>=0)
-                    {
-                        f[faces][0][0] = v2;
-                        f[faces][0][1] = vt2;
-                        f[faces][0][2] = vn2;
-                        f[faces][1][0] = v3;
-                        f[faces][1][1] = vt3;
-                        f[faces][1][2] = vn3;
-                        f[faces][2][0] = v4;
-                        f[faces][2][1] = vt4;
-                        f[faces][2][2] = vn4;
-                        faces++;
-                    }else{
-                      fsetpos(fl,&pos);
-                    };
-                }else{
-                    fsetpos(fl,&pos);
                 };
+
+                if(v4>=0)
+                {
+                f[faces][0][0] = v3;
+                f[faces][0][1] = vt3;
+                f[faces][0][2] = vn3;
+                f[faces][1][0] = v4;
+                f[faces][1][1] = vt4;
+                f[faces][1][2] = vn4;
+                f[faces][2][0] = v1;
+                f[faces][2][1] = vt1;
+                f[faces][2][2] = vn1;
+                faces++;
+                };
+
 
             };
         };
