@@ -495,7 +495,6 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                 f[faces][2][1] = vt3;
                 f[faces][2][2] = vn3;
                 faces++;
-
                 fpos_t pos;
                 fgetpos(fl,&pos);
                 fscanf(fl,"%c",rc);
