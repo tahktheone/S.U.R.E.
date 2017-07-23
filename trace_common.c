@@ -155,26 +155,14 @@
                     for(uint im = 0;im<lv_dr->mesh_count;++im)
                     { // Для каждой meshины
                         uint cm = lv_dr->mesh_start + im;
-                        __SURE_VINT4 mesh_v1;
-                        __SURE_VINT4 mesh_v2;
-                        __SURE_VINT4 mesh_v3;
+                        __SURE_VINT4 mesh;
                         __VTYPE3 gm1;
                         __VTYPE3 gm2;
                         __VTYPE3 gm3;
-                        __GET_MESH_1(mesh_v1,cm);
-                        __GET_VERTEX(gm1,mesh_v1.x);
-                        #ifdef GPU
-                        __GET_MESH_NEXT(mesh_v2);
-                        #else
-                        __GET_MESH_2(mesh_v2,cm);
-                        #endif
-                        __GET_VERTEX(gm2,mesh_v2.x);
-                        #ifdef GPU
-                        __GET_MESH_NEXT(mesh_v3);
-                        #else
-                        __GET_MESH_3(mesh_v3,cm);
-                        #endif
-                        __GET_VERTEX(gm3,mesh_v3.x);
+                        __GET_MESH(mesh,cm);
+                        __GET_VERTEX(gm1,mesh.x);
+                        __GET_VERTEX(gm2,mesh.y);
+                        __GET_VERTEX(gm3,mesh.z);
                         // Алгоритм Моллера — Трумбора
                         __VTYPE3 pvec = cross(ltv,gm3-gm1);
                         __VTYPE det = dot(gm2-gm1,pvec);

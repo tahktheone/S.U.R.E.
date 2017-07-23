@@ -79,23 +79,9 @@ double2 c_f_d2(float2 d)
         coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
         P.xyz = __DCONV3(read_imagef(VrtxCLImg,smpVertex,coords).xyz);
 
-#define __GET_MESH_1(P,VID) \
+#define __GET_MESH(P,VID) \
         mcoords.y = VID>>CLSIZE_VERTEX_SHF; \
-        mcoords.x = (VID-(mcoords.y<<CLSIZE_VERTEX_SHF))<<2; \
-        P = read_imagei(MeshCLImg,smpVertex,mcoords);
-
-#define __GET_MESH_2(P,VID) \
-        mcoords.y = VID>>CLSIZE_VERTEX_SHF; \
-        mcoords.x = ((VID-(mcoords.y<<CLSIZE_VERTEX_SHF))<<2)+1; \
-        P = read_imagei(MeshCLImg,smpVertex,mcoords);
-
-#define __GET_MESH_3(P,VID) \
-        mcoords.y = VID>>CLSIZE_VERTEX_SHF; \
-        mcoords.x = ((VID-(mcoords.y<<CLSIZE_VERTEX_SHF))<<2)+2; \
-        P = read_imagei(MeshCLImg,smpVertex,mcoords);
-
-#define __GET_MESH_NEXT(P) \
-        mcoords.x = mcoords.x + 1; \
+        mcoords.x = VID-(mcoords.y<<CLSIZE_VERTEX_SHF); \
         P = read_imagei(MeshCLImg,smpVertex,mcoords);
 
 #define __GET_TEXTURE(ix,iy,id) \
@@ -109,16 +95,18 @@ double2 c_f_d2(float2 d)
         if(col_transp>0.5)col_dt=SURE_D_NORM;
 
 #define __GET_TEXTURE_UV(id) \
-if(mesh_v1.y>=0&&mesh_v2.y>=0&&mesh_v3.y>=0){ \
 __VTYPE2 v1,v2,v0; \
-coords.y = mesh_v1.y>>CLSIZE_VERTEX_SHF; \
-coords.x = mesh_v1.y - (coords.y<<CLSIZE_VERTEX_SHF); \
+int tid = cm; \
+coords.y = tid>>CLSIZE_VERTEX_SHF; \
+coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
 v0.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
-coords.y = mesh_v2.y>>CLSIZE_VERTEX_SHF; \
-coords.x = mesh_v2.y - (coords.y<<CLSIZE_VERTEX_SHF); \
+tid++; \
+coords.y = tid>>CLSIZE_VERTEX_SHF; \
+coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
 v1.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
-coords.y = mesh_v3.y>>CLSIZE_VERTEX_SHF; \
-coords.x = mesh_v3.y - (coords.y<<CLSIZE_VERTEX_SHF); \
+tid++; \
+coords.y = tid>>CLSIZE_VERTEX_SHF; \
+coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
 v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
@@ -127,7 +115,7 @@ col_transp = 1.01 - (col_rgba.w / 255.0); \
 col_rgb.x = col_rgba.x; \
 col_rgb.y = col_rgba.y; \
 col_rgb.z = col_rgba.z; \
-if(col_transp>0.5)col_dt=SURE_D_NORM;};
+if(col_transp>0.5)col_dt=SURE_D_NORM;
 
 #define GPU
 #include <SureGPUData.h>

@@ -327,7 +327,7 @@ void SureThread::run()
                     origin[1] = ymin;
                     origin[2] = 0;
 
-                    region[0] = CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM;
+                    region[0] = CLSIZE_VERTEX_DIV;
                     region[1] = ymax+1;
                     region[2] = 1;
 
@@ -337,20 +337,20 @@ void SureThread::run()
                                                   CL_TRUE,
                                                   origin,
                                                   region,
-                                                  sizeof(cl_int)*CLSIZE_MESH_PTCH,
+                                                  sizeof(cl_int)*CLSIZE_VERTEX_PTCH,
                                                   0,
-                                                  (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_MESH_PTCH],
+                                                  (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
                                                   0,NULL,NULL));
 
-                    ymin = EngineData->objects[o].uv_start>>CLSIZE_VERTEX_SHF;
-                    ymax = (EngineData->objects[o].uv_start
-                               +EngineData->objects[o].uv_count)>>CLSIZE_VERTEX_SHF;
+                    ymin = EngineData->objects[o].mesh_start>>CLSIZE_MESH_SHF;
+                    ymax = (EngineData->objects[o].mesh_start
+                               +EngineData->objects[o].mesh_count)>>CLSIZE_MESH_SHF;
 
                     origin[0] = 0;
                     origin[1] = ymin;
                     origin[2] = 0;
 
-                    region[0] = CLSIZE_VERTEX_DIV;
+                    region[0] = CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM;
                     region[1] = ymax+1;
                     region[2] = 1;
 
@@ -360,9 +360,9 @@ void SureThread::run()
                                                   CL_TRUE,
                                                   origin,
                                                   region,
-                                                  sizeof(cl_float)*CLSIZE_VERTEX_PTCH,
+                                                  sizeof(cl_float)*CLSIZE_MESH_PTCH,
                                                   0,
-                                                  (void*)&EngineData->UVMap[origin[1]*CLSIZE_VERTEX_PTCH],
+                                                  (void*)&EngineData->UVMap[origin[1]*CLSIZE_MESH_PTCH],
                                                   0,NULL,NULL));
 
                     int v_min = SURE_R_MAXVERTEX;

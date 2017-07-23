@@ -35,34 +35,27 @@
 #define __VERTEX_Y(A) VrtxCLImg[A*4+1]
 #define __VERTEX_Z(A) VrtxCLImg[A*4+2]
 #define __VERTEX_SET(A,B) __VERTEX_X(A) = B.x; __VERTEX_Y(A) = B.y;  __VERTEX_Z(A) = B.z;
-#define __MESH_V1(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                  ]
-#define __MESH_V2(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+1*CLSIZE_MESH_DIM]
-#define __MESH_V3(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+2*CLSIZE_MESH_DIM]
+#define __MESH_V1(i) MeshCLImg[i*CLSIZE_VERTEX_DIM  ]
+#define __MESH_V2(i) MeshCLImg[i*CLSIZE_VERTEX_DIM+1]
+#define __MESH_V3(i) MeshCLImg[i*CLSIZE_VERTEX_DIM+2]
 
-#define __MESH_UV1(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                   + 1]
-#define __MESH_UV2(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+1*CLSIZE_MESH_DIM + 1]
-#define __MESH_UV3(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+2*CLSIZE_MESH_DIM + 1]
+#define __MESH_UV1_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
+#define __MESH_UV2_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
+#define __MESH_UV3_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
 
-#define __MESH_N1(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                   + 2]
-#define __MESH_N2(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+1*CLSIZE_MESH_DIM + 2]
-#define __MESH_N3(i) MeshCLImg[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM+2*CLSIZE_MESH_DIM + 2]
-
-#define __UVMAP_U(i) UVMap[i*4]
-#define __UVMAP_V(i) UVMap[i*4+1]
+#define __MESH_UV1_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
+#define __MESH_UV2_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
+#define __MESH_UV3_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
 
 #define __GET_VERTEX(P,VID) \
         P.x = __VERTEX_X(VID); \
         P.y = __VERTEX_Y(VID); \
         P.z = __VERTEX_Z(VID);
 
-#define __GET_MESH_1(P,VID) \
-        P.x = __MESH_V1(VID);
-
-#define __GET_MESH_2(P,VID) \
-        P.x = __MESH_V2(VID);
-
-#define __GET_MESH_3(P,VID) \
-        P.x = __MESH_V3(VID);
+#define __GET_MESH(P,VID) \
+        P.x = __MESH_V1(VID); \
+        P.y = __MESH_V2(VID); \
+        P.z = __MESH_V3(VID); \
 
 #define __GET_TEXTURE(ix,iy,id) \
         uint iix = ix; \
@@ -79,14 +72,11 @@
         if(col_transp>0.5)col_dt=SURE_D_NORM;
 
 #define __GET_TEXTURE_UV(id) \
-if(__MESH_UV1(cm)>=0&&__MESH_UV2(cm)>=0&&__MESH_UV3(cm)>=0) \
-{ \
-__VTYPE map_px = __UVMAP_U(__MESH_UV1(cm))+(__UVMAP_U(__MESH_UV2(cm))-__UVMAP_U(__MESH_UV1(cm)))*u + \
-                                           (__UVMAP_U(__MESH_UV3(cm))-__UVMAP_U(__MESH_UV1(cm)))*v; \
-__VTYPE map_py = __UVMAP_V(__MESH_UV1(cm))+(__UVMAP_V(__MESH_UV2(cm))-__UVMAP_V(__MESH_UV1(cm)))*u + \
-                                           (__UVMAP_V(__MESH_UV3(cm))-__UVMAP_V(__MESH_UV1(cm)))*v; \
+__VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
+                                  (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
+__VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \
+                                  (__MESH_UV3_V(cm)-__MESH_UV1_V(cm))*v; \
 __GET_TEXTURE(map_px,map_py,id); \
-};
 
 #include <QtCore/QtCore>
 #include <QtCore/QThread>
@@ -193,8 +183,6 @@ struct SureObject
     cl_uint vertex_count = 0;
     cl_uint norm_start = 0;
     cl_uint norm_count = 0;
-    cl_uint uv_start = 0;
-    cl_uint uv_count = 0;
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -432,7 +420,6 @@ class SureData
         int AddVertex(double x, double y, double z);
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
-        int AddUVMap(float u,float v);
         void Mesh_GenerateCube(int object);
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count);
         void MapTexture(int object,int type);
