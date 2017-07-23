@@ -399,7 +399,6 @@ class SureData
         cl_uint cur_vertexes = 0;
         cl_uint cur_meshes = 0;
         cl_uint cur_textures = 0;
-        cl_uint cur_uvmaps = 0;
         SureTextureData TexturesInfo[SURE_R_MAXTEX];
 
         void LoadTexture(const char*);

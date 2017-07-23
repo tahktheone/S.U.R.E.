@@ -178,7 +178,6 @@ void SureData::MapTexture(int object,int type)
     double x,y;
     int uvi;
     int i = objects[object].mesh_start;
-    objects[object].uv_start = cur_uvmaps;
     for(uint mi = 0;mi<objects[object].mesh_count;++mi)
     {
         if(type == 1)
