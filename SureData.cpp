@@ -704,8 +704,8 @@ SureData::SureData()
     objects[i].lx = 20.0; // длина
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
-    //Mesh_FromFile(i,"wolf2");
-
+    Mesh_FromFile(i,"monkey");
+/*
     for(int mi = 0;mi<200;++mi)
     {
         my_double3 tm;
@@ -719,8 +719,8 @@ SureData::SureData()
     };
 
     Mesh_GenerateHull(i,generated_mesh,200);
-
-//    MapTexture(i,2);
+*/
+    MapTexture(i,2);
 
     objects[i].movable = false;
     objects[i].collidable = true;
@@ -738,7 +738,7 @@ SureData::SureData()
     objects[i].drawable.mesh_start = objects[i].mesh_start;
     objects[i].drawable.mesh_count = objects[i].mesh_count;
     objects[i].drawable.mesh_changed = true;
-//    objects[i].drawable.map_id = GetTexture("grid");
+    objects[i].drawable.map_id = GetTexture("grid");
     objects[i].drawable.type = SURE_DR_MESH; // форма
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.95; // прозрачность
