@@ -163,58 +163,58 @@ int SureData::AddMesh(int v1, int v2, int v3)
     __MESH_V1(cur_meshes) = v1;
     __MESH_V2(cur_meshes) = v2;
     __MESH_V3(cur_meshes) = v3;
-    __MESH_UV1(cur_meshes) = -1;
-    __MESH_UV2(cur_meshes) = -1;
-    __MESH_UV3(cur_meshes) = -1;
-    __MESH_N1(cur_meshes) = -1;
-    __MESH_N2(cur_meshes) = -1;
-    __MESH_N3(cur_meshes) = -1;
+    __MESH_UV1_U(cur_meshes) = 0;
+    __MESH_UV1_V(cur_meshes) = 0;
+    __MESH_UV2_U(cur_meshes) = 0;
+    __MESH_UV2_V(cur_meshes) = 0;
+    __MESH_UV3_U(cur_meshes) = 0;
+    __MESH_UV3_V(cur_meshes) = 0;
     ++cur_meshes;
     return cur_meshes-1;
 };
-
-int SureData::AddUVMap(float u,float v)
-{
- __UVMAP_U(cur_uvmaps) = u;
- __UVMAP_V(cur_uvmaps) = v;
- cur_uvmaps++;
- return cur_uvmaps-1;
-}
 
 void SureData::MapTexture(int object,int type)
 {
     double x,y;
     int i = objects[object].mesh_start;
-    objects[object].uv_start = cur_uvmaps;
     for(uint mi = 0;mi<objects[object].mesh_count;++mi)
     {
         if(type == 1)
         {
             x = objects[object].lx;
             y = objects[object].lz;
-            __MESH_UV1(i) = AddUVMap(__VERTEX_X(__MESH_V1(i))+x,__VERTEX_Z(__MESH_V1(i))+y);objects[object].uv_count++;
-            __MESH_UV2(i) = AddUVMap(__VERTEX_X(__MESH_V2(i))+x,__VERTEX_Z(__MESH_V2(i))+y);objects[object].uv_count++;
-            __MESH_UV3(i) = AddUVMap(__VERTEX_X(__MESH_V3(i))+x,__VERTEX_Z(__MESH_V3(i))+y);objects[object].uv_count++;
+            __MESH_UV1_U(i) = __VERTEX_X(__MESH_V1(i))+x;
+            __MESH_UV1_V(i) = __VERTEX_Z(__MESH_V1(i))+y;
+            __MESH_UV2_U(i) = __VERTEX_X(__MESH_V2(i))+x;
+            __MESH_UV2_V(i) = __VERTEX_Z(__MESH_V2(i))+y;
+            __MESH_UV3_U(i) = __VERTEX_X(__MESH_V3(i))+x;
+            __MESH_UV3_V(i) = __VERTEX_Z(__MESH_V3(i))+y;
         }else if(type == 2)
         {
             x = objects[object].ly;
             y = objects[object].lz;
-            __MESH_UV1(i) = AddUVMap(__VERTEX_Y(__MESH_V1(i))+x,__VERTEX_Z(__MESH_V1(i))+y);objects[object].uv_count++;
-            __MESH_UV2(i) = AddUVMap(__VERTEX_Y(__MESH_V2(i))+x,__VERTEX_Z(__MESH_V2(i))+y);objects[object].uv_count++;
-            __MESH_UV3(i) = AddUVMap(__VERTEX_Y(__MESH_V3(i))+x,__VERTEX_Z(__MESH_V3(i))+y);objects[object].uv_count++;
+            __MESH_UV1_U(i) = __VERTEX_Y(__MESH_V1(i))+x;
+            __MESH_UV1_V(i) = __VERTEX_Z(__MESH_V1(i))+y;
+            __MESH_UV2_U(i) = __VERTEX_Y(__MESH_V2(i))+x;
+            __MESH_UV2_V(i) = __VERTEX_Z(__MESH_V2(i))+y;
+            __MESH_UV3_U(i) = __VERTEX_Y(__MESH_V3(i))+x;
+            __MESH_UV3_V(i) = __VERTEX_Z(__MESH_V3(i))+y;
         }else{
             x = objects[object].lx;
             y = objects[object].ly;
-            __MESH_UV1(i) = AddUVMap(__VERTEX_X(__MESH_V1(i))+x,__VERTEX_Y(__MESH_V1(i))+y);objects[object].uv_count++;
-            __MESH_UV2(i) = AddUVMap(__VERTEX_X(__MESH_V2(i))+x,__VERTEX_Y(__MESH_V2(i))+y);objects[object].uv_count++;
-            __MESH_UV3(i) = AddUVMap(__VERTEX_X(__MESH_V3(i))+x,__VERTEX_Y(__MESH_V3(i))+y);objects[object].uv_count++;
+            __MESH_UV1_U(i) = __VERTEX_X(__MESH_V1(i))+x;
+            __MESH_UV1_V(i) = __VERTEX_Y(__MESH_V1(i))+y;
+            __MESH_UV2_U(i) = __VERTEX_X(__MESH_V2(i))+x;
+            __MESH_UV2_V(i) = __VERTEX_Y(__MESH_V2(i))+y;
+            __MESH_UV3_U(i) = __VERTEX_X(__MESH_V3(i))+x;
+            __MESH_UV3_V(i) = __VERTEX_Y(__MESH_V3(i))+y;
         };
-        __UVMAP_U(__MESH_UV1(i)) = 0.5*SURE_R_TEXRES*__UVMAP_U(__MESH_UV1(i))/x;
-        __UVMAP_V(__MESH_UV1(i)) = 0.5*SURE_R_TEXRES*__UVMAP_V(__MESH_UV1(i))/y;
-        __UVMAP_U(__MESH_UV2(i)) = 0.5*SURE_R_TEXRES*__UVMAP_U(__MESH_UV2(i))/x;
-        __UVMAP_V(__MESH_UV2(i)) = 0.5*SURE_R_TEXRES*__UVMAP_V(__MESH_UV2(i))/y;
-        __UVMAP_U(__MESH_UV3(i)) = 0.5*SURE_R_TEXRES*__UVMAP_U(__MESH_UV3(i))/x;
-        __UVMAP_V(__MESH_UV3(i)) = 0.5*SURE_R_TEXRES*__UVMAP_V(__MESH_UV3(i))/y;
+        __MESH_UV1_U(i) = 0.5*SURE_R_TEXRES*__MESH_UV1_U(i)/x;
+        __MESH_UV1_V(i) = 0.5*SURE_R_TEXRES*__MESH_UV1_V(i)/y;
+        __MESH_UV2_U(i) = 0.5*SURE_R_TEXRES*__MESH_UV2_U(i)/x;
+        __MESH_UV2_V(i) = 0.5*SURE_R_TEXRES*__MESH_UV2_V(i)/y;
+        __MESH_UV3_U(i) = 0.5*SURE_R_TEXRES*__MESH_UV3_U(i)/x;
+        __MESH_UV3_V(i) = 0.5*SURE_R_TEXRES*__MESH_UV3_V(i)/y;
         i++;
     };
 };
@@ -546,24 +546,23 @@ void SureData::Mesh_FromFile(int object,const char* fname)
             AddVertex(v[i]);
             objects[object].vertex_count++;
         };
-        objects[object].uv_start = cur_uvmaps;
         for(int i = 0;i<faces;++i)
         {
                 int m = AddMesh(vstart+f[i][0][0],vstart+f[i][1][0],vstart+f[i][2][0]);
                 if(f[i][0][1]>=0)
                 {
-                    __MESH_UV1(m) = AddUVMap(vt[f[i][0][1]].x*SURE_R_TEXRES,vt[f[i][0][1]].y*SURE_R_TEXRES);
-                    objects[object].uv_count++;
+                    __MESH_UV1_U(m) = vt[f[i][0][1]].x*SURE_R_TEXRES;
+                    __MESH_UV1_V(m) = vt[f[i][0][1]].y*SURE_R_TEXRES;
                 };
                 if(f[i][1][1]>=0)
                 {
-                    __MESH_UV2(m) = AddUVMap(vt[f[i][1][1]].x*SURE_R_TEXRES,vt[f[i][1][1]].y*SURE_R_TEXRES);
-                    objects[object].uv_count++;
+                    __MESH_UV2_U(m) = vt[f[i][1][1]].x*SURE_R_TEXRES;
+                    __MESH_UV2_V(m) = vt[f[i][1][1]].y*SURE_R_TEXRES;
                 };
                 if(f[i][2][1]>=0)
                 {
-                    __MESH_UV3(m) = AddUVMap(vt[f[i][2][1]].x*SURE_R_TEXRES,vt[f[i][2][1]].y*SURE_R_TEXRES);
-                    objects[object].uv_count++;
+                    __MESH_UV3_U(m) = vt[f[i][2][1]].x*SURE_R_TEXRES;
+                    __MESH_UV3_V(m) = vt[f[i][2][1]].y*SURE_R_TEXRES;
                 };
                 objects[object].mesh_count++;
         };
@@ -585,10 +584,10 @@ void SureData::Mesh_FromFile(int object,const char* fname)
 SureData::SureData()
 {
 
-        VrtxCLImg = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM];
-        MeshCLImg = new cl_int[CLSIZE_VERTEX];
+        VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
+        MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
         TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
-        UVMap = new cl_float[CLSIZE_VERTEX];
+        UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         srand(time(NULL));
 
         LoadTexture("parket");
@@ -705,7 +704,7 @@ SureData::SureData()
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
     Mesh_FromFile(i,"monkey");
-/*
+    /*
     for(int mi = 0;mi<200;++mi)
     {
         my_double3 tm;
