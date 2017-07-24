@@ -80,9 +80,9 @@ double2 c_f_d2(float2 d)
         P.xyz = __DCONV3(read_imagef(VrtxCLImg,smpVertex,coords).xyz);
 
 #define __GET_MESH(P,VID) \
-        mcoords.y = VID>>CLSIZE_VERTEX_SHF; \
-        mcoords.x = VID-(mcoords.y<<CLSIZE_VERTEX_SHF); \
-        P = read_imagei(MeshCLImg,smpVertex,mcoords);
+        coords.y = VID>>CLSIZE_VERTEX_SHF; \
+        coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
+        P = read_imagei(MeshCLImg,smpVertex,coords);
 
 #define __GET_TEXTURE(ix,iy,id) \
         map_uv.x = ix; \
@@ -141,7 +141,6 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                              CLK_ADDRESS_NONE     |
                              CLK_FILTER_LINEAR;
 int2 coords;
-int2 mcoords;
 __VTYPE2 map_uv;
 
 // общая для CPU и GPU функция трассировки

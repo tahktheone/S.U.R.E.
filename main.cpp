@@ -1,5 +1,10 @@
 // Sure v 0.0001 by Vadim Malgin
-//
+// 24.07.2017 -- версия 0.0001:
+// * unbiased rendering на GPU (рисуем сферы, плоские квадраты и произвольные mesh'ы)
+// * 4 режима рендера на GPU (double, float, float без рассеивания, float без оражений) и 1 на CPU
+// * физика - столкновение шаров, швров с плоскими квадратами
+// * поддержка uv-карт
+// * загрузка моделей из .obj файлов
 //
 #include <SureData.h>
 #include <SureWidget.h>
@@ -54,7 +59,7 @@ int main(int argc, char* argv[]) {
     Physics.StopPhysics();
     Physics.wait();
 
-    EngineData.SureClear();
+    EngineData.SureClear(); // чистим память
 
     return 0;
 }

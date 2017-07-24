@@ -181,8 +181,6 @@ struct SureObject
     cl_uint mesh_count;
     cl_uint vertex_start = 0;
     cl_uint vertex_count = 0;
-    cl_uint norm_start = 0;
-    cl_uint norm_count = 0;
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -195,14 +193,6 @@ struct SureObject
                   v2.x=0;v2.y=0;v2.z=0;
                   v3.x=0;v3.y=0;v3.z=0;
                   v4.x=0;v4.y=0;v4.z=0;}
-    void hard_push(my_double3 pp,my_double3 pv,double pd)
-    {
-        p1+=pv*pd; //dp1+=pv*pd;
-        p2+=pv*pd; //dp2+=pv*pd;
-        p3+=pv*pd; //dp3+=pv*pd;
-        p4+=pv*pd; //dp4+=pv*pd;
-        movebyp4();
-    }
     void push(my_double3 pp,my_double3 pv,double pd)
     {
         my_double3 vp1 = pp-p1;
@@ -256,10 +246,6 @@ struct SureObject
             np1+=d1; np2+=d2; np3+=d3; np4+=d4; //np5+=d5;
         };
 
-        //dp1+=(np1-p1);
-        //dp2+=(np2-p2);
-        //dp3+=(np3-p3);
-        //dp4+=(np4-p4);
         p1=np1;
         p2=np2;
         p3=np3;
@@ -390,12 +376,10 @@ class SureData
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
 
-        //cl_float *VertexData;   //[SURE_R_MAXVERTEX*3];
         cl_float *VrtxCLImg; // [SURE_R_MAXVERTEX*4] -- для OpenCL image2d_t
         cl_int *MeshCLImg;  // [SURE_R_MAXMESH*4] -- для OpenCL image2d_t
         cl_uchar *TexturesData; //[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
-        cl_float *UVMap;  //[SURE_R_MAXTEXMAP * 2]; {u1, v1}
-        //cl_float *TexMapData;    //[SURE_R_MAXTEXMAP * 6]; TexMapData[mesh*6] = {u1, v1, u2, v2, u3, v3}
+        cl_float *UVMap;  //[SURE_R_MAXTEXMAP * 4]; {u1, v1}
         cl_uint cur_vertexes = 0;
         cl_uint cur_meshes = 0;
         cl_uint cur_textures = 0;
@@ -423,7 +407,6 @@ class SureData
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count);
         void MapTexture(int object,int type);
         void Mesh_FromFile(int object,const char* name);
-
 };
 
 struct SureOCLData{
@@ -448,7 +431,6 @@ struct SureOCLData{
     cl_mem cmMeshImage; //  указатель на массив mesh'ей
     cl_mem cmTextures; //указатель на массив текстур
     cl_mem cmUVMap; // указатель на массив uv-mappingа
-    //cl_mem cmTexMapData; // указатель на массив текстурных координат
 };
 
 // Работа с OpenCL из CPU-части:

@@ -31,8 +31,6 @@ class SureThread : public QThread
         cl_float* Randomf;
 
         void raytrace();
-        void fractal();
-        void noise();
 
     protected:
     private:

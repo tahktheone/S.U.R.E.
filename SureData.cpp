@@ -694,7 +694,7 @@ SureData::SureData()
     objects[i].initp4();
     */
 
-    my_double3 generated_mesh[256];
+    //my_double3 generated_mesh[256];
 
     i = CreateObject(SURE_OBJ_MESH);
     objects[i].X.x = 0; //Координаты центра
@@ -703,7 +703,7 @@ SureData::SureData()
     objects[i].lx = 20.0; // длина
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
-    Mesh_FromFile(i,"monkey");
+    Mesh_FromFile(i,"golem");
     /*
     for(int mi = 0;mi<200;++mi)
     {
@@ -719,32 +719,32 @@ SureData::SureData()
 
     Mesh_GenerateHull(i,generated_mesh,200);
 */
-    MapTexture(i,2);
+    // MapTexture(i,2);
 
     objects[i].movable = false;
     objects[i].collidable = true;
-    objects[i].oz.x = 0;
+    objects[i].oz.x = 1;
     objects[i].oz.y = 0;
-    objects[i].oz.z = 1;
+    objects[i].oz.z = 0;
     objects[i].oy.x = 0;
-    objects[i].oy.y = 1;
-    objects[i].oy.z = 0;
-    objects[i].ox.x = 1;
-    objects[i].ox.y = 0;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 1;
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
     objects[i].ox.z = 0;
 
     ObjCoordsToDrawable(i);
     objects[i].drawable.mesh_start = objects[i].mesh_start;
     objects[i].drawable.mesh_count = objects[i].mesh_count;
     objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("grid");
+    objects[i].drawable.map_id = GetTexture("golem");
     objects[i].drawable.type = SURE_DR_MESH; // форма
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.95; // прозрачность
     objects[i].drawable.transp_i = 0.8; // прозрачность
     objects[i].drawable.refr = 1.41; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.5; // sigma рандомизации
     objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
     objects[i].drawable.rgb.s[0] = 200.0; // цвет
     objects[i].drawable.rgb.s[1] = 220.0; // цвет
@@ -914,7 +914,7 @@ SureData::SureData()
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.0; // прозрачность
     objects[i].drawable.transp_i = 0.0; // прозрачность
-    objects[i].drawable.refr = 1.0; // Коэффициент преломления
+    objects[i].drawable.refr = 1.1; // Коэффициент преломления
     objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
     objects[i].drawable.dist_sigma = 0.01; // sigma рандомизации
     objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
@@ -1036,42 +1036,7 @@ SureData::~SureData()
 
 }
 
-void NormVec(double* Vec)
-{
-    double l = sqrt(Vec[0]*Vec[0] + Vec[1]*Vec[1] + Vec[2]*Vec[2]);
-    Vec[0] /= l; Vec[1] /= l; Vec[2] /= l;
-}
-
-void NormVec(cl_double3* Vec)
-{
-    double l = sqrt(Vec->s[0]*Vec->s[0] + Vec->s[1]*Vec->s[1] + Vec->s[2]*Vec->s[2]);
-    Vec->s[0] /= l; Vec->s[1] /= l; Vec->s[2] /= l;
-}
-
 #include <func_common.c>
-
-bool CollideRaySpheref(cl_float3* tp,cl_float3* tv,cl_float3* o,cl_float r, cl_float2 *t, bool in,cl_float* id)
-{
-    cl_float3 vtc = cl_float3{tp->s[0]-o->s[0], tp->s[1]-o->s[1], tp->s[2]-o->s[2]}; //VecToCenter
-    cl_float B = vtc.s[0]*tv->s[0] + vtc.s[1]*tv->s[1] + vtc.s[2]*tv->s[2];
-    cl_float C = vtc.s[0]*vtc.s[0] + vtc.s[1]*vtc.s[1] + vtc.s[2]*vtc.s[2]-r*r;
-    cl_float D = B*B-C;
-    if(D>=0){
-        cl_float kd = sqrt(D);
-        cl_float t1 = -B+kd;
-        cl_float t2 = -B-kd;
-        t->s[0] = t1<t2 ? t1 : t2;
-        t->s[1] = t1>t2 ? t1 : t2;
-        if(t->s[0]>*id) return false; // отсеиваем случаи когда ближайшая точка сферы дальше чем текущий intersect_dist
-        if(t->s[1]<SURE_R_DELTA) return false; // отсеиваем случаи когда сфера "сзади"
-        in = t->s[0]<SURE_R_DELTA ? true : false; // определяем мы внутри или снаружи
-        if(in&&t->s[1]>*id) return false; // отсеиваем случай когда мы внутри но дальняя стенка дальше id
-        *id = in ? t->s[1] : t->s[0]; //если внутри -- id = дальняя стенка, если снаружи ближняя
-        return true;
-    }else{
-        return false;
-    };
-}
 
 void ocl_errtext(cl_int i_ret)
 {
@@ -1238,6 +1203,5 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
 
     if(o2->movable)o2->push(pp,v2xy,-1.0);
     if(o1->movable)o1->push(pp,v1xy,-1.0);
-
 
  }

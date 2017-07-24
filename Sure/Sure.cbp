@@ -129,6 +129,7 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="TODO.txt" />
 		<Extensions>
 			<code_completion />
 			<debugger />
