@@ -5,3 +5,6 @@ Sure/screenshots/
 # игнорируем специфические файлы code::blocks
 *.layout
 *.depend
+Cmake*
+cmake*
+/CMakeCache.txt
