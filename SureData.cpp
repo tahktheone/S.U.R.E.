@@ -184,7 +184,6 @@ int SureData::AddUVMap(float u,float v)
 void SureData::MapTexture(int object,int type)
 {
     double x,y;
-    int uvi;
     int i = objects[object].mesh_start;
     objects[object].uv_start = cur_uvmaps;
     for(uint mi = 0;mi<objects[object].mesh_count;++mi)
@@ -705,8 +704,8 @@ SureData::SureData()
     objects[i].lx = 20.0; // длина
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
-    Mesh_FromFile(i,"wolf2");
-    /*
+    //Mesh_FromFile(i,"wolf2");
+
     for(int mi = 0;mi<200;++mi)
     {
         my_double3 tm;
@@ -720,7 +719,7 @@ SureData::SureData()
     };
 
     Mesh_GenerateHull(i,generated_mesh,200);
-*/
+
 //    MapTexture(i,2);
 
     objects[i].movable = false;
@@ -739,7 +738,7 @@ SureData::SureData()
     objects[i].drawable.mesh_start = objects[i].mesh_start;
     objects[i].drawable.mesh_count = objects[i].mesh_count;
     objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("grid");
+//    objects[i].drawable.map_id = GetTexture("grid");
     objects[i].drawable.type = SURE_DR_MESH; // форма
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.95; // прозрачность
