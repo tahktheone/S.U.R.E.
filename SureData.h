@@ -71,7 +71,7 @@
         col_rgb.z = col_rgba.z; \
         if(col_transp>0.5)col_dt=SURE_D_NORM;
 
-#define __GET_TEXTURE_UV(id) \
+#define __GET_TEXTURE_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
                                   (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
 __VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \

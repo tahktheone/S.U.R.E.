@@ -94,19 +94,15 @@ double2 c_f_d2(float2 d)
         col_rgb.z = col_rgba.z; \
         if(col_transp>0.5)col_dt=SURE_D_NORM;
 
-#define __GET_TEXTURE_UV(id) \
+#define __GET_TEXTURE_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
 int tid = cm; \
 coords.y = tid>>CLSIZE_VERTEX_SHF; \
-coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
+coords.x = (tid - (coords.y<<CLSIZE_VERTEX_SHF))<<2; \
 v0.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
-tid++; \
-coords.y = tid>>CLSIZE_VERTEX_SHF; \
-coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
+coords.x++; \
 v1.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
-tid++; \
-coords.y = tid>>CLSIZE_VERTEX_SHF; \
-coords.x = tid - (coords.y<<CLSIZE_VERTEX_SHF); \
+coords.x++; \
 v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \

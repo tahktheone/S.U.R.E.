@@ -9,8 +9,6 @@ SurePhysThread::~SurePhysThread()
 
 void SurePhysThread::run()
 {
-    int tick = 0;
-    int phase = 0;
     while(m_running)
     {
         clock_gettime(CLOCK_MONOTONIC,&framestart);

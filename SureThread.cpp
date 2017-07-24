@@ -186,9 +186,9 @@ void SureThread::oclInit()
     //OCL_GET_("clCreateImage(Vertexes)",OCLData->cmVertexImage,clCreateImage(context,CL_MEM_READ_ONLY,&cif_vertex,&cid_vertex,NULL,&ret));
 
     OCL_GET_("clCreateImage(Vertexes)",OCLData->cmVertexImage,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV,CLSIZE_VERTEX_DIV,0,NULL,&ret));
-    OCL_GET_("clCreateImage(Meshes)",OCLData->cmMeshImage,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_mesh,CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM,CLSIZE_VERTEX_DIV,0,NULL,&ret));
+    OCL_GET_("clCreateImage(Meshes)",OCLData->cmMeshImage,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_mesh,CLSIZE_VERTEX_DIV,CLSIZE_VERTEX_DIV,0,NULL,&ret));
     OCL_GET_("clCreateImage(Textures)",OCLData->cmTextures,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_textures,SURE_R_TEXRES,SURE_R_TEXRES*SURE_R_MAXTEX,0,NULL,&ret));
-    OCL_GET_("clCreateImage(UVMap)",OCLData->cmUVMap,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV,CLSIZE_VERTEX_DIV,0,NULL,&ret));
+    OCL_GET_("clCreateImage(UVMap)",OCLData->cmUVMap,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM,CLSIZE_VERTEX_DIV,0,NULL,&ret));
 
     // vvv Объявления для макроса OCL_PROGRAM()
     size_t source_size = 0;
@@ -342,9 +342,9 @@ void SureThread::run()
                                                   (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
                                                   0,NULL,NULL));
 
-                    ymin = EngineData->objects[o].mesh_start>>CLSIZE_MESH_SHF;
+                    ymin = EngineData->objects[o].mesh_start>>CLSIZE_VERTEX_SHF;
                     ymax = (EngineData->objects[o].mesh_start
-                               +EngineData->objects[o].mesh_count)>>CLSIZE_MESH_SHF;
+                               +EngineData->objects[o].mesh_count)>>CLSIZE_VERTEX_SHF;
 
                     origin[0] = 0;
                     origin[1] = ymin;

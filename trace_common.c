@@ -200,7 +200,7 @@
                             RT_SETCOL;
                             if(lv_dr->map_id>=0)
                             {
-                                __GET_TEXTURE_UV(lv_dr->map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
                             };
                             cn = -n;
                         }else{ // с внешней стороны
@@ -211,7 +211,7 @@
                             cn = n;
                             if(lv_dr->map_id>=0)
                             {
-                                __GET_TEXTURE_UV(lv_dr->map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
                             };
                         };
                     }; // Для каждой meshины
