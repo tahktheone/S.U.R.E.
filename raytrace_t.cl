@@ -10,9 +10,6 @@
 #define __SURE_GLOBAL_MY get_global_size(1)
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
-#define __SURE_COL_RGB_X col->rgb.x
-#define __SURE_COL_RGB_Y col->rgb.y
-#define __SURE_COL_RGB_Z col->rgb.z
 #define __MAD(A,B,C) mad(A,B,C)
 
 #ifdef SURE_GPU_FLOAT
@@ -102,12 +99,19 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
 #define __GET_TEXTURE(ix,iy,id) \
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
+        if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
         col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
         col_transp = 1.01 - (col_rgba.w/255.0); \
         col_rgb.x = col_rgba.x; \
         col_rgb.y = col_rgba.y; \
         col_rgb.z = col_rgba.z; \
         if(col_transp>0.5)col_dt=SURE_D_NORM;
+
+#define __GET_ADVMAP(ix,iy,id) \
+        map_uv.x = ix; \
+        map_uv.y = iy+id*SURE_R_TEXRES; \
+        if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
+        col_radiance = read_imageui(Textures,smpTex,__DCONV2(map_uv)).x;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -121,12 +125,28 @@ coords.x++; \
 v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
+if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
 col_transp = 1.01 - (col_rgba.w / 255.0); \
 col_rgb.x = col_rgba.x; \
 col_rgb.y = col_rgba.y; \
 col_rgb.z = col_rgba.z; \
 if(col_transp>0.5)col_dt=SURE_D_NORM;
+
+#define __GET_ADVMAP_UV(cm,id) \
+__VTYPE2 v1,v2,v0; \
+int tid = cm; \
+coords.y = tid>>CLSIZE_VERTEX_SHF; \
+coords.x = (tid - (coords.y<<CLSIZE_VERTEX_SHF))<<2; \
+v0.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
+coords.x++; \
+v1.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
+coords.x++; \
+v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
+map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
+map_uv.y += id*SURE_R_TEXRES; \
+if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
+col_radiance = read_imageui(Textures,smpTex,__DCONV2(map_uv)).x;
 
 #define GPU
 #include <SureGPUData.h>
@@ -151,14 +171,13 @@ int y = get_global_id(1);
 
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
-                             CLK_ADDRESS_NONE            |
-                             CLK_FILTER_NEAREST;
+                              CLK_ADDRESS_NONE            |
+                              CLK_FILTER_NEAREST;
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
-                             CLK_ADDRESS_NONE     |
-                             CLK_FILTER_LINEAR;
+                              CLK_ADDRESS_NONE    |
+                              CLK_FILTER_LINEAR;
 int2 coords;
 __VTYPE2 map_uv;
-
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

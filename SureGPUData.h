@@ -25,6 +25,7 @@ struct SureDrawable {
     uint mesh_count;
     bool mesh_changed;
     int map_id;
+    int advmap_id;
 #else
     cl_double3 X = cl_double3{0,0,0}; //Координаты центра
     cl_double3 ox = cl_double3{1,0,0}; //Локальная ось x
@@ -47,6 +48,7 @@ struct SureDrawable {
     cl_uint mesh_count;
     cl_bool mesh_changed = false;
     cl_int map_id = -1;
+    cl_int advmap_id = -1;
 #endif // CPU
 
 };

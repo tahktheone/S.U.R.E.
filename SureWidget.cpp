@@ -525,6 +525,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].drawable.rgb.s[1] = 100+155.0*(float)rand()/(float)RAND_MAX;// цвет
         EngineData->objects[i].drawable.rgb.s[2] = 100+155.0*(float)rand()/(float)RAND_MAX; // цвет
         EngineData->objects[i].drawable.sided = true;
+        EngineData->objects[i].drawable.map_id = EngineData->GetTexture("earth");
         EngineData->objects[i].initp4();
         EngineData->objects[i].push(EngineData->objects[i].X,EngineData->cam_vec,0.8);
     };

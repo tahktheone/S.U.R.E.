@@ -25,9 +25,6 @@
 #define __SURE_GLOBAL_MY amy
 #define __SURE_MIN(A,B) A<B?A:B
 #define __SURE_MAX(A,B) A>B?A:B
-#define __SURE_COL_RGB_X col->rgb.s[0]
-#define __SURE_COL_RGB_Y col->rgb.s[1]
-#define __SURE_COL_RGB_Z col->rgb.s[2]
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
 #define __MAD(A,B,C) A*B+C
 
@@ -96,12 +93,25 @@
         col_rgb.z = col_rgba.z; \
         if(col_transp>0.5)col_dt=SURE_D_NORM;
 
+#define __GET_ADVMAP(ix,iy,id) \
+        uint iix = ix; \
+        uint iiy = iy+SURE_R_TEXRES*id; \
+        uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
+        col_radiance = *tex;
+
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
                                   (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
 __VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \
                                   (__MESH_UV3_V(cm)-__MESH_UV1_V(cm))*v; \
 __GET_TEXTURE(map_px,map_py,id); \
+
+#define __GET_ADVMAP_UV(cm,id) \
+__VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
+                                  (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
+__VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \
+                                  (__MESH_UV3_V(cm)-__MESH_UV1_V(cm))*v; \
+__GET_ADVMAP(map_px,map_py,id); \
 
 #include <QtCore/QtCore>
 #include <QtCore/QThread>
@@ -430,7 +440,7 @@ class SureData
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
         void Mesh_GenerateCube(int object);
-        void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count);
+        void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
         void MapTexture(int object,int type);
         void Mesh_FromFile(int object,const char* name);
 };

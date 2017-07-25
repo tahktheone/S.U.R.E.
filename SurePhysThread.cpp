@@ -1061,6 +1061,9 @@ void SurePhysThread::drawscene()
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;
                 GPUData->Drawables[i].X = EngineData->objects[d].X;
                 GPUData->Drawables[i].lx = 0.95*EngineData->objects[d].lx;
+                GPUData->Drawables[i].ox = EngineData->objects[d].ox;
+                GPUData->Drawables[i].oy = EngineData->objects[d].oy;
+                GPUData->Drawables[i].oz = EngineData->objects[d].oz;
                 GPUData->m_drawables++;
                 break;
             };

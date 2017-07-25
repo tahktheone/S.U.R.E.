@@ -81,6 +81,40 @@
                        };
                         RT_SETCOL;
                         cp = tp + id*tv;
+                        if(lv_dr->map_id>=0)
+                        {
+                            __VTYPE3 lc;
+                            __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - cp;             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
+                            lc = __NORMALIZE(lc);
+                            __VTYPE3 uv;
+                            uv.y = 0.5*(dot(lc,__FCONV3(lv_dr->oz))+1); // от 0 (низ) до 1 (верх)
+                            if(lc.x>0){uv.x = atan(lc.y/lc.x)/M_PI+0.5;}
+                            else{uv.x = atan(lc.y/lc.x)/M_PI+1.5;};
+                            uv.x*=0.5;
+                            __GET_TEXTURE(SURE_R_TEXRES*uv.x,
+                                          SURE_R_TEXRES*uv.y,
+                                          lv_dr->map_id);
+                        };
+                        if(lv_dr->advmap_id>=0)
+                        {
+                            __VTYPE3 lc;
+                            __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - cp;             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
+                            lc = __NORMALIZE(lc);
+                            __VTYPE3 uv;
+                            uv.y = 0.5*(dot(lc,__FCONV3(lv_dr->oz))+1); // от 0 (низ) до 1 (верх)
+                            if(lc.x>0){uv.x = atan(lc.y/lc.x)/M_PI+0.5;}
+                            else{uv.x = atan(lc.y/lc.x)/M_PI+1.5;};
+                            uv.x*=0.5;
+                            __GET_ADVMAP(SURE_R_TEXRES*uv.x,
+                                          SURE_R_TEXRES*uv.y,
+                                          lv_dr->advmap_id);
+                        };
                         if(in)
                         {
                             cn = __FCONV3(lv_dr->X) - cp;
@@ -126,6 +160,12 @@
                                           SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
                                           lv_dr->map_id);
                         };
+                        if(lv_dr->advmap_id>=0)
+                        {
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->advmap_id);
+                        };
                         cn = -__FCONV3(lv_dr->oz);
                     }else{ // с внешней стороны
                         col = lv_dr;
@@ -137,6 +177,12 @@
                             __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
                                           SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
                                           lv_dr->map_id);
+                        };
+                        if(lv_dr->advmap_id>=0)
+                        {
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->advmap_id);
                         };
                         cn = __FCONV3(lv_dr->oz);
                     };
@@ -209,6 +255,10 @@
                             {
                                 __GET_TEXTURE_UV(cm,lv_dr->map_id);
                             };
+                            if(lv_dr->advmap_id>=0)
+                            {
+                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
+                            };
                             cn = -n;
                         }else{ // с внешней стороны
                             col = lv_dr;
@@ -219,6 +269,10 @@
                             if(lv_dr->map_id>=0)
                             {
                                 __GET_TEXTURE_UV(cm,lv_dr->map_id);
+                            };
+                            if(lv_dr->advmap_id>=0)
+                            {
+                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
                             };
                         };
                     }; // Для каждой meshины
@@ -247,9 +301,9 @@
 
         if(col_radiance>0)
         {
-            rgb.x += fade.x*__SURE_COL_RGB_X;
-            rgb.y += fade.y*__SURE_COL_RGB_Y;
-            rgb.z += fade.z*__SURE_COL_RGB_Z;
+            rgb.x += fade.x*col_rgb.x;
+            rgb.y += fade.y*col_rgb.y;
+            rgb.z += fade.z*col_rgb.z;
             break;
         };
 
