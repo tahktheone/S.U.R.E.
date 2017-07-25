@@ -74,6 +74,21 @@ double2 c_f_d2(float2 d)
 
 #endif
 
+#define __GET_NORMAL1(P,VID) \
+coords.y = VID>>CLSIZE_VERTEX_SHF; \
+coords.x = (VID - (coords.y<<CLSIZE_VERTEX_SHF))<<2; \
+P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
+
+#define __GET_NORMAL2(P,VID) \
+coords.y = VID>>CLSIZE_VERTEX_SHF; \
+coords.x = ((VID - (coords.y<<CLSIZE_VERTEX_SHF))<<2) + 1; \
+P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
+
+#define __GET_NORMAL3(P,VID) \
+coords.y = VID>>CLSIZE_VERTEX_SHF; \
+coords.x = ((VID - (coords.y<<CLSIZE_VERTEX_SHF))<<2) + 2; \
+P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
+
 #define __GET_VERTEX(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
         coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
@@ -126,7 +141,8 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t VrtxCLImg, // Набор vertexов
                    __read_only image2d_t Textures, // Текстуры
                    __read_only image2d_t MeshCLImg, // Mesh'ы
-                   __read_only image2d_t UVMap // мэппинг мешей на текстуры
+                   __read_only image2d_t UVMap, // мэппинг мешей на текстуры
+                   __read_only image2d_t Normals // нормали
                    )
 {
 // координаты обрабатываемой точки

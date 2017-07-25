@@ -187,6 +187,7 @@ void SureThread::oclInit()
 
     OCL_GET_("clCreateImage(Vertexes)",OCLData->cmVertexImage,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV,CLSIZE_VERTEX_DIV,0,NULL,&ret));
     OCL_GET_("clCreateImage(Meshes)",OCLData->cmMeshImage,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_mesh,CLSIZE_VERTEX_DIV,CLSIZE_VERTEX_DIV,0,NULL,&ret));
+    OCL_GET_("clCreateImage(Normals)",OCLData->cmNormals,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM,CLSIZE_VERTEX_DIV,0,NULL,&ret));
     OCL_GET_("clCreateImage(Textures)",OCLData->cmTextures,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_textures,SURE_R_TEXRES,SURE_R_TEXRES*SURE_R_MAXTEX,0,NULL,&ret));
     OCL_GET_("clCreateImage(UVMap)",OCLData->cmUVMap,clCreateImage2D(context,CL_MEM_READ_ONLY,&cif_vertex,CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM,CLSIZE_VERTEX_DIV,0,NULL,&ret));
 
@@ -215,6 +216,7 @@ void SureThread::oclInit()
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_t, 5, sizeof(cl_mem), (void*)&OCLData->cmTextures));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_t, 6, sizeof(cl_mem), (void*)&OCLData->cmMeshImage));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_t, 7, sizeof(cl_mem), (void*)&OCLData->cmUVMap));
+    OCL_RUN_("clSetKernelArg 9t",clSetKernelArg(OCLData->kernel_t, 8, sizeof(cl_mem), (void*)&OCLData->cmNormals));
     OCL_RUN_("clSetKernelArg 0f",clSetKernelArg(OCLData->kernel_f, 0, sizeof(cl_mem), (void*)&OCLData->cmRGBmatrix));
     OCL_RUN_("clSetKernelArg 1f",clSetKernelArg(OCLData->kernel_f, 1, sizeof(cl_mem), (void*)&OCLData->cmRandom));
     OCL_RUN_("clSetKernelArg 2f",clSetKernelArg(OCLData->kernel_f, 2, sizeof(cl_mem), (void*)&OCLData->cmGPUData));
@@ -223,6 +225,7 @@ void SureThread::oclInit()
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_f, 5, sizeof(cl_mem), (void*)&OCLData->cmTextures));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_f, 6, sizeof(cl_mem), (void*)&OCLData->cmMeshImage));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_f, 7, sizeof(cl_mem), (void*)&OCLData->cmUVMap));
+    OCL_RUN_("clSetKernelArg 9t",clSetKernelArg(OCLData->kernel_f, 8, sizeof(cl_mem), (void*)&OCLData->cmNormals));
     OCL_RUN_("clSetKernelArg 0d",clSetKernelArg(OCLData->kernel_d, 0, sizeof(cl_mem), (void*)&OCLData->cmRGBmatrix));
     OCL_RUN_("clSetKernelArg 1d",clSetKernelArg(OCLData->kernel_d, 1, sizeof(cl_mem), (void*)&OCLData->cmRandom));
     OCL_RUN_("clSetKernelArg 2d",clSetKernelArg(OCLData->kernel_d, 2, sizeof(cl_mem), (void*)&OCLData->cmGPUData));
@@ -231,6 +234,7 @@ void SureThread::oclInit()
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_d, 5, sizeof(cl_mem), (void*)&OCLData->cmTextures));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_d, 6, sizeof(cl_mem), (void*)&OCLData->cmMeshImage));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_d, 7, sizeof(cl_mem), (void*)&OCLData->cmUVMap));
+    OCL_RUN_("clSetKernelArg 9t",clSetKernelArg(OCLData->kernel_d, 8, sizeof(cl_mem), (void*)&OCLData->cmNormals));
     OCL_RUN_("clSetKernelArg 0n",clSetKernelArg(OCLData->kernel_n, 0, sizeof(cl_mem), (void*)&OCLData->cmRGBmatrix));
     OCL_RUN_("clSetKernelArg 1n",clSetKernelArg(OCLData->kernel_n, 1, sizeof(cl_mem), (void*)&OCLData->cmRandom));
     OCL_RUN_("clSetKernelArg 2n",clSetKernelArg(OCLData->kernel_n, 2, sizeof(cl_mem), (void*)&OCLData->cmGPUData));
@@ -239,6 +243,7 @@ void SureThread::oclInit()
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_n, 5, sizeof(cl_mem), (void*)&OCLData->cmTextures));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_n, 6, sizeof(cl_mem), (void*)&OCLData->cmMeshImage));
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_n, 7, sizeof(cl_mem), (void*)&OCLData->cmUVMap));
+    OCL_RUN_("clSetKernelArg 9t",clSetKernelArg(OCLData->kernel_n, 8, sizeof(cl_mem), (void*)&OCLData->cmNormals));
     if(!OCLData->OpenCL)
         std::cout << "Запускаемся без OpenCL!\n";
 
@@ -365,6 +370,18 @@ void SureThread::run()
                                                   (void*)&EngineData->UVMap[origin[1]*CLSIZE_MESH_PTCH],
                                                   0,NULL,NULL));
 
+                    OCL_RUN_("clEnqueueWriteImage(Normals)",
+                              clEnqueueWriteImage(OCLData->cqCommandQue,
+                                                  OCLData->cmNormals,
+                                                  CL_TRUE,
+                                                  origin,
+                                                  region,
+                                                  sizeof(cl_float)*CLSIZE_MESH_PTCH,
+                                                  0,
+                                                  (void*)&EngineData->Normals[origin[1]*CLSIZE_MESH_PTCH],
+                                                  0,NULL,NULL));
+
+
                     int v_min = SURE_R_MAXVERTEX;
                     int v_max = 0;
                     int* MeshCLImg = EngineData->MeshCLImg;
@@ -470,6 +487,7 @@ void SureThread::raytrace()
     SureDrawable* Drawables = GPUData->Drawables;
     cl_uchar* Textures = EngineData->TexturesData; // Текстуры
     cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+    cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
     cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
     cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
 

@@ -47,6 +47,31 @@
 #define __MESH_UV2_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
 #define __MESH_UV3_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
 
+#define __NORMAL1_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
+#define __NORMAL2_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
+#define __NORMAL3_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
+#define __NORMAL1_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
+#define __NORMAL2_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
+#define __NORMAL3_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
+#define __NORMAL1_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 2]
+#define __NORMAL2_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 2]
+#define __NORMAL3_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 2]
+
+#define __GET_NORMAL1(P,VID) \
+        P.x = __NORMAL1_X(VID); \
+        P.y = __NORMAL1_Y(VID); \
+        P.z = __NORMAL1_Z(VID);
+
+#define __GET_NORMAL2(P,VID) \
+        P.x = __NORMAL2_X(VID); \
+        P.y = __NORMAL2_Y(VID); \
+        P.z = __NORMAL2_Z(VID);
+
+#define __GET_NORMAL3(P,VID) \
+        P.x = __NORMAL3_X(VID); \
+        P.y = __NORMAL3_Y(VID); \
+        P.z = __NORMAL3_Z(VID);
+
 #define __GET_VERTEX(P,VID) \
         P.x = __VERTEX_X(VID); \
         P.y = __VERTEX_Y(VID); \
@@ -379,7 +404,8 @@ class SureData
         cl_float *VrtxCLImg; // [SURE_R_MAXVERTEX*4] -- для OpenCL image2d_t
         cl_int *MeshCLImg;  // [SURE_R_MAXMESH*4] -- для OpenCL image2d_t
         cl_uchar *TexturesData; //[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
-        cl_float *UVMap;  //[SURE_R_MAXTEXMAP * 4]; {u1, v1}
+        cl_float *UVMap;  //[SURE_R_MAXTEXMAP * 4]; {u1, v1 .. }
+        cl_float *Normals; // [SURE_R_MAXTEXMAP * 4]; {n1x, n1y, n1z ...}
         cl_uint cur_vertexes = 0;
         cl_uint cur_meshes = 0;
         cl_uint cur_textures = 0;
@@ -431,6 +457,7 @@ struct SureOCLData{
     cl_mem cmMeshImage; //  указатель на массив mesh'ей
     cl_mem cmTextures; //указатель на массив текстур
     cl_mem cmUVMap; // указатель на массив uv-mappingа
+    cl_mem cmNormals; // указатель на массив uv-mappingа
 };
 
 // Работа с OpenCL из CPU-части:

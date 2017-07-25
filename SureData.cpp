@@ -5,6 +5,7 @@ void SureData::SureClear()
 {
     delete TexturesData;
     delete UVMap;
+    delete Normals;
     delete VrtxCLImg;
     delete MeshCLImg;
 };
@@ -199,6 +200,57 @@ void SureData::MapTexture(int object,int type)
             __MESH_UV2_V(i) = __VERTEX_Z(__MESH_V2(i))+y;
             __MESH_UV3_U(i) = __VERTEX_Y(__MESH_V3(i))+x;
             __MESH_UV3_V(i) = __VERTEX_Z(__MESH_V3(i))+y;
+        }else if(type == 3)
+        {
+            x = 0.5;
+            y = 0.5;
+            my_double3 v;
+            my_double3 vf;
+            double mapx, mapy;
+
+            v.x = __VERTEX_X(__MESH_V1(i));
+            v.y = __VERTEX_Y(__MESH_V1(i));
+            v.z = __VERTEX_Z(__MESH_V1(i));
+            v = __NORMALIZE(v);
+
+            vf.x = 0; vf.y = 0; vf.z = 1;
+            mapy = 0.5*(dot(v,vf)+1); // от 0 (низ) до 1 (верх)
+            vf.x = 1; vf.y = 0; vf.z = 0;
+            if(dot(v,vf)>0) { vf.x = 0; vf.y = 1; vf.z = 0; mapx = 0.25*(dot(v,vf)+1);
+            }else{ vf.x = 0; vf.y = 1; vf.z = 0; mapx = 1.0-0.25*(dot(v,vf)+1); };
+
+            __MESH_UV1_U(i) = mapx;
+            __MESH_UV1_V(i) = mapy;
+
+
+            v.x = __VERTEX_X(__MESH_V2(i));
+            v.y = __VERTEX_Y(__MESH_V2(i));
+            v.z = __VERTEX_Z(__MESH_V2(i));
+            v = __NORMALIZE(v);
+
+            vf.x = 0; vf.y = 0; vf.z = 1;
+            mapy = 0.5*(dot(v,vf)+1); // от 0 (низ) до 1 (верх)
+            vf.x = 1; vf.y = 0; vf.z = 0;
+            if(dot(v,vf)>0) { vf.x = 0; vf.y = 1; vf.z = 0; mapx = 0.25*(dot(v,vf)+1);
+            }else{ vf.x = 0; vf.y = 1; vf.z = 0; mapx = 1.0-0.25*(dot(v,vf)+1); };
+
+            __MESH_UV2_U(i) = mapx;
+            __MESH_UV2_V(i) = mapy;
+
+            v.x = __VERTEX_X(__MESH_V3(i));
+            v.y = __VERTEX_Y(__MESH_V3(i));
+            v.z = __VERTEX_Z(__MESH_V3(i));
+            v = __NORMALIZE(v);
+
+            vf.x = 0; vf.y = 0; vf.z = 1;
+            mapy = 0.5*(dot(v,vf)+1); // от 0 (низ) до 1 (верх)
+            vf.x = 1; vf.y = 0; vf.z = 0;
+            if(dot(v,vf)>0) { vf.x = 0; vf.y = 1; vf.z = 0; mapx = 0.25*(dot(v,vf)+1);
+            }else{ vf.x = 0; vf.y = 1; vf.z = 0; mapx = 1.0-0.25*(dot(v,vf)+1); };
+
+            __MESH_UV3_U(i) = mapx;
+            __MESH_UV3_V(i) = mapy;
+
         }else{
             x = objects[object].lx;
             y = objects[object].ly;
@@ -378,6 +430,32 @@ void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count)
         AddMesh(AddVertex(vertexes[cover[ic][2]]),
                 AddVertex(vertexes[cover[ic][1]]),
                 AddVertex(vertexes[cover[ic][0]]));
+
+                my_double3 n = __NORMALIZE(cross(vertexes[cover[ic][1]]-vertexes[cover[ic][0]],vertexes[cover[ic][2]]-vertexes[cover[ic][0]]));
+                    __NORMAL1_X(objects[object].mesh_count) = n.x;
+                    __NORMAL1_Y(objects[object].mesh_count) = n.y;
+                    __NORMAL1_Z(objects[object].mesh_count) = n.z;
+                    __NORMAL2_X(objects[object].mesh_count) = n.x;
+                    __NORMAL2_Y(objects[object].mesh_count) = n.y;
+                    __NORMAL2_Z(objects[object].mesh_count) = n.z;
+                    __NORMAL3_X(objects[object].mesh_count) = n.x;
+                    __NORMAL3_Y(objects[object].mesh_count) = n.y;
+                    __NORMAL3_Z(objects[object].mesh_count) = n.z;
+
+                /*
+                my_double3 n1 = __NORMALIZE(vertexes[cover[ic][2]]);
+                my_double3 n2 = __NORMALIZE(vertexes[cover[ic][1]]);
+                my_double3 n3 = __NORMALIZE(vertexes[cover[ic][0]]);
+                    __NORMAL1_X(objects[object].mesh_count) = n1.x;
+                    __NORMAL1_Y(objects[object].mesh_count) = n1.y;
+                    __NORMAL1_Z(objects[object].mesh_count) = n1.z;
+                    __NORMAL2_X(objects[object].mesh_count) = n2.x;
+                    __NORMAL2_Y(objects[object].mesh_count) = n2.y;
+                    __NORMAL2_Z(objects[object].mesh_count) = n2.z;
+                    __NORMAL3_X(objects[object].mesh_count) = n3.x;
+                    __NORMAL3_Y(objects[object].mesh_count) = n3.y;
+                    __NORMAL3_Z(objects[object].mesh_count) = n3.z;
+                */
         objects[object].mesh_count++;
     };
 };
@@ -437,6 +515,7 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                 vn[normals].x = x;
                 vn[normals].y = y;
                 vn[normals].z = z;
+                vn[normals] = __NORMALIZE(vn[normals]);
                 normals++;
 
             }else if ( strcmp( line, "f" ) == 0 ){
@@ -564,6 +643,35 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                     __MESH_UV3_U(m) = vt[f[i][2][1]].x*SURE_R_TEXRES;
                     __MESH_UV3_V(m) = vt[f[i][2][1]].y*SURE_R_TEXRES;
                 };
+                if(f[i][0][2]>=0) // Нормали заданы
+                {
+                    __NORMAL1_X(m) = vn[f[i][0][2]].x;
+                    __NORMAL1_Y(m) = vn[f[i][0][2]].y;
+                    __NORMAL1_Z(m) = vn[f[i][0][2]].z;
+                    __NORMAL2_X(m) = vn[f[i][1][2]].x;
+                    __NORMAL2_Y(m) = vn[f[i][1][2]].y;
+                    __NORMAL2_Z(m) = vn[f[i][1][2]].z;
+                    __NORMAL3_X(m) = vn[f[i][2][2]].x;
+                    __NORMAL3_Y(m) = vn[f[i][2][2]].y;
+                    __NORMAL3_Z(m) = vn[f[i][2][2]].z;
+                }else{ // Нормали не заданы
+                        my_double3 gm1;
+                        my_double3 gm2;
+                        my_double3 gm3;
+                        __GET_VERTEX(gm1,vstart+f[i][0][0]);
+                        __GET_VERTEX(gm2,vstart+f[i][1][0]);
+                        __GET_VERTEX(gm3,vstart+f[i][2][0]);
+                        my_double3 n = __NORMALIZE(cross(gm2-gm1,gm3-gm1));
+                    __NORMAL1_X(m) = n.x;
+                    __NORMAL1_Y(m) = n.y;
+                    __NORMAL1_Z(m) = n.z;
+                    __NORMAL2_X(m) = n.x;
+                    __NORMAL2_Y(m) = n.y;
+                    __NORMAL2_Z(m) = n.z;
+                    __NORMAL3_X(m) = n.x;
+                    __NORMAL3_Y(m) = n.y;
+                    __NORMAL3_Z(m) = n.z;
+                };
                 objects[object].mesh_count++;
         };
         /*
@@ -588,6 +696,7 @@ SureData::SureData()
         MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
         TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
         UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+        Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         srand(time(NULL));
 
         LoadTexture("parket");
@@ -694,7 +803,7 @@ SureData::SureData()
     objects[i].initp4();
     */
 
-    //my_double3 generated_mesh[256];
+    my_double3 generated_mesh[256];
 
     i = CreateObject(SURE_OBJ_MESH);
     objects[i].X.x = 0; //Координаты центра
@@ -703,8 +812,8 @@ SureData::SureData()
     objects[i].lx = 20.0; // длина
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
-    Mesh_FromFile(i,"golem");
-    /*
+    //Mesh_FromFile(i,"monkey");
+
     for(int mi = 0;mi<200;++mi)
     {
         my_double3 tm;
@@ -718,26 +827,26 @@ SureData::SureData()
     };
 
     Mesh_GenerateHull(i,generated_mesh,200);
-*/
-    // MapTexture(i,2);
+
+     MapTexture(i,3);
 
     objects[i].movable = false;
     objects[i].collidable = true;
-    objects[i].oz.x = 1;
+    objects[i].oz.x = 0;
     objects[i].oz.y = 0;
-    objects[i].oz.z = 0;
+    objects[i].oz.z = 1;
     objects[i].oy.x = 0;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 1;
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
+    objects[i].oy.y = 1;
+    objects[i].oy.z = 0;
+    objects[i].ox.x = 1;
+    objects[i].ox.y = 0;
     objects[i].ox.z = 0;
 
     ObjCoordsToDrawable(i);
     objects[i].drawable.mesh_start = objects[i].mesh_start;
     objects[i].drawable.mesh_count = objects[i].mesh_count;
     objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("golem");
+    //objects[i].drawable.map_id = GetTexture("grid");
     objects[i].drawable.type = SURE_DR_MESH; // форма
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.95; // прозрачность

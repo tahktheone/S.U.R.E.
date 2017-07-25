@@ -180,11 +180,18 @@
                         id = tt;
                         cp = l_cp;
                         __VTYPE3 locn = cross(gm2-gm1,gm3-gm1);
-                        __VTYPE3 n = locn.x*__FCONV3(lv_dr->ox)+
-                                     locn.y*__FCONV3(lv_dr->oy)+
-                                     locn.z*__FCONV3(lv_dr->oz);
+                        __VTYPE dir = dot(ltv,locn);
+                        __VTYPE3 n1;
+                        __VTYPE3 n2;
+                        __VTYPE3 n3;
+                        __GET_NORMAL1(n1,cm);
+                        __GET_NORMAL2(n2,cm);
+                        __GET_NORMAL3(n3,cm);
+                        __VTYPE3 ln = n1*(1-u-v)+n2*u+n3*v;
+                        __VTYPE3 n = ln.x*__FCONV3(lv_dr->ox)+
+                                     ln.y*__FCONV3(lv_dr->oy)+
+                                     ln.z*__FCONV3(lv_dr->oz);
                         n = __NORMALIZE(n);
-                        __VTYPE dir = dot(tv,n);
                         if(dir>0.0) // с внутренней стороны
                         {
                             if(lv_dr->sided)
