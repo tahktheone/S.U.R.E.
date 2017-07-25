@@ -111,7 +111,9 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        col_radiance = read_imageui(Textures,smpTex,__DCONV2(map_uv)).x;
+        advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+        col_radiance = advmap.x; \
+        col_ds = advmap.y/100.0;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -146,7 +148,9 @@ v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-col_radiance = read_imageui(Textures,smpTex,__DCONV2(map_uv)).x;
+advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+col_radiance = advmap.x; \
+col_ds = advmap.y/100.0;
 
 #define GPU
 #include <SureGPUData.h>
@@ -178,6 +182,8 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_FILTER_LINEAR;
 int2 coords;
 __VTYPE2 map_uv;
+uint4 advmap;
+
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

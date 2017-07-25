@@ -97,7 +97,8 @@
         uint iix = ix; \
         uint iiy = iy+SURE_R_TEXRES*id; \
         uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
-        col_radiance = *tex;
+        col_radiance = *tex; tex++; \
+        col_ds = *tex/100.0;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \

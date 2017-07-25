@@ -707,7 +707,7 @@ SureData::SureData()
         srand(time(NULL));
 
         LoadTexture("parket");
-        LoadTexture("hole");
+        LoadTexture("earth_adv");
         LoadTexture("test_alpha");
         LoadTexture("colstones");
         LoadTexture("golem");
@@ -816,11 +816,11 @@ SureData::SureData()
     i = CreateObject(SURE_OBJ_MESH);
     objects[i].X.x = 0; //Координаты центра
     objects[i].X.y = 0;
-    objects[i].X.z = 25;
+    objects[i].X.z = 10;
     objects[i].lx = 20.0; // длина
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
-    Mesh_FromFile(i,"golem");
+    Mesh_FromFile(i,"teapot2");
 
     /*
     for(int mi = 0;mi<200;++mi)
@@ -839,31 +839,32 @@ SureData::SureData()
 
      MapTexture(i,SURE_MAPPING_PLANAR_XZ);
     */
+
     objects[i].movable = false;
     objects[i].collidable = true;
-    objects[i].oz.x = 1;
+    objects[i].oz.x = 0;
     objects[i].oz.y = 0;
-    objects[i].oz.z = 0;
+    objects[i].oz.z = 1;
     objects[i].oy.x = 0;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 1;
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
+    objects[i].oy.y = 1;
+    objects[i].oy.z = 0;
+    objects[i].ox.x = 1;
+    objects[i].ox.y = 0;
     objects[i].ox.z = 0;
 
     ObjCoordsToDrawable(i);
     objects[i].drawable.mesh_start = objects[i].mesh_start;
     objects[i].drawable.mesh_count = objects[i].mesh_count;
     objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("golem");
-    objects[i].drawable.advmap_id = GetTexture("golem_adv");
+    //objects[i].drawable.map_id = GetTexture("golem");
+    //objects[i].drawable.advmap_id = GetTexture("golem_adv");
     objects[i].drawable.type = SURE_DR_MESH; // форма
     objects[i].drawable.radiance = 0.0; // свечение
     objects[i].drawable.transp = 0.95; // прозрачность
     objects[i].drawable.transp_i = 0.8; // прозрачность
     objects[i].drawable.refr = 1.41; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.5; // sigma рандомизации
+    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
     objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
     objects[i].drawable.rgb.s[0] = 200.0; // цвет
     objects[i].drawable.rgb.s[1] = 220.0; // цвет
@@ -871,8 +872,6 @@ SureData::SureData()
     objects[i].drawable.sided = true;
     objects[i].lp = 10;
     objects[i].initp4();
-
-
 
     //коллайдер падающий
     /*

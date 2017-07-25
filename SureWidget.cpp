@@ -515,17 +515,18 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].drawable.lz = EngineData->objects[i].lz;
         EngineData->objects[i].drawable.type = SURE_DR_SPHERE; // форма
         EngineData->objects[i].drawable.radiance = 0.0; // свечение
-        EngineData->objects[i].drawable.transp = 0.96;//0.8+0.3*(float)rand()/(float)RAND_MAX; // прозрачность
-        EngineData->objects[i].drawable.transp_i = 0.1+0.6*(float)rand()/(float)RAND_MAX; // прозрачность
+        EngineData->objects[i].drawable.transp = 0;//0.8+0.3*(float)rand()/(float)RAND_MAX; // прозрачность
+        EngineData->objects[i].drawable.transp_i = 0.1;//+0.6*(float)rand()/(float)RAND_MAX; // прозрачность
         EngineData->objects[i].drawable.refr = 1.49; // Коэффициент преломления
         EngineData->objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-        EngineData->objects[i].drawable.dist_sigma = 0.02*(float)rand()/(float)RAND_MAX; // sigma рандомизации
+        EngineData->objects[i].drawable.dist_sigma = 3.0*(float)rand()/(float)RAND_MAX; // sigma рандомизации
         EngineData->objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
         EngineData->objects[i].drawable.rgb.s[0] = 100+155.0*(float)rand()/(float)RAND_MAX; // цвет
         EngineData->objects[i].drawable.rgb.s[1] = 100+155.0*(float)rand()/(float)RAND_MAX;// цвет
         EngineData->objects[i].drawable.rgb.s[2] = 100+155.0*(float)rand()/(float)RAND_MAX; // цвет
         EngineData->objects[i].drawable.sided = true;
         EngineData->objects[i].drawable.map_id = EngineData->GetTexture("earth");
+        EngineData->objects[i].drawable.advmap_id = EngineData->GetTexture("earth_adv");
         EngineData->objects[i].initp4();
         EngineData->objects[i].push(EngineData->objects[i].X,EngineData->cam_vec,0.8);
     };

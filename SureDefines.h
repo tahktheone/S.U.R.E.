@@ -13,7 +13,7 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 4
+#define SURE_SCALE 2
 #define SURE_SMOOTH 1
 
 #define SURE_MAXRES_X 1920
@@ -49,7 +49,7 @@
 #define CLSIZE_VERTEX      SURE_R_MAXVERTEX*CLSIZE_VERTEX_DIM
 
 #define SURE_R_MAXMESH     50000
-#define SURE_R_MAXTEX      20
+#define SURE_R_MAXTEX      16
 #define SURE_R_TEXRES      1024
 #define SURE_R_MAXTEXMAP   SURE_R_MAXMESH
 

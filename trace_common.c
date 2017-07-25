@@ -84,13 +84,13 @@
                         if(lv_dr->map_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - cp;             // вектор к точке пересечения
+                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr->X);             // вектор к точке пересечения
                             lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
                             lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
                             lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
-                            uv.y = 0.5*(dot(lc,__FCONV3(lv_dr->oz))+1); // от 0 (низ) до 1 (верх)
+                            uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
                             if(lc.x>0){uv.x = atan(lc.y/lc.x)/M_PI+0.5;}
                             else{uv.x = atan(lc.y/lc.x)/M_PI+1.5;};
                             uv.x*=0.5;
@@ -101,13 +101,13 @@
                         if(lv_dr->advmap_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - cp;             // вектор к точке пересечения
+                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr->X);             // вектор к точке пересечения
                             lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
                             lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
                             lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
-                            uv.y = 0.5*(dot(lc,__FCONV3(lv_dr->oz))+1); // от 0 (низ) до 1 (верх)
+                            uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
                             if(lc.x>0){uv.x = atan(lc.y/lc.x)/M_PI+0.5;}
                             else{uv.x = atan(lc.y/lc.x)/M_PI+1.5;};
                             uv.x*=0.5;
@@ -198,6 +198,37 @@
                     ltp.x = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->ox));
                     ltp.y = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oy));
                     ltp.z = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oz));
+
+                    __VTYPE t_in = -SURE_R_MAXDISTANCE;
+                    __VTYPE t_out = SURE_R_MAXDISTANCE;
+                    __VTYPE t = 0;
+
+                    t = -(ltp.x-lv_dr->lx)/ltv.x;
+                    if((ltv.x)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    t = -(ltp.x+lv_dr->lx)/ltv.x;
+                    if((-ltv.x)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    t = -(ltp.y-lv_dr->ly)/ltv.y;
+                    if((ltv.y)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    t = -(ltp.y+lv_dr->ly)/ltv.y;
+                    if((-ltv.y)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    t = -(ltp.z-lv_dr->lz)/ltv.z;
+                    if((ltv.z)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    t = -(ltp.z+lv_dr->lz)/ltv.z;
+                    if((-ltv.z)>0.0){ if(t<t_out) t_out = t;}
+                    else{ if(t>t_in) t_in = t; };
+
+                    if(t_in>t_out||t_out<SURE_R_DELTA)break;
+
                     for(uint im = 0;im<lv_dr->mesh_count;++im)
                     { // Для каждой meshины
                         uint cm = lv_dr->mesh_start + im;
