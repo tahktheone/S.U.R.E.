@@ -424,6 +424,7 @@ class SureData
 
         void LoadTexture(const char*);
         int GetTexture(const char*);
+        int GenTexture(const char*,int type);
 
         SureObject objects[SURE_OBJ_MAX];
         int CreateObject(int type);
@@ -444,6 +445,10 @@ class SureData
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
         void MapTexture(int object,int type);
         void Mesh_FromFile(int object,const char* name);
+
+        void Scene_box(); // коробка со светящимся потолком
+        void Scene_floor(); // Пол и круглая лампа
+
 };
 
 struct SureOCLData{

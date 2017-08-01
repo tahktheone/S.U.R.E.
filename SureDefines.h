@@ -13,7 +13,7 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 2
+#define SURE_SCALE 4
 #define SURE_SMOOTH 1
 
 #define SURE_MAXRES_X 1920
@@ -58,6 +58,10 @@
 #define SURE_MAPPING_SPHERICAL  3
 #define SURE_NORMALS_DEFAULT    0
 #define SURE_NORMALS_SHPERICAL  1
+
+#define SURE_GENTEX_UNTRANSP 0
+#define SURE_GENTEX_HALFTRANSP 1
+#define SURE_GENTEX_RNDTRANSP 2
 
 #define SURE_D_EQUAL 1
 #define SURE_D_NORM 2

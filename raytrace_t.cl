@@ -170,6 +170,7 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    )
 {
 // координаты обрабатываемой точки
+
 int x = get_global_id(0);
 int y = get_global_id(1);
 

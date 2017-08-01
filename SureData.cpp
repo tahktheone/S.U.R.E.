@@ -10,6 +10,51 @@ void SureData::SureClear()
     delete MeshCLImg;
 };
 
+
+
+int SureData::GenTexture(const char* name,int type)
+{
+            float rndcolors[8];
+            for(int k = 0;k<6;++k){
+                rndcolors[k] = 255.0*((float)rand()/(float)RAND_MAX);
+            };
+        if(type==SURE_GENTEX_UNTRANSP)
+        {
+            rndcolors[3] = 255.0;
+            rndcolors[7] = 255.0;
+        };
+        if(type==SURE_GENTEX_HALFTRANSP)
+        {
+            rndcolors[3] = 0.0;
+            rndcolors[7] = 255.0;
+        };
+        cl_uchar* tex = &TexturesData[cur_textures*SURE_R_TEXRES*SURE_R_TEXRES*4];
+        for(int iy = 0;iy<SURE_R_TEXRES;++iy)
+        for(int ix = 0;ix<SURE_R_TEXRES;++ix)
+        {
+            int cx = ix>>5;
+            int cy = iy>>5;
+            if(((cx%2==1)&&(cy%2==1))||
+                ((cx%2==0)&&(cy%2==0)))
+            {
+                *tex = rndcolors[0]; ++tex;
+                *tex = rndcolors[1]; ++tex;
+                *tex = rndcolors[2]; ++tex;
+                *tex = rndcolors[3]; ++tex;
+            }else{
+                *tex = rndcolors[4]; ++tex;
+                *tex = rndcolors[5]; ++tex;
+                *tex = rndcolors[6]; ++tex;
+                *tex = rndcolors[7]; ++tex;
+            };
+        };
+        TexturesInfo[cur_textures].toupdate = true;
+        sprintf(TexturesInfo[cur_textures].name,"%s",name);
+        cur_textures++;
+        return cur_textures - 1;
+
+};
+
 void SureData::LoadTexture(const char* name)
 {
     QImage img;
@@ -696,28 +741,10 @@ void SureData::Mesh_FromFile(int object,const char* fname)
 
 };
 
-SureData::SureData()
+void SureData::Scene_box() // коробка со светящимся потолком
 {
-
-        VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
-        MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
-        TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
-        UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
-        Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
-        srand(time(NULL));
-
-        LoadTexture("parket");
-        LoadTexture("earth_adv");
-        LoadTexture("test_alpha");
-        LoadTexture("colstones");
-        LoadTexture("golem");
-        LoadTexture("grid");
-        LoadTexture("golem_adv");
-        LoadTexture("earth");
-
-    int i;
-
-    // свет
+int i;
+  // свет
     i = CreateObject(SURE_OBJ_PLANE);
     objects[i].X.x = 0; //Координаты центра
     objects[i].X.y = 0;
@@ -767,245 +794,6 @@ SureData::SureData()
     objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
     objects[i].drawable.sided = true;
 
-    // голем
-    /*
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 0; //Координаты центра
-    objects[i].X.y = 0;
-    objects[i].X.z = 30;
-    objects[i].lx = 30.0; // длина
-    objects[i].ly = 30.0; // ширина
-    objects[i].lz = 30.0; // высота
-    //Mesh_GenerateCube(i);
-    Mesh_FromFile(i);
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    objects[i].oz.x = 1;
-    objects[i].oz.y = 0;
-    objects[i].oz.z = 0;
-    objects[i].oy.x = 0;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 1;
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
-    objects[i].ox.z = 0;
-
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("golem");
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.1; // прозрачность
-    objects[i].drawable.refr = 1.01; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 200.0; // цвет
-    objects[i].drawable.rgb.s[1] = 200.0; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 10;
-    objects[i].initp4();
-    */
-
-    my_double3 generated_mesh[256];
-
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 0; //Координаты центра
-    objects[i].X.y = 0;
-    objects[i].X.z = 10;
-    objects[i].lx = 20.0; // длина
-    objects[i].ly = 20.0; // ширина
-    objects[i].lz = 20.0; // высота
-    Mesh_FromFile(i,"teapot2");
-
-    /*
-    for(int mi = 0;mi<200;++mi)
-    {
-        my_double3 tm;
-        tm.x = (float)rand()/(float)RAND_MAX - 0.5;
-        tm.y = (float)rand()/(float)RAND_MAX - 0.5;
-        tm.z = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi] = __NORMALIZE(tm);
-        generated_mesh[mi].x *= objects[i].lx;
-        generated_mesh[mi].y *= objects[i].ly;
-        generated_mesh[mi].z *= objects[i].lz;
-    };
-
-    Mesh_GenerateHull(i,generated_mesh,200,SURE_NORMALS_SHPERICAL);
-
-     MapTexture(i,SURE_MAPPING_PLANAR_XZ);
-    */
-
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    objects[i].oz.x = 0;
-    objects[i].oz.y = 0;
-    objects[i].oz.z = 1;
-    objects[i].oy.x = 0;
-    objects[i].oy.y = 1;
-    objects[i].oy.z = 0;
-    objects[i].ox.x = 1;
-    objects[i].ox.y = 0;
-    objects[i].ox.z = 0;
-
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    //objects[i].drawable.map_id = GetTexture("golem");
-    //objects[i].drawable.advmap_id = GetTexture("golem_adv");
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.95; // прозрачность
-    objects[i].drawable.transp_i = 0.8; // прозрачность
-    objects[i].drawable.refr = 1.41; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 200.0; // цвет
-    objects[i].drawable.rgb.s[1] = 220.0; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 10;
-    objects[i].initp4();
-
-    //коллайдер падающий
-    /*
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 20; //Координаты центра
-    objects[i].X.y = -20;
-    objects[i].X.z = 15;
-    objects[i].oz.z = -1;
-    objects[i].lx = 30.0; // длина
-    objects[i].ly = 20.0; // ширина
-    objects[i].lz = 15.0; // высота
-    for(int mi = 0;mi<256;++mi)
-    {
-        generated_mesh[mi].x = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].y = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].z = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].x *= objects[i].lx;
-        generated_mesh[mi].y *= objects[i].ly;
-        generated_mesh[mi].z *= objects[i].lz;
-    };
-    generated_mesh[255].x = -1.5*objects[i].lx;
-    generated_mesh[255].y = 0;
-    generated_mesh[255].z = 0;
-
-    Mesh_GenerateHull(i,generated_mesh,256);
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.95; // прозрачность
-    objects[i].drawable.transp_i = 0.9; // прозрачность
-    objects[i].drawable.refr = 1.39; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.02; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-        objects[i].drawable.rgb.s[0] = 200.0; // цвет
-        objects[i].drawable.rgb.s[1] = 200.0; // цвет
-        objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 13;
-    objects[i].initp4();
-    */
-
-    //коллайдер MetaMesh
-    /*
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 25; //Координаты центра
-    objects[i].X.y = 25;
-    objects[i].X.z = 30;
-    objects[i].oz.z = -1;
-    objects[i].lx = 25.0; // длина
-    objects[i].ly = 25.0; // ширина
-    objects[i].lz = 20.0; // высота
-    for(int mi = 0;mi<256;++mi)
-    {
-        generated_mesh[mi].x = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].y = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].z = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].z *= objects[i].lz * (1.0 - fabs(generated_mesh[mi].x) - fabs(generated_mesh[mi].y)) ;
-        generated_mesh[mi].x *= 2.0*objects[i].lx;
-        generated_mesh[mi].y *= 2.0*objects[i].ly;
-    };
-    Mesh_GenerateHull(i,generated_mesh,256);
-    //Mesh_GenerateCube(i);
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("colstones");
-    MapTexture(i,0);
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.7; // прозрачность
-    objects[i].drawable.refr = 1.01; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.01; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 13;
-    objects[i].initp4();
-
-
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = -10; //Координаты центра
-    objects[i].X.y = -25;
-    objects[i].X.z = 30;
-    objects[i].oz.z = -1;
-    objects[i].lx = 35.0; // длина
-    objects[i].ly = 25.0; // ширина
-    objects[i].lz = 20.0; // высота
-    for(int mi = 0;mi<256;++mi)
-    {
-        generated_mesh[mi].x = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].y = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].z = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi].z *= 2.0*objects[i].lz;
-        generated_mesh[mi].x *= 2.0*objects[i].lx;
-        generated_mesh[mi].y *= 2.0*objects[i].ly;
-    };
-    Mesh_GenerateHull(i,generated_mesh,256);
-    //Mesh_GenerateCube(i);
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("test_alpha");
-    MapTexture(i,1);
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.7; // прозрачность
-    objects[i].drawable.refr = 1.01; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.01; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 13;
-    objects[i].initp4();
-    */
     // стена +x
     i = CreateObject(SURE_OBJ_MESH);
     objects[i].X.x = 50; //Координаты центра
@@ -1146,6 +934,200 @@ SureData::SureData()
         objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
         objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
     objects[i].drawable.sided = true;
+
+};
+
+
+void SureData::Scene_floor() // Пол и круглая лампа
+{
+int i;
+    // пол
+    i = CreateObject(SURE_OBJ_PLANE);
+    objects[i].X.x = 0; //Координаты центра
+    objects[i].X.y = 0;
+    objects[i].X.z = 0;
+    objects[i].lx = 100.0; // длина
+    objects[i].ly = 100.0; // ширина
+    objects[i].lz = 1.0; // высота
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.type = SURE_DR_SQUARE; // форма
+    objects[i].drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.0; // прозрачность
+    objects[i].drawable.transp_i = 0.0; // прозрачность
+    objects[i].drawable.refr = 1.99; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.sided = true;
+
+  // свет
+    i = CreateObject(SURE_OBJ_PLANE);
+    objects[i].X.x = 60; //Координаты центра
+    objects[i].X.y = 60;
+    objects[i].X.z = 100;
+    objects[i].oz.z = -1;
+    objects[i].lx = 20.0; // длина
+    objects[i].ly = 20.0; // ширина
+    objects[i].lz = 1.0; // высота
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.type = SURE_DR_SPHERE; // форма
+    objects[i].drawable.radiance = 1.0; // свечение
+    objects[i].drawable.transp = 0.0; // прозрачность
+    objects[i].drawable.transp_i = 0.0; // прозрачность
+    objects[i].drawable.refr = 99.0; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 250; // цвет
+    objects[i].drawable.rgb.s[1] = 250;
+    objects[i].drawable.rgb.s[2] = 200;
+    objects[i].drawable.sided = false;
+
+};
+
+
+SureData::SureData()
+{
+
+        VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
+        MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
+        TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
+        UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+        Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+        srand(time(NULL));
+
+        LoadTexture("parket");
+        LoadTexture("earth_adv");
+        //LoadTexture("colstones");
+        LoadTexture("golem");
+        LoadTexture("grid");
+        LoadTexture("golem_adv");
+        LoadTexture("earth");
+
+    int i;
+
+  //Scene_box();
+  Scene_floor();
+
+    // голем
+
+    /*
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = 0; //Координаты центра
+    objects[i].X.y = 0;
+    objects[i].X.z = 30;
+    objects[i].lx = 30.0; // длина
+    objects[i].ly = 30.0; // ширина
+    objects[i].lz = 30.0; // высота
+    //Mesh_GenerateCube(i);
+    Mesh_FromFile(i);
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    objects[i].oz.x = 1;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = 0;
+    objects[i].oy.x = 0;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 1;
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
+    objects[i].ox.z = 0;
+
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.map_id = GetTexture("golem");
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.0; // прозрачность
+    objects[i].drawable.transp_i = 0.1; // прозрачность
+    objects[i].drawable.refr = 1.01; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 200.0; // цвет
+    objects[i].drawable.rgb.s[1] = 200.0; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0; // цвет
+    objects[i].drawable.sided = true;
+    objects[i].lp = 10;
+    objects[i].initp4();
+    */
+
+    my_double3 generated_mesh[256];
+
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = 0; //Координаты центра
+    objects[i].X.y = 0;
+    objects[i].X.z = 20;
+    objects[i].lx = 20.0; // длина
+    objects[i].ly = 20.0; // ширина
+    objects[i].lz = 20.0; // высота
+    Mesh_FromFile(i,"golem");
+    /*
+
+    for(int mi = 0;mi<200;++mi)
+    {
+        my_double3 tm;
+        tm.x = (float)rand()/(float)RAND_MAX - 0.5;
+        tm.y = (float)rand()/(float)RAND_MAX - 0.5;
+        tm.z = (float)rand()/(float)RAND_MAX - 0.5;
+        generated_mesh[mi] = __NORMALIZE(tm);
+        generated_mesh[mi].x *= objects[i].lx;
+        generated_mesh[mi].y *= objects[i].ly;
+        generated_mesh[mi].z *= objects[i].lz;
+    };
+
+    Mesh_GenerateHull(i,generated_mesh,200,SURE_NORMALS_DEFAULT);
+
+    MapTexture(i,SURE_MAPPING_PLANAR_XZ); */
+
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    objects[i].oz.x = 1;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = 0;
+    objects[i].oz = __NORMALIZE(objects[i].oz);
+    objects[i].oy.x = 0;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 1;
+    objects[i].oy = __NORMALIZE(objects[i].oy);
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
+    objects[i].ox.z = 0;
+    objects[i].ox = __NORMALIZE(objects[i].ox);
+
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.map_id = GetTexture("golem");
+    objects[i].drawable.advmap_id = GetTexture("golem_adv");
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.95; // прозрачность
+    objects[i].drawable.transp_i = 0.9; // прозрачность
+    objects[i].drawable.refr = 1.41; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_NORM; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.03; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 200.0; // цвет
+    objects[i].drawable.rgb.s[1] = 220.0; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0; // цвет
+    objects[i].drawable.sided = true;
+    objects[i].lp = 10;
+    objects[i].initp4();
+
+
+
 
 }
 
