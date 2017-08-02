@@ -129,6 +129,21 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="SureData_gen.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="SureData_load.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="SureData_scene.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="TODO.txt" />
 		<Extensions>
 			<code_completion />

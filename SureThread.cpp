@@ -435,7 +435,7 @@ void SureThread::run()
                     origin[2] = 0;
 
                     region[0] = SURE_R_TEXRES;
-                    region[1] = (t+1)*SURE_R_TEXRES;
+                    region[1] = SURE_R_TEXRES;
                     region[2] = 1;
 
                     OCL_RUN_("clEnqueueWriteImage(Textures)",

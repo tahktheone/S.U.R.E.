@@ -451,6 +451,7 @@ class SureData
         void Scene_floor(); // Пол и круглая лампа
         void Scene_golem();
         void Scene_metaball(double x, double y, double z, double sz,int nt);
+        void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
 };
 
 struct SureOCLData{
