@@ -49,7 +49,7 @@ int SureData::GenTexture(const char* name,int type)
             };
         };
         TexturesInfo[cur_textures].toupdate = true;
-        sprintf(TexturesInfo[cur_textures].name,"%s",name);
+        sprintf(TexturesInfo[cur_textures].name,"%s%d",name,cur_textures);
         cur_textures++;
         return cur_textures - 1;
 
@@ -320,7 +320,7 @@ void SureData::MapTexture(int object,int type)
     };
 };
 
-void SureData::Mesh_GenerateCube(int object)
+void SureData::Mesh_GenerateCube(int object,int norm_type)
 {
     objects[object].mesh_start = cur_meshes;
     double x = objects[object].lx;
@@ -347,6 +347,51 @@ void SureData::Mesh_GenerateCube(int object)
     AddMesh(cv+3,cv  ,cv+5);
     AddMesh(cv+5,cv+4,cv+3);
     objects[object].mesh_count = 12;
+
+    for(int ms = 0; ms<objects[object].mesh_count; ++ms)
+    {
+        int im = objects[object].mesh_start + ms;
+        my_double3 v1;
+        v1.x = __VERTEX_X(__MESH_V1(ms));
+        v1.y = __VERTEX_Y(__MESH_V1(ms));
+        v1.z = __VERTEX_Z(__MESH_V1(ms));
+        my_double3 v2;
+        v2.x = __VERTEX_X(__MESH_V2(ms));
+        v2.y = __VERTEX_Y(__MESH_V2(ms));
+        v2.z = __VERTEX_Z(__MESH_V2(ms));
+        my_double3 v3;
+        v3.x = __VERTEX_X(__MESH_V3(ms));
+        v3.y = __VERTEX_Y(__MESH_V3(ms));
+        v3.z = __VERTEX_Z(__MESH_V3(ms));
+        if(norm_type==SURE_NORMALS_DEFAULT)
+        {
+            my_double3 n = __NORMALIZE(cross(v2-v1,v3-v1));
+            __NORMAL1_X(im) = n.x;
+            __NORMAL1_Y(im) = n.y;
+            __NORMAL1_Z(im) = n.z;
+            __NORMAL2_X(im) = n.x;
+            __NORMAL2_Y(im) = n.y;
+            __NORMAL2_Z(im) = n.z;
+            __NORMAL3_X(im) = n.x;
+            __NORMAL3_Y(im) = n.y;
+            __NORMAL3_Z(im) = n.z;
+        };
+        if(norm_type==SURE_NORMALS_SHPERICAL)
+        {
+            my_double3 n1 = __NORMALIZE(v3);
+            my_double3 n2 = __NORMALIZE(v2);
+            my_double3 n3 = __NORMALIZE(v1);
+            __NORMAL1_X(im) = n1.x;
+            __NORMAL1_Y(im) = n1.y;
+            __NORMAL1_Z(im) = n1.z;
+            __NORMAL2_X(im) = n2.x;
+            __NORMAL2_Y(im) = n2.y;
+            __NORMAL2_Z(im) = n2.z;
+            __NORMAL3_X(im) = n3.x;
+            __NORMAL3_Y(im) = n3.y;
+            __NORMAL3_Z(im) = n3.z;
+        };
+    };
 };
 
 void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type)
@@ -476,37 +521,37 @@ void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,
     objects[object].mesh_count = 0;
     for(int ic = 0;ic<cover_c;++ic)
     {
-        AddMesh(AddVertex(vertexes[cover[ic][2]]),
+        int z = AddMesh(AddVertex(vertexes[cover[ic][2]]),
                 AddVertex(vertexes[cover[ic][1]]),
                 AddVertex(vertexes[cover[ic][0]]));
 
                 if(norm_type==SURE_NORMALS_DEFAULT)
                 {
                 my_double3 n = __NORMALIZE(cross(vertexes[cover[ic][1]]-vertexes[cover[ic][0]],vertexes[cover[ic][2]]-vertexes[cover[ic][0]]));
-                    __NORMAL1_X(objects[object].mesh_count) = n.x;
-                    __NORMAL1_Y(objects[object].mesh_count) = n.y;
-                    __NORMAL1_Z(objects[object].mesh_count) = n.z;
-                    __NORMAL2_X(objects[object].mesh_count) = n.x;
-                    __NORMAL2_Y(objects[object].mesh_count) = n.y;
-                    __NORMAL2_Z(objects[object].mesh_count) = n.z;
-                    __NORMAL3_X(objects[object].mesh_count) = n.x;
-                    __NORMAL3_Y(objects[object].mesh_count) = n.y;
-                    __NORMAL3_Z(objects[object].mesh_count) = n.z;
+                    __NORMAL1_X(z) = n.x;
+                    __NORMAL1_Y(z) = n.y;
+                    __NORMAL1_Z(z) = n.z;
+                    __NORMAL2_X(z) = n.x;
+                    __NORMAL2_Y(z) = n.y;
+                    __NORMAL2_Z(z) = n.z;
+                    __NORMAL3_X(z) = n.x;
+                    __NORMAL3_Y(z) = n.y;
+                    __NORMAL3_Z(z) = n.z;
                 };
                 if(norm_type==SURE_NORMALS_SHPERICAL)
                 {
                 my_double3 n1 = __NORMALIZE(vertexes[cover[ic][2]]);
                 my_double3 n2 = __NORMALIZE(vertexes[cover[ic][1]]);
                 my_double3 n3 = __NORMALIZE(vertexes[cover[ic][0]]);
-                    __NORMAL1_X(objects[object].mesh_count) = n1.x;
-                    __NORMAL1_Y(objects[object].mesh_count) = n1.y;
-                    __NORMAL1_Z(objects[object].mesh_count) = n1.z;
-                    __NORMAL2_X(objects[object].mesh_count) = n2.x;
-                    __NORMAL2_Y(objects[object].mesh_count) = n2.y;
-                    __NORMAL2_Z(objects[object].mesh_count) = n2.z;
-                    __NORMAL3_X(objects[object].mesh_count) = n3.x;
-                    __NORMAL3_Y(objects[object].mesh_count) = n3.y;
-                    __NORMAL3_Z(objects[object].mesh_count) = n3.z;
+                    __NORMAL1_X(z) = n1.x;
+                    __NORMAL1_Y(z) = n1.y;
+                    __NORMAL1_Z(z) = n1.z;
+                    __NORMAL2_X(z) = n2.x;
+                    __NORMAL2_Y(z) = n2.y;
+                    __NORMAL2_Z(z) = n2.z;
+                    __NORMAL3_X(z) = n3.x;
+                    __NORMAL3_Y(z) = n3.y;
+                    __NORMAL3_Z(z) = n3.z;
                 };
         objects[object].mesh_count++;
     };
@@ -993,76 +1038,9 @@ int i;
 
 };
 
-
-SureData::SureData()
+void SureData::Scene_golem() // Пол и круглая лампа
 {
-
-        VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
-        MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
-        TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
-        UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
-        Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
-        srand(time(NULL));
-
-        LoadTexture("parket");
-        LoadTexture("earth_adv");
-        //LoadTexture("colstones");
-        LoadTexture("golem");
-        LoadTexture("grid");
-        LoadTexture("golem_adv");
-        LoadTexture("earth");
-
-    int i;
-
-  //Scene_box();
-  Scene_floor();
-
-    // голем
-
-    /*
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 0; //Координаты центра
-    objects[i].X.y = 0;
-    objects[i].X.z = 30;
-    objects[i].lx = 30.0; // длина
-    objects[i].ly = 30.0; // ширина
-    objects[i].lz = 30.0; // высота
-    //Mesh_GenerateCube(i);
-    Mesh_FromFile(i);
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    objects[i].oz.x = 1;
-    objects[i].oz.y = 0;
-    objects[i].oz.z = 0;
-    objects[i].oy.x = 0;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 1;
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
-    objects[i].ox.z = 0;
-
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GetTexture("golem");
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.1; // прозрачность
-    objects[i].drawable.refr = 1.01; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    objects[i].drawable.dist_sigma = 0.05; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 200.0; // цвет
-    objects[i].drawable.rgb.s[1] = 200.0; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
-    objects[i].lp = 10;
-    objects[i].initp4();
-    */
-
-    my_double3 generated_mesh[256];
+int i;
 
     i = CreateObject(SURE_OBJ_MESH);
     objects[i].X.x = 0; //Координаты центра
@@ -1072,23 +1050,6 @@ SureData::SureData()
     objects[i].ly = 20.0; // ширина
     objects[i].lz = 20.0; // высота
     Mesh_FromFile(i,"golem");
-    /*
-
-    for(int mi = 0;mi<200;++mi)
-    {
-        my_double3 tm;
-        tm.x = (float)rand()/(float)RAND_MAX - 0.5;
-        tm.y = (float)rand()/(float)RAND_MAX - 0.5;
-        tm.z = (float)rand()/(float)RAND_MAX - 0.5;
-        generated_mesh[mi] = __NORMALIZE(tm);
-        generated_mesh[mi].x *= objects[i].lx;
-        generated_mesh[mi].y *= objects[i].ly;
-        generated_mesh[mi].z *= objects[i].lz;
-    };
-
-    Mesh_GenerateHull(i,generated_mesh,200,SURE_NORMALS_DEFAULT);
-
-    MapTexture(i,SURE_MAPPING_PLANAR_XZ); */
 
     objects[i].movable = false;
     objects[i].collidable = true;
@@ -1125,10 +1086,99 @@ SureData::SureData()
     objects[i].drawable.sided = true;
     objects[i].lp = 10;
     objects[i].initp4();
+};
 
+void SureData::Scene_metaball(double i_x,double i_y,double i_z,double i_sz,int nt) // Пол и круглая лампа
+{
 
+    int i;
+    my_double3 generated_mesh[256];
 
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = i_x; //Координаты центра
+    objects[i].X.y = i_y;
+    objects[i].X.z = i_z;
+    objects[i].lx = i_sz; // длина
+    objects[i].ly = i_sz; // ширина
+    objects[i].lz = i_sz; // высота
 
+    for(int mi = 0;mi<200;++mi)
+    {
+        my_double3 tm;
+        tm.x = (float)rand()/(float)RAND_MAX - 0.5;
+        tm.y = (float)rand()/(float)RAND_MAX - 0.5;
+        tm.z = (float)rand()/(float)RAND_MAX - 0.5;
+        generated_mesh[mi] = __NORMALIZE(tm);
+        generated_mesh[mi].x *= objects[i].lx;
+        generated_mesh[mi].y *= objects[i].ly;
+        generated_mesh[mi].z *= objects[i].lz;
+    };
+
+    Mesh_GenerateHull(i,generated_mesh,200,nt);
+
+    MapTexture(i,SURE_MAPPING_PLANAR_YZ);
+
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    objects[i].oz.x = 1;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = 0;
+    objects[i].oz = __NORMALIZE(objects[i].oz);
+    objects[i].oy.x = 0;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 1;
+    objects[i].oy = __NORMALIZE(objects[i].oy);
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
+    objects[i].ox.z = 0;
+    objects[i].ox = __NORMALIZE(objects[i].ox);
+
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.map_id = GenTexture("tt",SURE_GENTEX_UNTRANSP);
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.95; // прозрачность
+    objects[i].drawable.transp_i = 0.9; // прозрачность
+    objects[i].drawable.refr = 1.41; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.03; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 200.0; // цвет
+    objects[i].drawable.rgb.s[1] = 220.0; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0; // цвет
+    objects[i].drawable.sided = true;
+    objects[i].lp = 10;
+    objects[i].initp4();
+};
+
+SureData::SureData()
+{
+
+        VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
+        MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
+        TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
+        UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+        Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+        srand(time(NULL));
+
+        LoadTexture("parket");
+        LoadTexture("earth_adv");
+        //LoadTexture("colstones");
+        LoadTexture("golem");
+        //LoadTexture("grid");
+        LoadTexture("golem_adv");
+        LoadTexture("earth");
+
+    int i;
+
+  //Scene_box();
+  Scene_floor();
+  //Scene_golem();
+  Scene_metaball(-30,-30,40,40,SURE_NORMALS_SHPERICAL);
+  Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }
 
 SureData::~SureData()

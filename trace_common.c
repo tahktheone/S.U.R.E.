@@ -466,9 +466,9 @@
 
     if((rgb.x+rgb.y+rgb.z)==0)
     {
-        rgb.x += fade.x*0.1;
-        rgb.y += fade.y*0.1;
-        rgb.z += fade.z*0.1;
+        rgb.x += fade.x*GPUData->r_backlight;
+        rgb.y += fade.y*GPUData->r_backlight;
+        rgb.z += fade.z*GPUData->r_backlight;
     };
 
 

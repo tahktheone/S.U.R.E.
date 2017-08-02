@@ -976,6 +976,7 @@ void SurePhysThread::drawscene()
     GPUData->xy_h = EngineData->xy_h;
     GPUData->r_maxiters = EngineData->r_iters;
     GPUData->r_rechecks = EngineData->r_rechecks;
+    GPUData->r_backlight = EngineData->r_backlight;
     if(EngineData->reset)GPUData->toreset=true;
     EngineData->reset = false;
 

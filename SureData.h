@@ -98,7 +98,7 @@
         uint iiy = iy+SURE_R_TEXRES*id; \
         uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
         col_radiance = *tex; tex++; \
-        col_ds = *tex/100.0;
+        col_ds = *tex/20.0;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
@@ -408,6 +408,7 @@ class SureData
         double xy_h = 3.0;
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
+        cl_float r_backlight = 0.5;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
@@ -441,14 +442,15 @@ class SureData
         int AddVertex(double x, double y, double z);
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
-        void Mesh_GenerateCube(int object);
+        void Mesh_GenerateCube(int object,int norm_type);
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
         void MapTexture(int object,int type);
         void Mesh_FromFile(int object,const char* name);
 
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
-
+        void Scene_golem();
+        void Scene_metaball(double x, double y, double z, double sz,int nt);
 };
 
 struct SureOCLData{

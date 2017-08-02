@@ -113,7 +113,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
         advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
         col_radiance = advmap.x; \
-        col_ds = advmap.y/100.0;
+        col_ds = advmap.y/20.0;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -170,21 +170,21 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    )
 {
 // координаты обрабатываемой точки
-
 int x = get_global_id(0);
 int y = get_global_id(1);
-
 // для чтения изображений:
+
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE            |
                               CLK_FILTER_NEAREST;
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
+
 int2 coords;
 __VTYPE2 map_uv;
-uint4 advmap;
 
+uint4 advmap;
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

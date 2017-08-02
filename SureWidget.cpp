@@ -176,6 +176,9 @@ void SureWidget::paintEvent(QPaintEvent * event)
     p.setY(30);
     sprintf(s,"O=%d L=%d",EngineData->m_objects,EngineData->m_links);
     painter.drawText(p,s);
+    p.setY(45);
+    sprintf(s,"Backlight=%.1f",EngineData->r_backlight);
+    painter.drawText(p,s);
     };
     // TODO: рисовать линки
     //for(int i = 0;i<EngineData->m_links;++i)
@@ -349,6 +352,14 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
     };
     if(event->key()==Qt::Key_6){
         EngineData->r_rechecks += 2;
+        EngineData->reset = true;
+    };
+    if(event->key()==Qt::Key_2){
+        EngineData->r_backlight -= 0.5;
+        EngineData->reset = true;
+    };
+    if(event->key()==Qt::Key_3){
+        EngineData->r_backlight += 0.5;
         EngineData->reset = true;
     };
     if(event->key()==Qt::Key_0){
