@@ -347,9 +347,9 @@ void SureThread::run()
                                                   (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
                                                   0,NULL,NULL));
 
-                    ymin = EngineData->objects[o].mesh_start>>CLSIZE_VERTEX_SHF;
-                    ymax = (EngineData->objects[o].mesh_start
-                               +EngineData->objects[o].mesh_count)>>CLSIZE_VERTEX_SHF;
+                    ymin = EngineData->objects[o].drawable.mesh_start>>CLSIZE_VERTEX_SHF;
+                    ymax = (EngineData->objects[o].drawable.mesh_start
+                               +EngineData->objects[o].drawable.mesh_count)>>CLSIZE_VERTEX_SHF;
 
                     origin[0] = 0;
                     origin[1] = ymin;

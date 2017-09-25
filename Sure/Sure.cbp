@@ -94,8 +94,8 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=corei7-avx" />
-			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-Wall" />
 			<Add option="-m64" />
 			<Add option="-fPIC -fPIE -fopenmp" />
 			<Add directory="/usr/include/qt5" />

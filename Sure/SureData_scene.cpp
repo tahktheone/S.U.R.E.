@@ -252,6 +252,101 @@ int i;
 
 };
 
+
+void SureData::Scene_tetrs() // Пол и лампа
+{
+int i;
+    // пол
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = 0; //Координаты центра
+    objects[i].X.y = 0;
+    objects[i].X.z = -25;
+    objects[i].lx = 500.0; // длина
+    objects[i].ly = 500.0; // ширина
+    objects[i].lz = 100.0; // высота
+
+    objects[i].oz.x = 0;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = -1;
+    objects[i].oz = __NORMALIZE(objects[i].oz);
+    objects[i].oy.x = 1;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 0;
+    objects[i].oy = __NORMALIZE(objects[i].oy);
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
+    objects[i].ox.z = 0;
+    objects[i].ox = __NORMALIZE(objects[i].ox);
+
+    objects[i].movable = false;
+    objects[i].collidable = true;
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+
+    Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
+    MapTexture(i,SURE_MAPPING_PLANAR_XY);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.0; // прозрачность
+    objects[i].drawable.transp_i = 0.0; // прозрачность
+    objects[i].drawable.refr = 1.99; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
+    objects[i].drawable.sided = true;
+
+  // свет
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = 0; //Координаты центра
+    objects[i].X.y = 0;
+    objects[i].X.z = 200;
+    objects[i].lx = 80.0; // длина
+    objects[i].ly = 80.0; // ширина
+    objects[i].lz = 10.0; // высота
+
+    objects[i].oz.x = 0;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = -1;
+    objects[i].oz = __NORMALIZE(objects[i].oz);
+    objects[i].oy.x = 1;
+    objects[i].oy.y = 0;
+    objects[i].oy.z = 0;
+    objects[i].oy = __NORMALIZE(objects[i].oy);
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 1;
+    objects[i].ox.z = 0;
+    objects[i].ox = __NORMALIZE(objects[i].ox);
+
+    objects[i].movable = false;
+    objects[i].collidable = true;
+
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+    Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
+    MapTexture(i,SURE_MAPPING_SPHERICAL);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.radiance = 1.0; // свечение
+    objects[i].drawable.transp = 0.0; // прозрачность
+    objects[i].drawable.transp_i = 0.0; // прозрачность
+    objects[i].drawable.refr = 99.0; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 250; // цвет
+    objects[i].drawable.rgb.s[1] = 250;
+    objects[i].drawable.rgb.s[2] = 200;
+    objects[i].drawable.sided = false;
+
+};
+
 void SureData::Scene_golem() // Пол и круглая лампа
 {
 int i;
@@ -368,6 +463,58 @@ void SureData::Scene_metaball(double i_x,double i_y,double i_z,double i_sz,int n
     objects[i].initp4();
 };
 
+void SureData::Scene_tetra(double i_x,double i_y,double i_z,double i_sz,int nt,int mt,bool mvbl) // Пол и круглая лампа
+{
+int i;
+    my_double3 generated_mesh[256];
+
+    i = CreateObject(SURE_OBJ_MESH);
+    objects[i].X.x = i_x; //Координаты центра
+    objects[i].X.y = i_y;
+    objects[i].X.z = i_z;
+    objects[i].lx = i_sz; // длина
+    objects[i].ly = i_sz; // ширина
+    objects[i].lz = i_sz; // высота
+
+    Mesh_GenerateTetr(i,nt);
+
+    MapTexture(i,mt);
+
+    objects[i].movable = mvbl;
+    objects[i].collidable = true;
+    objects[i].oz.x = 1;
+    objects[i].oz.y = 0;
+    objects[i].oz.z = 0;
+    objects[i].oz = __NORMALIZE(objects[i].oz);
+    objects[i].oy.x = 0;
+    objects[i].oy.y = 1;
+    objects[i].oy.z = 0;
+    objects[i].oy = __NORMALIZE(objects[i].oy);
+    objects[i].ox.x = 0;
+    objects[i].ox.y = 0;
+    objects[i].ox.z = 1;
+    objects[i].ox = __NORMALIZE(objects[i].ox);
+
+    ObjCoordsToDrawable(i);
+    objects[i].drawable.mesh_start = objects[i].mesh_start;
+    objects[i].drawable.mesh_count = objects[i].mesh_count;
+    objects[i].drawable.mesh_changed = true;
+    objects[i].drawable.map_id = GenTexture("tt",SURE_GENTEX_UNTRANSP);
+    objects[i].drawable.type = SURE_DR_MESH; // форма
+    objects[i].drawable.radiance = 0.0; // свечение
+    objects[i].drawable.transp = 0.95; // прозрачность
+    objects[i].drawable.transp_i = 0.9; // прозрачность
+    objects[i].drawable.refr = 1.41; // Коэффициент преломления
+    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+    objects[i].drawable.dist_sigma = 0.03; // sigma рандомизации
+    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+    objects[i].drawable.rgb.s[0] = 200.0; // цвет
+    objects[i].drawable.rgb.s[1] = 220.0; // цвет
+    objects[i].drawable.rgb.s[2] = 255.0; // цвет
+    objects[i].drawable.sided = true;
+    objects[i].lp = 10;
+    objects[i].initp4();
+};
 
 void SureData::Scene_cube(double i_x,double i_y,double i_z,double i_sz,int nt,int mt) // Пол и круглая лампа
 {

@@ -237,6 +237,48 @@ void SurePhysThread::run()
                                     }; // if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
                                 };// есть пересечение
                             }; // шарик с плоскостью
+                            if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH)
+                            { // mesh'ы
+                                o1=lv_o1; o2=lv_o2;
+// ============================================================================================
+// ====  Алгоритм Гилберта-Джонсона-Кёрти =====================================================
+// ============================================================================================
+
+int mink_c = 0; // количество точек в разности минковского
+my_double3 p1,p2; // точки из объектов, для получения разности
+my_double3 minkowski[64*64];  // разность минкосвского
+cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+
+// для определения стартового симплекса:
+int Q_maxx = -1;
+int Q_maxy = -1;
+int Q_maxz = -1;
+float maxx = -SURE_R_MAXDISTANCE;
+float maxy = -SURE_R_MAXDISTANCE;
+float maxz = -SURE_R_MAXDISTANCE;
+
+for(int i=0;i<lv_o1->vertex_count;++i)for(int j=0;j<lv_o2->vertex_count;++j)
+{
+    __GET_VERTEX(p1,lv_o1->vertex_start+i);
+    __GET_VERTEX(p2,lv_o2->vertex_start+j);
+    minkowski[i*lv_o2->vertex_count+j]=p1-p2;
+    mink_c++;
+    // Ищем точки с максимальными x,y,z
+
+};
+
+// стартовый тетраэдр -- {crs = дальняя точка в нправлении cross(max_x-max_y,max_z-max_y)}
+// основание max_y, max_x, max_z
+// max_y, max_z, crs
+// max_z, max_x, crs
+// max_x, max_y, crs
+
+// ищем тетраэдр охватвающий 0,0
+
+
+
+
+                            };// mesh'ы
                             if(lv_o1->type==SURE_OBJ_PLANE&&lv_o2->type==SURE_OBJ_PLANE)
                             { // квадратик с квадратиком
                                 o1=lv_o1; o2=lv_o2;

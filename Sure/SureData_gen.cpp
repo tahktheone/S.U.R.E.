@@ -1,48 +1,55 @@
-
-
-void SureData::Mesh_GenerateCube(int object,int norm_type)
+void SureData::Mesh_GenerateTetr(int object,int norm_type)
 {
     objects[object].mesh_start = cur_meshes;
-    double x = objects[object].lx;
-    double y = objects[object].ly;
-    double z = objects[object].lz;
-    int cv = AddVertex(-x,-y,-z); // cv
-    AddVertex(-x, y,-z); // cv+1
-    AddVertex( x, y,-z); // cv+2
-    AddVertex( x,-y,-z); // cv+3
-    AddVertex( x,-y, z); // cv+4
-    AddVertex(-x,-y, z); // cv+5
-    AddVertex(-x, y, z); // cv+6
-    AddVertex( x, y, z); // cv+7
-    AddMesh(cv  ,cv+1,cv+2);
-    AddMesh(cv+2,cv+3,cv  );
-    AddMesh(cv+4,cv+5,cv+6);
-    AddMesh(cv+6,cv+7,cv+4);
-    AddMesh(cv  ,cv+1,cv+6);
-    AddMesh(cv+6,cv+5,cv  );
-    AddMesh(cv+1,cv+2,cv+7);
-    AddMesh(cv+7,cv+6,cv+1);
-    AddMesh(cv+2,cv+3,cv+4);
-    AddMesh(cv+4,cv+7,cv+2);
-    AddMesh(cv+3,cv  ,cv+5);
-    AddMesh(cv+5,cv+4,cv+3);
-    objects[object].mesh_count = 12;
+    objects[object].vertex_start = cur_vertexes;
+    my_double3 p1,p2,p3,p4;
 
-    for(int ms = 0; ms<objects[object].mesh_count; ++ms)
+    p1.x = SURE_P4_X*objects[object].lx;
+    p1.y = 0;
+    p1.z = -SURE_P4_Y*objects[object].lz;
+    p2.x = -SURE_P4_Y*objects[object].lx;
+    p2.y = 0.5*objects[object].ly;
+    p2.z = -SURE_P4_Y*objects[object].lz;
+    p3.x = -SURE_P4_Y*objects[object].lx;
+    p3.y = -0.5*objects[object].ly;
+    p3.z = -SURE_P4_Y*objects[object].lz;
+    p4.x = 0;
+    p4.y = 0;
+    p4.z = SURE_P4_Z*objects[object].lz;
+
+    int cv = AddVertex(p1); // cv
+    AddVertex(p2);
+    AddVertex(p3);
+    AddVertex(p4);
+
+    AddMesh(cv  ,cv+2,cv+1); // нижняя грань
+    AddMesh(cv  ,cv+3,cv+2); // +x +y
+    AddMesh(cv  ,cv+1,cv+3); // +x -y
+    AddMesh(cv+1,cv+2,cv+3); // -x
+    objects[object].mesh_count = 4;
+    objects[object].vertex_count = cur_vertexes - objects[object].vertex_start;
+
+    Mesh_GenNormals(object,norm_type);
+
+};
+
+void SureData::Mesh_GenNormals(int object, int norm_type)
+{
+for(int ms = 0; ms<objects[object].mesh_count; ++ms)
     {
         int im = objects[object].mesh_start + ms;
         my_double3 v1;
-        v1.x = __VERTEX_X(__MESH_V1(ms));
-        v1.y = __VERTEX_Y(__MESH_V1(ms));
-        v1.z = __VERTEX_Z(__MESH_V1(ms));
+        v1.x = __VERTEX_X(__MESH_V1(im));
+        v1.y = __VERTEX_Y(__MESH_V1(im));
+        v1.z = __VERTEX_Z(__MESH_V1(im));
         my_double3 v2;
-        v2.x = __VERTEX_X(__MESH_V2(ms));
-        v2.y = __VERTEX_Y(__MESH_V2(ms));
-        v2.z = __VERTEX_Z(__MESH_V2(ms));
+        v2.x = __VERTEX_X(__MESH_V2(im));
+        v2.y = __VERTEX_Y(__MESH_V2(im));
+        v2.z = __VERTEX_Z(__MESH_V2(im));
         my_double3 v3;
-        v3.x = __VERTEX_X(__MESH_V3(ms));
-        v3.y = __VERTEX_Y(__MESH_V3(ms));
-        v3.z = __VERTEX_Z(__MESH_V3(ms));
+        v3.x = __VERTEX_X(__MESH_V3(im));
+        v3.y = __VERTEX_Y(__MESH_V3(im));
+        v3.z = __VERTEX_Z(__MESH_V3(im));
         if(norm_type==SURE_NORMALS_DEFAULT)
         {
             my_double3 n = __NORMALIZE(cross(v2-v1,v3-v1));
@@ -72,6 +79,39 @@ void SureData::Mesh_GenerateCube(int object,int norm_type)
             __NORMAL3_Z(im) = n3.z;
         };
     };
+
+};
+
+void SureData::Mesh_GenerateCube(int object,int norm_type)
+{
+    objects[object].mesh_start = cur_meshes;
+    double x = objects[object].lx;
+    double y = objects[object].ly;
+    double z = objects[object].lz;
+    int cv = AddVertex(-x,-y,-z); // cv
+    AddVertex(-x, y,-z); // cv+1
+    AddVertex( x, y,-z); // cv+2
+    AddVertex( x,-y,-z); // cv+3
+    AddVertex( x,-y, z); // cv+4
+    AddVertex(-x,-y, z); // cv+5
+    AddVertex(-x, y, z); // cv+6
+    AddVertex( x, y, z); // cv+7
+    AddMesh(cv  ,cv+1,cv+2);
+    AddMesh(cv+2,cv+3,cv  );
+    AddMesh(cv+4,cv+5,cv+6);
+    AddMesh(cv+6,cv+7,cv+4);
+    AddMesh(cv  ,cv+1,cv+6);
+    AddMesh(cv+6,cv+5,cv  );
+    AddMesh(cv+1,cv+2,cv+7);
+    AddMesh(cv+7,cv+6,cv+1);
+    AddMesh(cv+2,cv+3,cv+4);
+    AddMesh(cv+4,cv+7,cv+2);
+    AddMesh(cv+3,cv  ,cv+5);
+    AddMesh(cv+5,cv+4,cv+3);
+    objects[object].mesh_count = 12;
+
+    Mesh_GenNormals(object,norm_type);
+
 };
 
 void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type)

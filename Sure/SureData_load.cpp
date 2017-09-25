@@ -189,6 +189,16 @@ void SureData::MapTexture(int object,int type)
             __MESH_UV2_V(i) = __VERTEX_Z(__MESH_V2(i))+y;
             __MESH_UV3_U(i) = __VERTEX_Y(__MESH_V3(i))+x;
             __MESH_UV3_V(i) = __VERTEX_Z(__MESH_V3(i))+y;
+        }else if(type == SURE_MAPPING_PLANAR_XY)
+        {
+            x = objects[object].lx;
+            y = objects[object].ly;
+            __MESH_UV1_U(i) = __VERTEX_X(__MESH_V1(i))+x;
+            __MESH_UV1_V(i) = __VERTEX_Y(__MESH_V1(i))+y;
+            __MESH_UV2_U(i) = __VERTEX_X(__MESH_V2(i))+x;
+            __MESH_UV2_V(i) = __VERTEX_Y(__MESH_V2(i))+y;
+            __MESH_UV3_U(i) = __VERTEX_X(__MESH_V3(i))+x;
+            __MESH_UV3_V(i) = __VERTEX_Y(__MESH_V3(i))+y;
         }else if(type == SURE_MAPPING_SPHERICAL)
         {
             x = 0.5;

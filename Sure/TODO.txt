@@ -9,3 +9,4 @@
 * Обработку RGBMatrix -- на GPU
 * Изолировать данные методов
 * освоить image_array2d // версия?
+* новый класс SureGame -- разделеть object и drawable
