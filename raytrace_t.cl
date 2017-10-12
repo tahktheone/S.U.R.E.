@@ -171,7 +171,6 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    )
 {
 // координаты обрабатываемой точки
-
 int x = get_global_id(0);
 int y = get_global_id(1);
 
@@ -182,12 +181,9 @@ const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
-
 int2 coords;
-
 __VTYPE2 map_uv;
 uint4 advmap;
-
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

@@ -332,9 +332,15 @@
 
         if(col_radiance>0)
         {
+            #if SURE_RLEVEL>60
             rgb.x += fade.x*col_rgb.x;
             rgb.y += fade.y*col_rgb.y;
             rgb.z += fade.z*col_rgb.z;
+            #else
+            rgb.x += 255.0*fade.x*col_rgb.x;
+            rgb.y += 255.0*fade.y*col_rgb.y;
+            rgb.z += 255.0*fade.z*col_rgb.z;
+            #endif // SURE_RLEVEL>60
             break;
         };
 

@@ -542,46 +542,39 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].push(EngineData->objects[i].X,EngineData->cam_vec,0.8);
     };
     if (event->button() == Qt::RightButton) {
-        int i = EngineData->CreateObject(SURE_DR_SPHERE);
+        int i = EngineData->CreateObject(SURE_OBJ_CREAT);
         EngineData->objects[i].X.x = EngineData->cam_x.x; //Координаты центра
         EngineData->objects[i].X.y = EngineData->cam_x.y; //Координаты центра
         EngineData->objects[i].X.z = EngineData->cam_x.z; //Координаты центра
-        EngineData->objects[i].ox.x = 1;
-        EngineData->objects[i].ox.y = 0;
-        EngineData->objects[i].ox.z = 0;
-        EngineData->objects[i].oy.x = 0;
-        EngineData->objects[i].oy.y = 1;
-        EngineData->objects[i].oy.z = 0;
-        EngineData->objects[i].oz.x = 0;
-        EngineData->objects[i].oz.y = 0;
-        EngineData->objects[i].oz.z = 1;
-        EngineData->objects[i].lx = 3.0+3.0*(float)rand()/(float)RAND_MAX; // длина
-        EngineData->objects[i].ly = 3.0+3.0*(float)rand()/(float)RAND_MAX; // ширина
-        EngineData->objects[i].lz = 1.0; // высота
-        EngineData->objects[i].lp = EngineData->objects[i].lx*1.7;
-        EngineData->objects[i].type = SURE_OBJ_PLANE;
+        EngineData->objects[i].lx = 5.0; // длина
+        EngineData->objects[i].ly = 5.0; // ширина
+        EngineData->objects[i].lz = 5.0; // высота
+        EngineData->Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
+        EngineData->MapTexture(i,SURE_MAPPING_PLANAR_XZ);
+        EngineData->objects[i].ox = EngineData->cam_vec;
+        EngineData->objects[i].oz = EngineData->cam_upvec;
+        EngineData->objects[i].oy = cross(EngineData->objects[i].ox,EngineData->objects[i].oz);
+        EngineData->ObjCoordsToDrawable(i);
+        EngineData->objects[i].drawable.mesh_start =     EngineData->objects[i].mesh_start;
+        EngineData->objects[i].drawable.mesh_count =     EngineData->objects[i].mesh_count;
+        EngineData->objects[i].drawable.mesh_changed = true;
+        EngineData->objects[i].drawable.map_id = EngineData->GenTexture("tt",SURE_GENTEX_UNTRANSP);
+        EngineData->objects[i].drawable.type = SURE_DR_MESH; // форма
+        EngineData->objects[i].drawable.radiance = 0.0; // свечение
+        EngineData->objects[i].drawable.transp = 0.95; // прозрачность
+        EngineData->objects[i].drawable.transp_i = 0.9; // прозрачность
+        EngineData->objects[i].drawable.refr = 1.41; // Коэффициент преломления
+        EngineData->objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
+        EngineData->objects[i].drawable.dist_sigma = 0.03; // sigma рандомизации
+        EngineData->objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
+        EngineData->objects[i].drawable.rgb.s[0] = 200.0; // цвет
+        EngineData->objects[i].drawable.rgb.s[1] = 220.0; // цвет
+        EngineData->objects[i].drawable.rgb.s[2] = 255.0; // цвет
+        EngineData->objects[i].drawable.sided = true;
+        EngineData->objects[i].lp = 4;
+        EngineData->objects[i].initp4();
         EngineData->objects[i].movable = true;
         EngineData->objects[i].collidable = true;
-        EngineData->objects[i].drawable.X  = EngineData->objects[i].X;
-        EngineData->objects[i].drawable.ox = EngineData->objects[i].ox;
-        EngineData->objects[i].drawable.oy = EngineData->objects[i].oy;
-        EngineData->objects[i].drawable.oz = EngineData->objects[i].oz;
-        EngineData->objects[i].drawable.lx = EngineData->objects[i].lx;
-        EngineData->objects[i].drawable.ly = EngineData->objects[i].ly;
-        EngineData->objects[i].drawable.lz = EngineData->objects[i].lz;
-        EngineData->objects[i].drawable.type = SURE_DR_SQUARE; // форма
-        EngineData->objects[i].drawable.radiance = 0.0; // свечение
-        EngineData->objects[i].drawable.transp = 0.0;//0.8+0.3*(float)rand()/(float)RAND_MAX; // прозрачность
-        EngineData->objects[i].drawable.transp_i = 0.3+0.7*(float)rand()/(float)RAND_MAX; // прозрачность
-        EngineData->objects[i].drawable.refr = 1.49; // Коэффициент преломления
-        EngineData->objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-        EngineData->objects[i].drawable.dist_sigma = 0.02*(float)rand()/(float)RAND_MAX; // sigma рандомизации
-        EngineData->objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-        EngineData->objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-        EngineData->objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX;// цвет
-        EngineData->objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-        EngineData->objects[i].drawable.sided = true;
-        EngineData->objects[i].initp4();
         EngineData->objects[i].push(EngineData->objects[i].X,EngineData->cam_vec,0.8);
     };
 };

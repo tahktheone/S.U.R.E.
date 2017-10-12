@@ -14,7 +14,7 @@
 
 #define SURE_FAA 1
 #define SURE_SCALE 4
-#define SURE_SMOOTH 1
+#define SURE_SMOOTH 2
 
 #define SURE_MAXRES_X 1920
 #define SURE_MAXRES_Y 1080
@@ -26,6 +26,7 @@
 #define SURE_OBJ_CUBE    2
 #define SURE_OBJ_PLANE   3
 #define SURE_OBJ_MESH    4
+#define SURE_OBJ_CREAT   5
 
 #define SURE_DR_MAX     5000
 #define SURE_DR_NONE    0

@@ -237,6 +237,122 @@ void SurePhysThread::run()
                                     }; // if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
                                 };// есть пересечение
                             }; // шарик с плоскостью
+
+                            if((lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_PLANE)||
+                               (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE))
+                            {   // шарик с плоскостью
+                                if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)
+                                {
+                                    o1=lv_o2; o2=lv_o1;
+                                }else{
+                                    o1=lv_o1; o2=lv_o2;
+                                };
+                                // шарик с плоскостью
+                                // o1 - mesh
+                                // o2 - плоскость
+
+                                // определяем точки "под"
+                                // определяем среднее
+
+                            };
+
+                            if((lv_o1->type==SURE_OBJ_CREAT&&lv_o2->type==SURE_OBJ_PLANE)||
+                               (lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE))
+                            {   // шарик с плоскостью
+                                if(lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE)
+                                {
+                                    o1=lv_o2; o2=lv_o1;
+                                }else{
+                                    o1=lv_o1; o2=lv_o2;
+                                };
+                                // шарик с плоскостью
+                                // o1 - creature
+                                // o2 - плоскость
+
+                                // пересечение шара с плоскостью
+                                // шарик с плоскостью
+                                // o1 - шарик
+                                // o2 - плоскость
+                                my_double3 vtp = o2->X - o1->X; // вектор от центра к точке на плоскость
+                                double dist = -dot(vtp,o2->oz); // расстояние от центра шара до плоскости
+                                if(fabs(dist)<o1->lx)
+                                { // есть пересечение
+                                    double lx = -dot(vtp,o2->ox); // локальная x-координата центра шара
+                                    double ly = -dot(vtp,o2->oy); // локальная y-координата центра шара
+                                    if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
+                                    {// центр шара внутри прямоугольника
+                                        my_double3 pd = o2->oz*dist; // Penetration Direction
+                                        double pl = (o1->lx-fabs(dist)); // Penetration Length
+                                        pd = __NORMALIZE(pd);
+                                        my_double3 pp = o1->X-pd*(o1->lx-pl); // Penetration point
+                                        ObjCollide(o1,o2,pp,pd,pl);
+                                    }else{ // центр шара вне прямоугольника
+                                        if(fabs(lx)<o2->lx)
+                                        { // в пределах оси x -- столкновение с гранью y
+                                            my_double3 pp;
+                                            double cd = sqrt(dist*dist+(fabs(ly)-o2->ly)*(fabs(ly)-o2->ly));
+                                            if(cd<o1->lx)
+                                            {
+                                                if(ly<0)
+                                                {
+                                                        pp = o2->X+o2->ox*lx-o2->oy*o2->ly;
+                                                }else
+                                                {
+                                                        pp = o2->X+o2->ox*lx+o2->oy*o2->ly;
+                                                };
+                                                double pl = o1->lx-cd;
+                                                my_double3 pd = o1->X - pp;
+                                                pd = __NORMALIZE(pd);
+                                                ObjCollide(o1,o2,pp,pd,pl);
+                                            };
+                                        }else if(fabs(ly)<o2->ly){
+                                        // в пределах оси y -- столкновение с гранью x
+                                            my_double3 pp;
+                                            double cd = sqrt(dist*dist+(fabs(lx)-o2->lx)*(fabs(lx)-o2->lx));
+                                            if(cd<o1->lx)
+                                            {
+                                                if(lx<0)
+                                                {
+                                                        pp = o2->X+o2->oy*ly-o2->ox*o2->lx;
+                                                }else
+                                                {
+                                                        pp = o2->X+o2->oy*ly+o2->ox*o2->lx;
+                                                };
+                                                double pl = o1->lx-cd;
+                                                my_double3 pd = o1->X - pp;
+                                                pd = __NORMALIZE(pd);
+                                                ObjCollide(o1,o2,pp,pd,pl);
+                                            };
+                                        }else{
+                                        // столкновение с углом?
+                                            my_double3 pp;
+                                            double cd = sqrt(dist*dist+(fabs(lx)-o2->lx)*(fabs(lx)-o2->lx)+(fabs(ly)-o2->ly)*(fabs(ly)-o2->ly));
+                                            if(cd<o1->lx)
+                                            {
+                                                pp = o2->X;
+                                                if(lx<0)
+                                                {
+                                                    pp -= o2->ox*o2->lx;
+                                                }else{
+                                                    pp += o2->ox*o2->lx;
+                                                };
+                                                if(ly<0)
+                                                {
+                                                    pp -= o2->oy*o2->ly;
+                                                }else{
+                                                    pp += o2->oy*o2->ly;
+                                                };
+                                                double pl = o1->lx-cd;
+                                                my_double3 pd = o1->X - pp;
+                                                pd = __NORMALIZE(pd);
+                                                ObjCollide(o1,o2,pp,pd,pl);
+                                            };
+                                        };
+                                    }; // if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
+                                };// есть пересечение
+
+                            };
+
                             if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH)
                             { // mesh'ы
                                 o1=lv_o1; o2=lv_o2;
@@ -941,7 +1057,7 @@ while(!fin)
 // ====  Алгоритм Гилберта-Джонсона-Кёрти =====================================================
 // ============================================================================================
 
-                            }; // квадратик с квадратиком
+                            }; // mesh vs mesh
                             if((lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_CUBE)||
                                (lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_CUBE))
                             {   // шарик с кубом

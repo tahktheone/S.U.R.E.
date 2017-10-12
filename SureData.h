@@ -433,20 +433,22 @@ class SureData
         int m_links = 0;
         int m_objects = 0;
 
+        void ObjCoordsToDrawable(int); // не забыть вернуть в private
+        void Mesh_GenerateTetr(int object,int norm_type); // не забыть вернуть в private
+        void MapTexture(int object,int type); // не забыть вернуть в private
+
         // Для отладки
         float frametime = 0;
     protected:
     private:
         void SetDefaultRotationBasis(int);
-        void ObjCoordsToDrawable(int);
+
         int AddVertex(double x, double y, double z);
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
         void Mesh_GenerateCube(int object,int norm_type);
-        void Mesh_GenerateTetr(int object,int norm_type);
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
         void Mesh_GenNormals(int object,int norm_type);
-        void MapTexture(int object,int type);
         void Mesh_FromFile(int object,const char* name);
 
         void Scene_box(); // коробка со светящимся потолком

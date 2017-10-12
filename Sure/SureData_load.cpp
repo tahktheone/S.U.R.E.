@@ -128,6 +128,10 @@ int SureData::CreateObject(int type)
     int i = m_objects;
     SetDefaultRotationBasis(i);
     objects[i].type = type;
+    objects[i].mesh_start = cur_meshes;
+    objects[i].vertex_start = cur_vertexes;
+    objects[i].mesh_count = 0;
+    objects[i].vertex_count = 0;
     m_objects++;
     return m_objects - 1;
 };
