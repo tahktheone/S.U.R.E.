@@ -299,7 +299,7 @@ int i;
     objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
     objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
     objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.sided = true;
+    objects[i].drawable.sided = false;
 
   // свет
     i = CreateObject(SURE_OBJ_MESH);
@@ -458,7 +458,7 @@ void SureData::Scene_metaball(double i_x,double i_y,double i_z,double i_sz,int n
     objects[i].drawable.rgb.s[0] = 200.0; // цвет
     objects[i].drawable.rgb.s[1] = 220.0; // цвет
     objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
+    objects[i].drawable.sided = false;
     objects[i].lp = 10;
     objects[i].initp4();
 };
@@ -565,7 +565,7 @@ void SureData::Scene_cube(double i_x,double i_y,double i_z,double i_sz,int nt,in
     objects[i].drawable.rgb.s[0] = 200.0; // цвет
     objects[i].drawable.rgb.s[1] = 220.0; // цвет
     objects[i].drawable.rgb.s[2] = 255.0; // цвет
-    objects[i].drawable.sided = true;
+    objects[i].drawable.sided = false;
     objects[i].lp = 10;
     objects[i].initp4();
 };

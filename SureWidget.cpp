@@ -542,7 +542,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].push(EngineData->objects[i].X,EngineData->cam_vec,0.8);
     };
     if (event->button() == Qt::RightButton) {
-        int i = EngineData->CreateObject(SURE_OBJ_CREAT);
+        int i = EngineData->CreateObject(SURE_OBJ_MESH);
         EngineData->objects[i].X.x = EngineData->cam_x.x; //Координаты центра
         EngineData->objects[i].X.y = EngineData->cam_x.y; //Координаты центра
         EngineData->objects[i].X.z = EngineData->cam_x.z; //Координаты центра

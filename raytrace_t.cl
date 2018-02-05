@@ -181,6 +181,7 @@ const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
+
 int2 coords;
 __VTYPE2 map_uv;
 uint4 advmap;

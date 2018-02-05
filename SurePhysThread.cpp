@@ -77,6 +77,8 @@ void SurePhysThread::run()
         };
         */
 
+        cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+        cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
 
             for(int i = 0;i<EngineData->m_objects;++i)
             {
@@ -238,9 +240,158 @@ void SurePhysThread::run()
                                 };// есть пересечение
                             }; // шарик с плоскостью
 
+                            if((lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_SPHERE)||
+                               (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_SPHERE))
+                            {   // mesh с шариком
+                                if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_MESH)
+                                {
+                                    o1=lv_o2; o2=lv_o1;
+                                }else{
+                                    o1=lv_o1; o2=lv_o2;
+                                };
+                                // Параметры для ObjCollide():
+                                // ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+                                // o1 - шарик
+                                // o2 - mesh
+                                __VTYPE3 collision_point;
+                                __VTYPE3 collision_normal;
+                                __VTYPE collision_distance = 0;
+                                bool collision_found = false;
+
+                                // отталкиваем шарик от грани
+                                #define __REFL_FR(fr_b,fr_e) \
+                                __VTYPE3 vo = ltp - fr_b; \
+                                __VTYPE3 v = __NORMALIZE(fr_e-fr_b); \
+                                __VTYPE l = dot(v,vo); \
+                                __VTYPE3 p = fr_b + v*l; \
+                                __VTYPE3 dp = ltp-p; \
+                                __VTYPE pl = __LENGTH(dp); \
+                                if(pl<=o1->lx){ \
+                                    dd = o1->lx - pl; \
+                                    if(dd>=collision_distance) \
+                                    { \
+                                        collision_found = true; \
+                                        collision_distance = dd; \
+                                        __VTYPE3 vp = __NORMALIZE(dp); \
+                                        __VTYPE3 n = vp.x*__FCONV3(o2->ox)+ \
+                                                     vp.y*__FCONV3(o2->oy)+ \
+                                                     vp.z*__FCONV3(o2->oz); \
+                                        collision_normal = __NORMALIZE(n); \
+                                        collision_point = o1->X-collision_normal*pl; \
+                                    }; \
+                                };
+
+                                // отталкиваем шарик от угла
+                                #define __REFL_PT(pt) \
+                                __VTYPE3 cl = ltp - pt; \
+                                __VTYPE cdl = __LENGTH(cl); \
+                                __VTYPE cd = o1->lx-cdl; \
+                                if(cd>=collision_distance) \
+                                { \
+                                    collision_found = true; \
+                                    collision_distance = cd; \
+                                    __VTYPE3 cln = __NORMALIZE(cl); \
+                                    __VTYPE3 n = cln.x*__FCONV3(o2->ox)+ \
+                                                 cln.y*__FCONV3(o2->oy)+ \
+                                                 cln.z*__FCONV3(o2->oz); \
+                                    collision_normal = __NORMALIZE(n); \
+                                    collision_point = o1->X-collision_normal*cdl; \
+                                };
+                                // для каждой грани:
+                                for(uint im = 0;im<o2->mesh_count;++im)
+                                { // для каждой грани:
+                                    uint cm = o2->mesh_start + im;
+                                    __SURE_VINT4 mesh;
+                                    __VTYPE3 gm1;
+                                    __VTYPE3 gm2;
+                                    __VTYPE3 gm3;
+                                    __GET_MESH(mesh,cm);
+                                    __GET_VERTEX(gm1,mesh.x);
+                                    __GET_VERTEX(gm2,mesh.y);
+                                    __GET_VERTEX(gm3,mesh.z);
+
+                                    __VTYPE3 ltp; // координаты шара в локальных координатах mesh'ы
+                                    ltp.x = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->ox));
+                                    ltp.y = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oy));
+                                    ltp.z = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oz));
+
+                                    // сфера пересекается с плоскостью?
+                                        // определяем нормаль
+                                    __VTYPE3 cn = __NORMALIZE(cross(gm2-gm1,gm3-gm1));
+                                        // проеккция на нормаль вектора от центра шара к точке на плоскости
+                                    __VTYPE dd = dot(cn,gm1-ltp);
+                                        // длина проекции меньше радиуса шара?
+                                    if(fabs(dd)<=o1->lx)
+                                    {
+                                        // если да
+                                        // ищем точку проекции центра шара на плоскость
+                                        __VTYPE3 cp = ltp+cn*dd;
+                                        __VTYPE3 t1 = cross(gm2-gm1,cp-gm1);
+                                        __VTYPE3 t2 = cross(gm3-gm2,cp-gm2);
+                                        __VTYPE3 t3 = cross(gm1-gm3,cp-gm3);
+                                        if(dot(t1,cn)>=0)
+                                        { // первая грань -- "внутри"
+                                            if(dot(t2,cn)>=0)
+                                            { // вторая грань -- "внутри"
+                                                if(dot(t3,cn)>=0)
+                                                { // третья грань -- "внутри"
+                                                    __VTYPE cd = o1->lx-fabs(dd);
+                                                    if(cd>=collision_distance)
+                                                    {
+                                                        collision_found = true;
+                                                        collision_distance = cd;
+                                                        __VTYPE3 n = cn.x*__FCONV3(o2->ox)+
+                                                                     cn.y*__FCONV3(o2->oy)+
+                                                                     cn.z*__FCONV3(o2->oz); // нормаль в глобальных координатах
+                                                        collision_normal = __NORMALIZE(n);
+                                                        collision_point = o1->X+collision_normal*dd;
+                                                    }; //cd<=collision_distance
+                                                }else{ // третья грань снаружи
+                                                    // отталкиваемся от третей грани
+                                                    //__REFL_FR(gm3,gm1);
+                                                };  // третья грань
+                                            }else{// вторая грань снаружи
+                                                if(dot(t3,cn)>=0)
+                                                { // третья грань -- "внутри"
+                                                    // Отталкиваемся от второй грани
+                                                    //__REFL_FR(gm2,gm3);
+                                                }else{ // третья грань снаружи
+                                                    // отталкиваемся от угла gm3
+                                                    //__REFL_PT(gm3);
+                                                };  // третья грань
+                                            };  // вторая грань
+                                        }else{ // первая грань снаружи
+                                            if(dot(t2,cn)>=0)
+                                            { // вторая грань -- "внутри"
+                                                if(dot(t3,cn)>=0)
+                                                { // третья грань -- "внутри"
+                                                    // Отталкиваемся от первой грани
+                                                    //__REFL_FR(gm1,gm2);
+                                                }else{ // третья грань снаружи
+                                                    // отталкиваемся от угла gm1
+                                                    //__REFL_PT(gm1);
+                                                };  // третья грань
+                                            }else{ // вторая грань снаружи
+                                                if(dot(t3,cn)>=0)
+                                                { // третья грань -- "внутри"
+                                                    // отталкиваемся от угла gm2
+                                                    //__REFL_PT(gm2);
+                                                }else{ // третья грань снаружи
+                                                    // Все грани снаружи?
+                                                    // Пространственный континум разорван,
+                                                    // можно вываливаться в ошибку.
+                                                };  // третья грань
+                                            }; // вторая грань
+                                        }; // первая грань
+                                    }; // сфера пересеклась с плоскостью
+                                }; // для каждой грани:
+                                if(collision_found)
+                                    ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+                            }; // mesh сталкивается с шаром
+
                             if((lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_PLANE)||
                                (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE))
-                            {   // шарик с плоскостью
+                            {   // mesh с плоскостью
                                 if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)
                                 {
                                     o1=lv_o2; o2=lv_o1;
@@ -363,36 +514,104 @@ void SurePhysThread::run()
 int mink_c = 0; // количество точек в разности минковского
 my_double3 p1,p2; // точки из объектов, для получения разности
 my_double3 minkowski[64*64];  // разность минкосвского
-cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
 
-// для определения стартового симплекса:
-int Q_maxx = -1;
-int Q_maxy = -1;
-int Q_maxz = -1;
-float maxx = -SURE_R_MAXDISTANCE;
-float maxy = -SURE_R_MAXDISTANCE;
-float maxz = -SURE_R_MAXDISTANCE;
+/*
+1. Составляем разность минковского.
+1.1. M[mesh1_c*mesh2_c];
+1.2. M[mesh2_c*i+j] = mesh1[i] - mesh2[j];
 
-for(int i=0;i<lv_o1->vertex_count;++i)for(int j=0;j<lv_o2->vertex_count;++j)
-{
-    __GET_VERTEX(p1,lv_o1->vertex_start+i);
-    __GET_VERTEX(p2,lv_o2->vertex_start+j);
-    minkowski[i*lv_o2->vertex_count+j]=p1-p2;
-    mink_c++;
-    // Ищем точки с максимальными x,y,z
+[Тэтраэдр T. 4 точки.]
+2. Определяем стартовый тэтраэдр.
+T[0] = M[0];
+T[1] = M[1];
+T[2] = M[2];
+T[3] = M[3];
 
+3. Проверяем, содержит ли тэтраэдр 0,0.
+3.0.1.
+разворачиваем тэтраэдр наружу нормалями.
+dot ( cross (T0T1,T0T2) , T0T3 ) < 0? // вершина 4 снаружи грани M0M1M2
+    M2 <=> M1 (меняем местами)
+
+l_max = 0;
+грань F1 = T0T1 T0T2 L1 = dot(-T0,norm(cross(T0T1,T0T2))); L1 < 0 && L1 > L_max ? F_NEW = T0 T1 T2
+грань F2 = T0T3 T0T1 L2 = dot(-T0,norm(cross(T0T3,T0T1))); L2 < 0 && L2 > L_max ? F_NEW = T0 T3 T1
+грань F3 = T2T1 T2T3 L3 = dot(-T2,norm(cross(T2T1,T2T3))); L3 < 0 && L3 > L_max ? F_NEW = T2 T1 T3
+грань F4 = T0T2 T0T3 L4 = dot(-T0,norm(cross(T0T2,T0T3))); L4 < 0 && L4 > L_max ? F_NEW = T0 T2 T3
+
+3.0.2.
+ содержит (L1>0&&L2>0&&L3>0&&L4>0)? -> goto 4.
+ не содержит (else)? -> goto 3.1
+
+3.1. Ищем грань ближайшую к 0 0.
+выбираем грань T[0] = грань[0]; T[1]=грань[2] ...
+F_NEW есть (T0 T1 T2).
+v = cross(T0T1,T0T2);
+F_NEW.T3 = find_farest_M(v);
+
+3.2. От грани в направлении от 0 0 есть еще точки?
+ F_NEW.T3 есть -> goto 3.3
+ F_NEW.T3 нет -> Выход, пересечения нет
+
+3.3. T = F_NEW; goto 3.
+
+4. создаем cover минковского
+C[0] = T0T1T2
+C[1] = T0T3T1
+C[2] = T2T1T3
+C[3] = T0T2T3
+M_T[] = T0T1T2T3
+
+4.1. Ищем грань ближайшую к 0 0.
+for(c_cnt){
+//C[c_cnt]:T0T1T2
+L = dot(-T0,norm(cross(T0T1,T0T2))); L > 0 && L < L_min ? r_c = c_cnt;
+}
+C[r_c]:T0T1T2 //  грань ближайшая к 0 0
+N = -cross(T0T1,T0T2);
+// есть еще точки в направлении 0 0 ?
+X = find_farest_M(N);
+X есть : goto 5.
+X нет : goto 6.
+
+5. расширяем cover
+for(c_cnt){
+    //C[c_cnt]:T0T1T2
+    N = -cross(T0T1,T0T2);
+    L = dot(X-T0,N)
+    L<0 ? (грань невидимая) { C_NEW[cnew++] = C[c_cnt]; }
+    L>0 ? (грань видимая): {
+        check_cover(T0T1X);`
+        check_cover(T1T2X);
+        check_cover(T2T0X);
+    };
 };
+M_T[c++] = X;
+goto 4.1
 
-// стартовый тетраэдр -- {crs = дальняя точка в нправлении cross(max_x-max_y,max_z-max_y)}
-// основание max_y, max_x, max_z
-// max_y, max_z, crs
-// max_z, max_x, crs
-// max_x, max_y, crs
+check_cover(ABC)
+{
+    out = true;
+    N = -cross(AB,AC);
+    for(M_T[])
+    {
+        R = dot(M_T[i]-A,N)
+        R<0 ? out = false;
+    };
+    out = true ? // все точки с внутренней стороны новой грани
+        С[r_c++] = ABC
+}
 
-// ищем тетраэдр охватвающий 0,0
+6. Определяем точку контакта.
+C[r_c]:T0T1T2 //  из пред шага - грань ближайшая к 0 0
+N = norm(-cross(T0T1,T0T2)); // вектор в направлении точки контакта
+L = dot(N,-T0); // расстояние
 
+6.1. Для каждого объекта:
+оперделяем "крайние" точки в направлении вектора контакта
+Находим среднюю точку
 
-
+*/
 
                             };// mesh'ы
                             if(lv_o1->type==SURE_OBJ_PLANE&&lv_o2->type==SURE_OBJ_PLANE)

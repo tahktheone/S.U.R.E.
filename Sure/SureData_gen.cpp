@@ -98,16 +98,16 @@ void SureData::Mesh_GenerateCube(int object,int norm_type)
     AddVertex( x, y, z); // cv+7
     AddMesh(cv  ,cv+1,cv+2);
     AddMesh(cv+2,cv+3,cv  );
-    AddMesh(cv+4,cv+5,cv+6);
-    AddMesh(cv+6,cv+7,cv+4);
-    AddMesh(cv  ,cv+1,cv+6);
-    AddMesh(cv+6,cv+5,cv  );
-    AddMesh(cv+1,cv+2,cv+7);
-    AddMesh(cv+7,cv+6,cv+1);
-    AddMesh(cv+2,cv+3,cv+4);
-    AddMesh(cv+4,cv+7,cv+2);
-    AddMesh(cv+3,cv  ,cv+5);
-    AddMesh(cv+5,cv+4,cv+3);
+    AddMesh(cv+4,cv+6,cv+5);
+    AddMesh(cv+6,cv+4,cv+7);
+    AddMesh(cv  ,cv+6,cv+1);
+    AddMesh(cv+6,cv  ,cv+5);
+    AddMesh(cv+1,cv+7,cv+2);
+    AddMesh(cv+7,cv+1,cv+6);
+    AddMesh(cv+2,cv+4,cv+3);
+    AddMesh(cv+4,cv+2,cv+7);
+    AddMesh(cv+3,cv+5,cv  );
+    AddMesh(cv+5,cv+3,cv+4);
     objects[object].mesh_count = 12;
 
     Mesh_GenNormals(object,norm_type);
@@ -241,9 +241,9 @@ void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,
     objects[object].mesh_count = 0;
     for(int ic = 0;ic<cover_c;++ic)
     {
-        int z = AddMesh(AddVertex(vertexes[cover[ic][2]]),
+        int z = AddMesh(AddVertex(vertexes[cover[ic][0]]),
                 AddVertex(vertexes[cover[ic][1]]),
-                AddVertex(vertexes[cover[ic][0]]));
+                AddVertex(vertexes[cover[ic][2]]));
 
                 if(norm_type==SURE_NORMALS_DEFAULT)
                 {
@@ -260,9 +260,9 @@ void SureData::Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,
                 };
                 if(norm_type==SURE_NORMALS_SHPERICAL)
                 {
-                my_double3 n1 = __NORMALIZE(vertexes[cover[ic][2]]);
+                my_double3 n1 = __NORMALIZE(vertexes[cover[ic][0]]);
                 my_double3 n2 = __NORMALIZE(vertexes[cover[ic][1]]);
-                my_double3 n3 = __NORMALIZE(vertexes[cover[ic][0]]);
+                my_double3 n3 = __NORMALIZE(vertexes[cover[ic][2]]);
                     __NORMAL1_X(z) = n1.x;
                     __NORMAL1_Y(z) = n1.y;
                     __NORMAL1_Z(z) = n1.z;

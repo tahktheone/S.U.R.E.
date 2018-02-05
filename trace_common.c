@@ -254,8 +254,6 @@
                         __VTYPE tt = dot(gm3-gm1, qvec) * inv_det;
                         if(tt<(__VTYPE)SURE_R_DELTA||tt>id)continue; // Слишком близко или дальше чем уже найденное пересечение
                         __VTYPE3 l_cp = tp+tv*tt;                    // точка пересечения
-                        id = tt;
-                        cp = l_cp;
                         __VTYPE3 locn = cross(gm2-gm1,gm3-gm1);
                         __VTYPE dir = dot(ltv,locn);
                         __VTYPE3 n1;
@@ -277,10 +275,16 @@
                                 cur = lv_cur;
                                 col_radiance = lv_dr->radiance;
                             }else{  // материал односторонний
-                                col = &Drawables[0];
-                                cur = lv_dr;
-                                col_radiance = 0;
+                                #if SURE_RLEVEL<30
+                                    continue;
+                                #else
+                                    col = &Drawables[0];
+                                    cur = lv_dr;
+                                    col_radiance = 0;
+                                #endif
                             };
+                            id = tt;
+                            cp = l_cp;
                             RT_SETCOL;
                             if(lv_dr->map_id>=0)
                             {
@@ -295,6 +299,8 @@
                             col = lv_dr;
                             cur = lv_cur;
                             col_radiance = lv_dr->radiance;
+                            id = tt;
+                            cp = l_cp;
                             RT_SETCOL;
                             cn = n;
                             if(lv_dr->map_id>=0)
