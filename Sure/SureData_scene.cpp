@@ -324,7 +324,7 @@ int i;
     objects[i].ox = __NORMALIZE(objects[i].ox);
 
     objects[i].movable = false;
-    objects[i].collidable = true;
+    objects[i].collidable = false;
 
     ObjCoordsToDrawable(i);
     objects[i].drawable.type = SURE_DR_MESH; // форма

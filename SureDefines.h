@@ -23,7 +23,7 @@
 #define SURE_LIN_MAX     5000
 #define SURE_OBJ_NONE    0
 #define SURE_OBJ_SPHERE  1
-#define SURE_OBJ_CUBE    2
+//#define SURE_OBJ_CUBE    2 Устарело
 #define SURE_OBJ_PLANE   3
 #define SURE_OBJ_MESH    4
 #define SURE_OBJ_CREAT   5
