@@ -283,7 +283,7 @@ void SureData::Mesh_FromFile(int object,const char* fname)
     char filename[100];
     sprintf(filename,"./models/%s.obj",fname);
     FILE *fl = fopen(filename,"r");
-    char line[256];
+    wchar_t* line;
 
     my_double3 v[10000];
     int vertexes = 1;
@@ -293,11 +293,12 @@ void SureData::Mesh_FromFile(int object,const char* fname)
     int tcoords = 1;
     int f[10000][3][3];
     int faces = 0;
-    double x,y,z;
 
     if(fl!=nullptr)
     {
         std::wcout << L"Загрузка " << fname << "...\n";
+        line = (wchar_t*) malloc (512);
+        fwide(fl,1);
         objects[object].mesh_start = cur_meshes;
         objects[object].mesh_count = 0;
         my_double3 maxcoords;
@@ -308,127 +309,190 @@ void SureData::Mesh_FromFile(int object,const char* fname)
         mincoords.x = SURE_R_MAXDISTANCE;
         mincoords.y = SURE_R_MAXDISTANCE;
         mincoords.z = SURE_R_MAXDISTANCE;
-        while(fscanf(fl, "%s", line)!=EOF)
+
+        wchar_t curr_c;
+        curr_c = fgetwc(fl);
+        wchar_t curr_type;
+        curr_type = *L" ";
+
+        int l_group_index;
+        int l_vector_index;
+        l_group_index = 0;
+        l_vector_index = 0;
+
+        int l_fract;
+        int l_int;
+        int l_int_mul;
+        int l_fract_div;
+        int l_num;
+        int l_sig;
+
+        bool l_fract_on;
+        bool l_flush;
+
+        l_fract = 0;
+        l_int = 0;
+        l_fract_div = 1;
+        l_int_mul = 1;
+        l_fract_on = false;
+        l_num = 0;
+        l_sig = 1;
+
+        curr_c = fgetwc(fl);
+        while(curr_c!=WEOF)
         {
-            if ( strcmp( line, "v" ) == 0 ){
-                fscanf(fl,"%lf %lf %lf\n",&x,&y,&z);
-                v[vertexes].x = x;
-                v[vertexes].y = y;
-                v[vertexes].z = z;
-                vertexes++;
-                if(x>maxcoords.x)maxcoords.x=x;
-                if(y>maxcoords.y)maxcoords.y=y;
-                if(z>maxcoords.z)maxcoords.z=z;
-                if(x<mincoords.x)mincoords.x=x;
-                if(y<mincoords.y)mincoords.y=y;
-                if(z<mincoords.z)mincoords.z=z;
-            }else if ( strcmp( line, "vt" ) == 0 ){
-                fscanf(fl,"%lf %lf %lf\n",&x,&y,&z);
-                vt[tcoords].x = x;
-                vt[tcoords].y = 1.0-y;
-                vt[tcoords].z = z;
-                tcoords++;
-            }else if ( strcmp( line, "vn" ) == 0 ){
-                fscanf(fl,"%lf %lf %lf\n",&x,&y,&z);
-                vn[normals].x = x;
-                vn[normals].y = y;
-                vn[normals].z = z;
-                vn[normals] = __NORMALIZE(vn[normals]);
-                normals++;
-
-            }else if ( strcmp( line, "f" ) == 0 ){
-                int v1=-1;
-                int v2=-1;
-                int v3=-1;
-                int v4=-1;
-                int vt1=-1;
-                int vt2=-1;
-                int vt3=-1;
-                int vt4=-1;
-                int vn1=-1;
-                int vn2=-1;
-                int vn3=-1;
-                int vn4=-1;
-
-                fpos_t pos;
-                fgetpos(fl,&pos);
-
-                int lr = 0;
-
-                lr = fscanf(fl,"%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",&v1,&vt1,&vn1,&v2,&vt2,&vn2,&v3,&vt3,&vn3,&v4,&vt4,&vn4);
-                if(lr!=12)
-                {
-                fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                lr = fscanf(fl,"%d/%d/%d %d/%d/%d %d/%d/%d\n",&v1,&vt1,&vn1,&v2,&vt2,&vn2,&v3,&vt3,&vn3);
-                    if(lr!=9)
-                    {
-                        fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                        lr = fscanf(fl,"%d//%d %d//%d %d//%d %d//%d\n",&v1,&vn1,&v2,&vn2,&v3,&vn3,&v4,&vn4);
-                        if(lr!=8)
-                        {
-                            fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                            lr = fscanf(fl,"%d//%d %d//%d %d//%d\n",&v1,&vn1,&v2,&vn2,&v3,&vn3);
-                            if(lr!=6)
-                            {
-                                fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                                lr = fscanf(fl,"%d %d %d %d\n",&v1,&v2,&v3,&v4);
-                                if(lr!=4)
-                                {
-                                    fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                                    lr= fscanf(fl,"%d %d %d\n",&v1,&v2,&v3);
-                                    if(lr!=3)
-                                    {
-                                        fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                                        lr = fscanf(fl,"%d/%d %d/%d %d/%d %d/%d\n",&v1,&vt1,&v2,&vt2,&v3,&vt3,&v4,&vt4);
-                                        if(lr!=8)
-                                        {
-                                            fsetpos(fl,&pos); v1=v2=v3=v4=vt1=vt2=vt3=vt4=vn1=vn2=vn3=vn4=-1;
-                                            lr = fscanf(fl,"%d/%d %d/%d %d/%d\n",&v1,&vt1,&v2,&vt2,&v3,&vt3);
-                                        };
-                                    };
-                                };
-                            };
-                        };
+            if(curr_type==*L" "){
+                curr_type = curr_c;
+                l_fract = 0;
+                l_int = 0;
+                l_fract_div = 1;
+                l_vector_index = 0;
+                l_int_mul = 1;
+                l_sig = 1;
+                l_fract_on = false;
+            };
+            if((curr_type==*L"v")&&(curr_c==*L"t")){
+                curr_type=*L"t";
+            };
+            if((curr_type==*L"v")&&(curr_c==*L"n")){
+                curr_type=*L"n";
+            };
+            if((curr_c==*L" ")||(curr_c==*L"\n")){
+                if(curr_type==*L"f"){
+                    f[faces][l_group_index][l_vector_index] = l_int;
+                };
+                if(l_group_index==0){
+                    if(curr_type==*L"v"){
+                        v[vertexes].x = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"n"){
+                        vn[normals].x = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"t"){
+                        vt[tcoords].x = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
                     };
                 };
-
-                if(lr>2)
-                {
-                f[faces][0][0] = v1;
-                f[faces][0][1] = vt1;
-                f[faces][0][2] = vn1;
-                f[faces][1][0] = v2;
-                f[faces][1][1] = vt2;
-                f[faces][1][2] = vn2;
-                f[faces][2][0] = v3;
-                f[faces][2][1] = vt3;
-                f[faces][2][2] = vn3;
-                faces++;
+                if(l_group_index==1){
+                    if(curr_type==*L"v"){
+                        v[vertexes].y = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"n"){
+                        vn[normals].y = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"t"){
+                        vt[tcoords].y = 1.0 - ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
                 };
-
-                if(v4>=0)
-                {
-                f[faces][0][0] = v3;
-                f[faces][0][1] = vt3;
-                f[faces][0][2] = vn3;
-                f[faces][1][0] = v4;
-                f[faces][1][1] = vt4;
-                f[faces][1][2] = vn4;
-                f[faces][2][0] = v1;
-                f[faces][2][1] = vt1;
-                f[faces][2][2] = vn1;
-                faces++;
+                if(l_group_index==2){
+                    if(curr_type==*L"v"){
+                        v[vertexes].z = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"n"){
+                        vn[normals].z = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
+                    if(curr_type==*L"t"){
+                        vt[tcoords].z = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
+                    };
                 };
-
-
+                if(l_int>0||l_fract>0)
+                    ++l_group_index;
+                if((l_group_index==3)&&(curr_type==*L"f")&&(curr_c==*L" ")){
+                    faces++;
+                    f[faces][0][0] = f[faces-1][2][0];
+                    f[faces][0][1] = f[faces-1][2][1];
+                    f[faces][0][2] = f[faces-1][2][2];
+                    f[faces][1][0] = 0;
+                    f[faces][1][1] = 0;
+                    f[faces][1][2] = 0;
+                    f[faces][2][0] = f[faces-1][0][0];
+                    f[faces][2][1] = f[faces-1][0][1];
+                    f[faces][2][2] = f[faces-1][0][2];
+                    l_group_index = 1;
+                };
+                l_fract = 0;
+                l_int = 0;
+                l_fract_div = 1;
+                l_sig = 1;
+                l_int_mul = 1;
+                l_vector_index = 0;
+                l_fract_on = false;
             };
+            if(curr_c==*L"\n"){
+                if(curr_type==*L"v"){
+                    if(v[vertexes].x>maxcoords.x)maxcoords.x=v[vertexes].x;
+                    if(v[vertexes].y>maxcoords.y)maxcoords.y=v[vertexes].y;
+                    if(v[vertexes].z>maxcoords.z)maxcoords.z=v[vertexes].z;
+                    if(v[vertexes].x<mincoords.x)mincoords.x=v[vertexes].x;
+                    if(v[vertexes].y<mincoords.y)mincoords.y=v[vertexes].y;
+                    if(v[vertexes].z<mincoords.z)mincoords.z=v[vertexes].z;
+                    vertexes++;
+                };
+                if(curr_type==*L"n"){
+                    vn[normals] = __NORMALIZE(vn[normals]);
+                    normals++;
+                };
+                if(curr_type==*L"t"){
+                    tcoords++;
+                };
+                if(curr_type==*L"f"){
+                    if((f[faces][1][0]!=0)||(f[faces][1][1]!=0)||(f[faces][1][2]!=0))
+                        faces++;
+                };
+                curr_type = *L" ";
+                l_group_index = 0;
+                l_vector_index = 0;
+                l_fract = 0;
+                l_int = 0;
+                l_fract_div = 1;
+                l_int_mul = 1;
+                l_fract_on = false;
+                l_sig = 1;
+            };
+            if(curr_c==*L"/"){
+                if(curr_type==*L"f"){
+                    f[faces][l_group_index][l_vector_index] = l_int;
+                };
+                l_fract = 0;
+                l_int = 0;
+                l_fract_div = 1;
+                l_int_mul = 1;
+                l_sig = 1;
+                ++l_vector_index;
+                l_fract_on = false;
+            };
+            if((curr_c==*L".")||(curr_c==*L",")){
+                l_fract_on = true;
+            };
+            if(curr_c==*L"-"){
+                l_sig = -1;
+            };
+            if((curr_c==*L"1")||(curr_c==*L"2")||(curr_c==*L"3")||(curr_c==*L"4")||
+               (curr_c==*L"5")||(curr_c==*L"6")||(curr_c==*L"7")||(curr_c==*L"8")||
+               (curr_c==*L"9")||(curr_c==*L"0")){
+                if(curr_c==*L"1")l_num=1;
+                if(curr_c==*L"2")l_num=2;
+                if(curr_c==*L"3")l_num=3;
+                if(curr_c==*L"4")l_num=4;
+                if(curr_c==*L"5")l_num=5;
+                if(curr_c==*L"6")l_num=6;
+                if(curr_c==*L"7")l_num=7;
+                if(curr_c==*L"8")l_num=8;
+                if(curr_c==*L"9")l_num=9;
+                if(curr_c==*L"0")l_num=0;
+                if(l_fract_on){
+                    l_fract = 10*l_fract + l_num;
+                    l_fract_div *= 10;
+                }else{
+                    l_int = 10*l_int + l_num;
+                };
+            };
+            curr_c = fgetwc(fl);
         };
 
-        std::cout << "vertexes=" << vertexes <<  ";faces=" << faces << "\n";
-        /*
-        std::cout << "max=" << maxcoords.x << ";" << maxcoords.y << ";" << maxcoords.z << "\n";
-        std::cout << "min=" << mincoords.x << ";" << mincoords.y << ";" << mincoords.z << "\n";
-        */
+        std::wcout << L"vertexes=" << vertexes <<  L";faces=" << faces << L"\n";
+        //std::cout << "max=" << maxcoords.x << ";" << maxcoords.y << ";" << maxcoords.z << "\n";
+        //std::cout << "min=" << mincoords.x << ";" << mincoords.y << ";" << mincoords.z << "\n";
+
         int vstart = cur_vertexes-1;
         objects[object].vertex_start = cur_vertexes;
         objects[object].vertex_count = 0;
@@ -492,15 +556,7 @@ void SureData::Mesh_FromFile(int object,const char* fname)
                 };
                 objects[object].mesh_count++;
         };
-        /*
-        std::wcout << L"Загрузка завершена." << objects[object].mesh_count <<  L"граней начиная с " << objects[object].mesh_start << L". Вот первые 5:\n";
-        for(int i = 0;i<5;++i)
-        {
-            std::cout << "P1(" << VertexData[MeshData[(objects[object].mesh_start+i)*3  ]*3] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3  ]*3+1] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3  ]*3+2] <<
-                      ")  P2(" << VertexData[MeshData[(objects[object].mesh_start+i)*3+1]*3] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3+1]*3+1] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3+1]*3+2] <<
-                      ")  P3(" << VertexData[MeshData[(objects[object].mesh_start+i)*3+2]*3] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3+2]*3+1] << ";" << VertexData[MeshData[(objects[object].mesh_start+i)*3+2]*3+2] << ")\n";
-        };
-        */
+        free (line);
     }else{
         std::wcout << L"Не найдена модель " << fname << "!\n";
     };

@@ -1,4 +1,4 @@
-﻿#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
  #include <SureDefines.h>
 
 #define __SURE_GLOBAL global
@@ -159,6 +159,7 @@ col_ds = advmap.y/100.0;
 
 __kernel
 __attribute__(( vec_type_hint(__VTYPE3)))
+__attribute__((work_group_size_hint(16, 16, 1)))
 void Trace(        __global float* rgbmatrix, // картинка, в которую рисуем
                    __global float* Randomf, // массив случайных чисел
                    constant struct SureGPUData* GPUData, // структура с общими настройками рендера

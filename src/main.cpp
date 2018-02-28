@@ -4,13 +4,14 @@
 // * физика - столкновение шаров с mesh'ми, mesh'ей с плоскостями
 // * генерация текстур (шахматные)
 // * полноценная кросплатформенность, собраны бинарники под nix и win32
+// * универсализация загрузчика obj
 
 // 24.07.2017 -- версия 0.0001:
 // * unbiased rendering на GPU (рисуем сферы, плоские квадраты и произвольные mesh'ы)
 // * 4 режима рендера на GPU (double, float, float без рассеивания, float без оражений) и 1 на CPU
-// * физика - столкновение шаров, швров с плоскими квадратами
+// * физика - столкновение шаров, шаров с плоскими квадратами
 // * поддержка uv-карт
-// * загрузка моделей из .obj файлов
+// * загрузка моделей из .obj файло
 
 #include <SureData.h>
 #include <SureWidget.h>
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]) {
 
     #ifdef _WIN32
         _setmode(_fileno(stdout), _O_U16TEXT);
-        _setmode(_fileno(stdin), _O_U16TEXT);
+        //_setmode(_fileno(stdin), _O_U16TEXT);
     #endif // _WIN32
 
     QApplication app(argc, argv);
@@ -33,6 +34,9 @@ int main(int argc, char* argv[]) {
     SureGPUData GPUData;
     SureData EngineData;
     SureOCLData OCLData;
+
+    std::wcout << SURE_TITLE << "/" << SURE_VERSION << "\n";
+
     SureThread Render;
     SurePhysThread Physics;
     SureDrawable Drawables[SURE_DR_MAX];
@@ -40,7 +44,6 @@ int main(int argc, char* argv[]) {
 
     app.setApplicationName(SURE_TITLE);
     app.setApplicationVersion(SURE_VERSION);
-    std::wcout << SURE_TITLE << "/" << SURE_VERSION << "\n";
 
     widget.setMouseTracking(true);
     //widget.setCursor(QCursor(Qt::BlankCursor));
@@ -76,6 +79,8 @@ int main(int argc, char* argv[]) {
     Physics.wait();
 
     EngineData.SureClear(); // чистим память
+
+    std::cin.get(); // оставляем консоль
 
     return 0;
 }

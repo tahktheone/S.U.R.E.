@@ -54,7 +54,7 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
-					<Add option="-std=c++14" />
+					<Add option="-std=c++11" />
 					<Add option="-m64" />
 					<Add option="-g" />
 					<Add directory="D:/Qt/A_qt510_64/include" />
@@ -83,7 +83,7 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
-					<Add option="-std=c++14" />
+					<Add option="-std=c++11" />
 					<Add option="-m64" />
 					<Add directory="D:/Qt/A_qt510_64/include" />
 				</Compiler>
@@ -124,6 +124,7 @@
 			<Option link="0" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="README.md" />
 		<Unit filename="TODO.txt" />
 		<Unit filename="include/SureData.h" />
 		<Unit filename="include/SurePhysThread.h" />

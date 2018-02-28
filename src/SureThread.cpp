@@ -64,11 +64,43 @@ void SureThread::oclInit()
                std::wcout << L"Разрядность адреса:" << cores << "\n";
             };
 
+            std::wcout << L"Параметры параллелизации (размер группы/изменерия/размерность):\n";
+
+            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_GROUP_SIZE,300,(void*)&cores,&ret_size));
+            if(ret==CL_SUCCESS)
+            {
+               std::wcout << cores << "/";
+               OCLData->g_workgroup_size = sqrt(cores)/2;
+            };
+
+            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,300,(void*)&cores,&ret_size));
+            if(ret==CL_SUCCESS)
+            {
+               std::wcout << cores << "/";
+            };
+
+            int l_dims = cores;
+            size_t l_szs[100];
+
+            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_SIZES,300,(void*)l_szs,&ret_size));
+            if(ret==CL_SUCCESS)
+            {
+                std::wcout << "(";
+                for(int i=0;i<l_dims;++i){
+                    std::wcout << l_szs[i] << ";";
+                };
+                std::wcout << ")";
+            };
+
+            std::wcout << "\n";
+
+            /*
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_EXTENSIONS,500,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
                std::wcout << L"Доступные расширения:" << devname << "\n";
             };
+            */
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE,300,(void*)&cores,&ret_size));
             if(ret==CL_SUCCESS)
@@ -311,6 +343,12 @@ void SureThread::run()
                 OCLData->kernel = &OCLData->kernel_n;
             OCLData->sizes[0] = widget->rect().right()*SURE_FAA/SURE_SCALE;
             OCLData->sizes[1] = widget->rect().bottom()*SURE_FAA/SURE_SCALE;
+            OCLData->sizes[0] /= OCLData->g_workgroup_size;
+            OCLData->sizes[0] *= OCLData->g_workgroup_size;
+            OCLData->sizes[0] += OCLData->g_workgroup_size;
+            OCLData->sizes[1] /= OCLData->g_workgroup_size;
+            OCLData->sizes[1] *= OCLData->g_workgroup_size;
+            OCLData->sizes[1] += OCLData->g_workgroup_size;
             OCL_RUN_("clEnqueueWriteBuffer(GPUData)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmGPUData,CL_TRUE,0,sizeof(SureGPUData),(void*)GPUData,0,NULL,NULL));
             OCL_RUN_("clEnqueueWriteBuffer(Drawables)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmDrawables,CL_TRUE,0,sizeof(SureDrawable)*GPUData->m_drawables,(void*)GPUData->Drawables,0,NULL,NULL));
             for(int o = 0;o<EngineData->m_objects;++o)
@@ -447,7 +485,19 @@ void SureThread::run()
                                                   0,NULL,NULL));
                 EngineData->TexturesInfo[t].toupdate = false;
             };
-            OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue,*OCLData->kernel,2,NULL,OCLData->sizes,NULL,0,NULL,NULL));
+            size_t l_lws[3];
+            l_lws[0] = OCLData->g_workgroup_size;
+            l_lws[1] = OCLData->g_workgroup_size;
+            l_lws[2] = 1;
+
+            OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь
+                                                            *OCLData->kernel, // Программа
+                                                            2, // 2 измерения для ID потока (X * Y)
+                                                            NULL, // стартовые координаты (тип size_t[измерения])
+                                                            OCLData->sizes, // размер области обработки (тип size_t[измерения])
+                                                            l_lws, // размер локальной области (workgroup)
+                                                            0,NULL, // события, которые нужно дождаться перед запуском
+                                                            NULL)); // событие, которое генерится по завершении работы
             OCL_RUN_("clFinish",clFinish(OCLData->cqCommandQue));
         }else{
             raytrace();

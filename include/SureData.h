@@ -124,6 +124,7 @@ __GET_ADVMAP(map_px,map_py,id); \
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#include <cwchar>
 
 #include <CL/cl.h>
 
@@ -471,6 +472,7 @@ struct SureOCLData{
     cl_kernel kernel_n;
 
     size_t sizes[2] = {1920,1080};
+    int g_workgroup_size = 16;
     // OpenCL штуки
     cl_command_queue cqCommandQue;
     cl_mem cmRGBmatrix;
