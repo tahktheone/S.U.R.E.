@@ -6,8 +6,6 @@
 #define __SURE_VINT4 int4
 #define __SURE_UCHAR3 uchar3
 #define __SURE_UINT4 uint4
-#define __SURE_GLOBAL_MX get_global_size(0)
-#define __SURE_GLOBAL_MY get_global_size(1)
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
 #define __MAD(A,B,C) mad(A,B,C)
@@ -179,7 +177,6 @@ int y = get_global_id(1);
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE            |
                               CLK_FILTER_NEAREST;
-
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
@@ -187,6 +184,7 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
 int2 coords;
 __VTYPE2 map_uv;
 uint4 advmap;
+
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

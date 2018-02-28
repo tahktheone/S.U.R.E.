@@ -19,6 +19,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
     image = new QImage(x,y,QImage::Format_ARGB32);
     int my = image->rect().bottom();
     int mx = image->rect().right();
+    EngineData->m_amx = rect().right()*SURE_FAA/SURE_SCALE;
+    EngineData->m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
     clock_gettime(CLOCK_MONOTONIC,&framestart);
     double lv_max = 0;
     double lv_med = 0;

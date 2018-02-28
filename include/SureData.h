@@ -21,8 +21,6 @@
 #define __SURE_UCHAR4 my_uchar4
 #define __SURE_UINT4 my_uchar4
 #define __SURE_VINT4 my_int4
-#define __SURE_GLOBAL_MX amx
-#define __SURE_GLOBAL_MY amy
 #define __SURE_MIN(A,B) A<B?A:B
 #define __SURE_MAX(A,B) A>B?A:B
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
@@ -410,6 +408,8 @@ class SureData
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
         cl_float r_backlight = 0.5;
+        cl_uint m_amx = 1920;
+        cl_uint m_amy = 1080;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики

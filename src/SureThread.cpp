@@ -341,8 +341,8 @@ void SureThread::run()
                 OCLData->kernel = &OCLData->kernel_f;
             if(OCLData->rtype==SURE_RT_N)
                 OCLData->kernel = &OCLData->kernel_n;
-            OCLData->sizes[0] = widget->rect().right()*SURE_FAA/SURE_SCALE;
-            OCLData->sizes[1] = widget->rect().bottom()*SURE_FAA/SURE_SCALE;
+            OCLData->sizes[0] = GPUData->m_amx; //widget->rect().right()*SURE_FAA/SURE_SCALE;
+            OCLData->sizes[1] = GPUData->m_amy;//widget->rect().bottom()*SURE_FAA/SURE_SCALE;
             OCLData->sizes[0] /= OCLData->g_workgroup_size;
             OCLData->sizes[0] *= OCLData->g_workgroup_size;
             OCLData->sizes[0] += OCLData->g_workgroup_size;
@@ -489,16 +489,27 @@ void SureThread::run()
             l_lws[0] = OCLData->g_workgroup_size;
             l_lws[1] = OCLData->g_workgroup_size;
             l_lws[2] = 1;
+            int h_gr = OCLData->g_workgroup_size*4;
+            size_t l_start[2];
+            size_t l_gws[2];
+            l_gws[0] = h_gr;
+            l_gws[1] = h_gr;
 
-            OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь
-                                                            *OCLData->kernel, // Программа
-                                                            2, // 2 измерения для ID потока (X * Y)
-                                                            NULL, // стартовые координаты (тип size_t[измерения])
-                                                            OCLData->sizes, // размер области обработки (тип size_t[измерения])
-                                                            l_lws, // размер локальной области (workgroup)
-                                                            0,NULL, // события, которые нужно дождаться перед запуском
-                                                            NULL)); // событие, которое генерится по завершении работы
-            OCL_RUN_("clFinish",clFinish(OCLData->cqCommandQue));
+            for(int i_x_gr=0;i_x_gr<OCLData->sizes[0];i_x_gr+=h_gr)
+            for(int i_y_gr=0;i_y_gr<OCLData->sizes[1];i_y_gr+=h_gr){
+                l_start[0]=i_x_gr;
+                l_start[1]=i_y_gr;
+                OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь
+                                                                *OCLData->kernel, // Программа
+                                                                2, // 2 измерения для ID потока (X * Y)
+                                                                l_start, // стартовые координаты (тип size_t[измерения])
+                                                                l_gws, // размер области обработки (тип size_t[измерения])
+                                                                l_lws, // размер локальной области (workgroup)
+                                                                0,NULL, // события, которые нужно дождаться перед запуском
+                                                                NULL)); // событие, которое генерится по завершении работы
+                OCL_RUN_("clFinish",clFinish(OCLData->cqCommandQue));
+            };
+
         }else{
             raytrace();
         };
@@ -538,8 +549,8 @@ void SureThread::raytrace()
     cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
     cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
 
-    int amx = widget->rect().right()*SURE_FAA/SURE_SCALE;
-    int amy = widget->rect().bottom()*SURE_FAA/SURE_SCALE;
+    int amx = GPUData->m_amx;
+    int amy = GPUData->m_amy;
     #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<amy;++y)
         {
