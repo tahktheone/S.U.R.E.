@@ -3,7 +3,7 @@ S.U.R.E. is Unbiased Render Engine
 
 # Билды
 v 0.0002 для win64
-https://www.dropbox.com/s/xf72ql17got7r66/SURE_0.0002_w64.zip?dl=0
+https://github.com/tahktheone/S.U.R.E./blob/master/releases/SURE_0.0002_w64.zip
 
 # История изменений
 27.02.2018 -- версия 0.0002:

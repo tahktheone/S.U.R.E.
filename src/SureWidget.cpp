@@ -19,6 +19,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
     image = new QImage(x,y,QImage::Format_ARGB32);
     int my = image->rect().bottom();
     int mx = image->rect().right();
+    EngineData->m_amx = rect().right()*SURE_FAA/SURE_SCALE;
+    EngineData->m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
     clock_gettime(CLOCK_MONOTONIC,&framestart);
     double lv_max = 0;
     double lv_med = 0;
@@ -511,8 +513,8 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].oz.x = 0;
         EngineData->objects[i].oz.y = 0;
         EngineData->objects[i].oz.z = 1;
-        EngineData->objects[i].lx = 3.0+3.0*(float)rand()/(float)RAND_MAX; // длина
-        EngineData->objects[i].ly = 3.0+3.0*(float)rand()/(float)RAND_MAX; // ширина
+        EngineData->objects[i].lx = 1.0+10.0*(float)rand()/(float)RAND_MAX; // длина
+        EngineData->objects[i].ly = 1.0+10.0*(float)rand()/(float)RAND_MAX; // ширина
         EngineData->objects[i].lz = 1.0; // высота
         EngineData->objects[i].lp = EngineData->objects[i].lx*1.7;
         EngineData->objects[i].movable = true;
@@ -546,9 +548,9 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].X.x = EngineData->cam_x.x; //Координаты центра
         EngineData->objects[i].X.y = EngineData->cam_x.y; //Координаты центра
         EngineData->objects[i].X.z = EngineData->cam_x.z; //Координаты центра
-        EngineData->objects[i].lx = 5.0; // длина
-        EngineData->objects[i].ly = 5.0; // ширина
-        EngineData->objects[i].lz = 5.0; // высота
+        EngineData->objects[i].lx = 35.0; // длина
+        EngineData->objects[i].ly = 35.0; // ширина
+        EngineData->objects[i].lz = 35.0; // высота
         EngineData->Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
         EngineData->MapTexture(i,SURE_MAPPING_PLANAR_XZ);
         EngineData->objects[i].ox = EngineData->cam_vec;

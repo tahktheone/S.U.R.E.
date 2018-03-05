@@ -2,6 +2,8 @@
 
 #include <SureData.h>
 
+#define COLLISION_LOGGING
+
 SurePhysThread::~SurePhysThread()
 {
 
@@ -9,6 +11,9 @@ SurePhysThread::~SurePhysThread()
 
 void SurePhysThread::run()
 {
+    #ifdef COLLISION_LOGGING
+    int l_collision_index = 0;
+    #endif // COLLISION_LOGGING
     while(m_running)
     {
         clock_gettime(CLOCK_MONOTONIC,&framestart);
@@ -635,18 +640,180 @@ if(dot(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]]),M[TI[3]]-M[TI[0]])>0) //вер
 bool exit_no_collision = false;
 bool exit_collision = false;
 
+#ifdef COLLISION_LOGGING
+QImage *l_image;
+QPainter *l_painter;
+QBrush *l_brush;
+
+#define LOG_PICWID 700.0
+#define LOG_PICHIG 700.0
+#define LOG_PICWID_A LOG_PICWID*2.0
+#define LOG_PICHIG_A LOG_PICHIG*2.0
+
+l_image = new QImage(LOG_PICWID_A,LOG_PICHIG_A*10,QImage::Format_ARGB32);
+l_painter = new QPainter();
+
+l_painter->begin(l_image);
+l_painter->fillRect(0,0,LOG_PICWID_A,LOG_PICHIG_A*10,Qt::black);
+
+QPen lo_pen;
+lo_pen.setColor(Qt::white);
+lo_pen.setWidth(1);
+l_painter->setPen(lo_pen);
+
+l_painter->drawText(0,20,"Minkowski:");
+l_painter->drawLine(LOG_PICWID,0,LOG_PICWID,LOG_PICHIG_A); // разделение на 4 области
+l_painter->drawLine(0,LOG_PICHIG,LOG_PICWID_A,LOG_PICHIG); // разделение на 4 области
+
+double min_mc_x = SURE_R_MAXDISTANCE;
+double max_mc_x = -SURE_R_MAXDISTANCE;
+double min_mc_y = SURE_R_MAXDISTANCE;
+double max_mc_y = -SURE_R_MAXDISTANCE;
+double min_mc_z = SURE_R_MAXDISTANCE;
+double max_mc_z = -SURE_R_MAXDISTANCE;
+
+for(int i = 0;i<mc;++i){
+    if(min_mc_x>M[i].x)min_mc_x=M[i].x;
+    if(max_mc_x<M[i].x)max_mc_x=M[i].x;
+    if(min_mc_y>M[i].y)min_mc_y=M[i].y;
+    if(max_mc_y<M[i].y)max_mc_y=M[i].y;
+    if(min_mc_z>M[i].z)min_mc_z=M[i].z;
+    if(max_mc_z<M[i].z)max_mc_z=M[i].z;
+};
+
+//   ^ z       |  ^ z
+//    > x      |  > y
+//------------------------
+//   ^ y       |
+//    > x      |
+
+max_mc_x+=20.0;
+max_mc_y+=20.0;
+max_mc_z+=20.0;
+min_mc_x-=20.0;
+min_mc_y-=20.0;
+min_mc_z-=20.0;
+
+double delta_x = max_mc_x - min_mc_x;
+double delta_y = max_mc_y - min_mc_y;
+double delta_z = max_mc_z - min_mc_z;
+
+float l_x;
+float l_y;
+
+int l_log_index = 0;
+int l_log_drawline[4];
+int l_log_textline = 0;
+char l_text[200];
+
+#define LOG_DRAW_AXISES \
+l_painter->drawLine(LOG_PICWID,l_log_index*LOG_PICHIG_A+0,LOG_PICWID,l_log_index*LOG_PICHIG_A+LOG_PICHIG_A); \
+l_painter->drawLine(0,l_log_index*LOG_PICHIG_A+LOG_PICHIG,LOG_PICWID_A,l_log_index*LOG_PICHIG_A+LOG_PICHIG); \
+lo_pen.setWidth(1); \
+lo_pen.setColor(Qt::gray); \
+l_painter->setPen(lo_pen); \
+if(min_mc_x<0&&max_mc_x>0){ \
+         float l_px = LOG_PICWID * ( 0.0 - min_mc_x ) / delta_x; \
+         int drawx = l_px; \
+         l_painter->drawLine(drawx,l_log_index*LOG_PICHIG_A+0,drawx,l_log_index*LOG_PICHIG_A+LOG_PICHIG_A); \
+         l_painter->drawLine(drawx,l_log_index*LOG_PICHIG_A+LOG_PICHIG,drawx,l_log_index*LOG_PICHIG_A+LOG_PICHIG_A); \
+}; \
+if(min_mc_y<0&&max_mc_y>0){ \
+         float l_py = LOG_PICWID * ( 0.0 - min_mc_y ) / delta_y; \
+         int drawy = l_py; \
+         l_painter->drawLine(LOG_PICWID+drawy,l_log_index*LOG_PICHIG_A+0,LOG_PICWID+drawy,l_log_index*LOG_PICHIG_A+LOG_PICHIG); \
+         l_py = LOG_PICHIG * ( 0.0 - min_mc_y ) / delta_y; \
+         drawy = l_py; \
+         l_painter->drawLine(0,l_log_index*LOG_PICHIG_A+LOG_PICHIG_A-drawy,LOG_PICWID,l_log_index*LOG_PICHIG_A+LOG_PICHIG_A-drawy); \
+}; \
+if(min_mc_z<0&&max_mc_z>0){ \
+         float l_pz = LOG_PICHIG * ( 0.0 - min_mc_z ) / delta_z; \
+         int drawz = l_pz; \
+         l_painter->drawLine(0,l_log_index*LOG_PICHIG_A+LOG_PICHIG-drawz,LOG_PICWID,l_log_index*LOG_PICHIG_A+LOG_PICHIG-drawz); \
+         l_painter->drawLine(LOG_PICWID,l_log_index*LOG_PICHIG_A+LOG_PICHIG-drawz,LOG_PICWID_A,l_log_index*LOG_PICHIG_A+LOG_PICHIG-drawz); \
+};
+
+#define LOG_MINKOWSKI \
+lo_pen.setColor(Qt::yellow); \
+lo_pen.setWidth(3); \
+l_painter->setPen(lo_pen); \
+for(int i = 0;i<mc;++i){ \
+         l_x = LOG_PICWID * ( M[i].x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( M[i].z - min_mc_z ) / delta_z; \
+         l_painter->drawPoint((int)(l_x),(int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y)); \
+         l_x = LOG_PICWID * ( M[i].y - min_mc_y ) / delta_y; \
+         l_y = LOG_PICHIG * ( M[i].z - min_mc_z ) / delta_z; \
+         l_painter->drawPoint((int)(LOG_PICWID + l_x),(int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y)); \
+         l_x = LOG_PICWID * ( M[i].x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( M[i].y - min_mc_y ) / delta_y; \
+         l_painter->drawPoint((int)(l_x),(int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG_A-l_y)); \
+}; \
+
+    #define LOG_LINE(A,B) \
+         l_x = LOG_PICWID * ( A.x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( A.z - min_mc_z ) / delta_z; \
+         l_log_drawline[0] = (int)(l_x); \
+         l_log_drawline[1] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y); \
+         l_x = LOG_PICWID * ( B.x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( B.z - min_mc_z ) / delta_z; \
+         l_log_drawline[2] = (int)(l_x); \
+         l_log_drawline[3] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y); \
+         l_painter->drawLine(l_log_drawline[0],l_log_drawline[1],l_log_drawline[2],l_log_drawline[3]); \
+         l_x = LOG_PICWID * ( A.y - min_mc_y ) / delta_y; \
+         l_y = LOG_PICHIG * ( A.z - min_mc_z ) / delta_z; \
+         l_log_drawline[0] = (int)(LOG_PICWID + l_x); \
+         l_log_drawline[1] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y); \
+         l_x = LOG_PICWID * ( B.y - min_mc_y ) / delta_y; \
+         l_y = LOG_PICHIG * ( B.z - min_mc_z ) / delta_z; \
+         l_log_drawline[2] = (int)(LOG_PICWID + l_x); \
+         l_log_drawline[3] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG-l_y); \
+         l_painter->drawLine(l_log_drawline[0],l_log_drawline[1],l_log_drawline[2],l_log_drawline[3]); \
+         l_x = LOG_PICWID * ( A.x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( A.y - min_mc_y ) / delta_y; \
+         l_log_drawline[0] = (int)(l_x); \
+         l_log_drawline[1] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG_A-l_y); \
+         l_x = LOG_PICWID * ( B.x - min_mc_x ) / delta_x; \
+         l_y = LOG_PICHIG * ( B.y - min_mc_y ) / delta_y; \
+         l_log_drawline[2] = (int)(l_x); \
+         l_log_drawline[3] = (int)(l_log_index*LOG_PICHIG_A+LOG_PICHIG_A-l_y); \
+         l_painter->drawLine(l_log_drawline[0],l_log_drawline[1],l_log_drawline[2],l_log_drawline[3]);
+
+    #define LOG_POINT(A,B) \
+    lo_pen.setWidth(1); \
+    lo_pen.setColor(Qt::white); \
+    l_painter->setPen(lo_pen); \
+    sprintf(l_text,A,B.x,B.y,B.z); \
+    l_painter->drawText(LOG_PICWID+10,l_log_index*LOG_PICHIG_A+LOG_PICHIG+20+l_log_textline*20,l_text); \
+    l_log_textline++; \
+
+    #define LOG_NUMBER(A,B) \
+    lo_pen.setWidth(1); \
+    lo_pen.setColor(Qt::white); \
+    l_painter->setPen(lo_pen); \
+    sprintf(l_text,A,B); \
+    l_painter->drawText(LOG_PICWID+10,l_log_index*LOG_PICHIG_A+LOG_PICHIG+20+l_log_textline*20,l_text); \
+    l_log_textline++; \
+
+    #define LOG_TEXT(A) \
+    lo_pen.setWidth(1); \
+    lo_pen.setColor(Qt::white); \
+    l_painter->setPen(lo_pen); \
+    l_painter->drawText(LOG_PICWID+10,l_log_index*LOG_PICHIG_A+LOG_PICHIG+20+l_log_textline*20,A); \
+    l_log_textline++; \
+
+
+LOG_DRAW_AXISES;
+LOG_MINKOWSKI;
+
+#endif // COLLISION_LOGGING
+
 while(!(exit_no_collision||exit_collision))
 {
-    /*
-    bool check = false;
-    if(dot(cross(T[1]-T[0],T[2]-T[0]),T[3]-T[0])<0) //вершина T3 внутри T0 T1 T2 ?
-    if(dot(cross(T[3]-T[0],T[1]-T[0]),T[2]-T[0])<0) //вершина T2 внутри T0 T3 T1 ?
-    if(dot(cross(T[3]-T[1],T[2]-T[1]),T[0]-T[1])<0) //вершина T0 внутри T1 T3 T2 ?
-    if(dot(cross(T[3]-T[2],T[0]-T[2]),T[1]-T[2])<0) //вершина T1 внутри T2 T3 T0 ?
-        check = true;
-    if(!check)
-        std::cout << "err! ";
-    */
+    #ifdef COLLISION_LOGGING
+    l_log_index++;
+    l_log_textline = 0;
+    #endif // COLLISION_LOGGING
+
     //Проверяем, содержит ли тэтраэдр 0,0.
     //заодно ищем грань ближайшую к 0,0
     __VTYPE L1 = dot(__NORMALIZE(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]])),-M[TI[0]]); // грань 0 1 2
@@ -654,39 +821,64 @@ while(!(exit_no_collision||exit_collision))
     __VTYPE L3 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[1]],M[TI[2]]-M[TI[1]])),-M[TI[1]]); // грань 1 3 2
     __VTYPE L4 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[2]],M[TI[0]]-M[TI[2]])),-M[TI[2]]); // грань 2 3 0
 
+    #ifdef COLLISION_LOGGING
+    lo_pen.setColor(Qt::white);
+    lo_pen.setWidth(1);
+    l_painter->setPen(lo_pen);
+    l_painter->drawText(0,l_log_index*LOG_PICHIG_A+20,"Проверка на 0,0:");
+    LOG_DRAW_AXISES;
+    LOG_MINKOWSKI;
+
+    lo_pen.setColor(Qt::green);
+    lo_pen.setWidth(2);
+    l_painter->setPen(lo_pen);
+
+    LOG_LINE(M[TI[0]],M[TI[1]]);
+    LOG_LINE(M[TI[0]],M[TI[2]]);
+    LOG_LINE(M[TI[0]],M[TI[3]]);
+    LOG_LINE(M[TI[1]],M[TI[2]]);
+    LOG_LINE(M[TI[1]],M[TI[3]]);
+    LOG_LINE(M[TI[2]],M[TI[3]]);
+
+    #endif // COLLISION_LOGGING
+
     if(L1>SURE_R_DELTA||L2>SURE_R_DELTA||L3>SURE_R_DELTA||L4>SURE_R_DELTA)
     { // тэтраэдр не содержит 0,0
         //__VTYPE3 TN[4];
         uint TNI[4] = {0,0,0,0};
-        __VTYPE LM = 0;
+        __VTYPE LM = SURE_R_MAXDISTANCE;
         #define SET_TN(A,B,C) TN[0]=T[A];TN[1]=T[B];TN[2]=T[C];
         #define SET_TNI(A,B,C) TNI[0]=TI[A];TNI[1]=TI[B];TNI[2]=TI[C];
 
         // ищем грань, для которой [0,0] снаружи
-        if(L1>LM){
+        if(L1>0&&L1<LM){
             SET_TNI(0,1,2);
             LM=L1;
         };
-        if(L2>LM){
+        if(L2>0&&L2<LM){
             SET_TNI(0,3,1);
             LM=L2;
         };
-        if(L3>LM){
+        if(L3>0&&L3<LM){
             SET_TNI(1,3,2);
             LM=L3;
         };
-        if(L4>LM){
+        if(L4>0&&L4<LM){
             SET_TNI(2,3,0);
             LM=L4;
         };
         __VTYPE3 v = cross(M[TNI[1]]-M[TNI[0]],M[TNI[2]]-M[TNI[0]]); // нормаль основания нового тэтраэдра
         // ищем дальнюю точку в M в направлении v
 
+    #ifdef COLLISION_LOGGING
+    LOG_POINT("v=(%.4f;%.4f;%.4f)",v);
+    #endif // COLLISION_LOGGING
+
         __VTYPE md = SURE_R_DELTA;
         __VTYPE ld;
         bool f = false;
         for(uint i = 0;i<mc;++i)
-        {// для каждой точки M[i]
+        {// для каждой точки M[i] -- есть точка в направлении v?
             ld = dot(v,M[i]-M[TNI[0]]);
             if(ld>md)
             {
@@ -697,7 +889,7 @@ while(!(exit_no_collision||exit_collision))
         };
 
         if(f)
-        {   // новый тэтраэдр, и его проверяем на 0,0
+        {   // новый тэтраэдр
             TI[0]=TNI[0];
             TI[1]=TNI[2];
             TI[2]=TNI[1];
@@ -715,6 +907,11 @@ while(!(exit_no_collision||exit_collision))
         collision_found = true;
         //std::cout << "hit ";
         // создаем cover для минковского
+
+        #ifdef COLLISION_LOGGING
+        LOG_TEXT("Hit 0,0 !");
+        #endif // COLLISION_LOGGING
+
         uint C[64*3];
         uint cc = 0;
         uint C_N[64*3];
@@ -746,6 +943,36 @@ while(!(exit_no_collision||exit_collision))
         uint iter = 0;
         while(!cover_expanded)
         {
+                #define CF0 M[C[ci*3+0]]
+                #define CF1 M[C[ci*3+1]]
+                #define CF2 M[C[ci*3+2]]
+
+#ifdef COLLISION_LOGGING
+            l_log_index++;
+            l_log_textline = 0;
+
+    lo_pen.setColor(Qt::white);
+    lo_pen.setWidth(1);
+    l_painter->setPen(lo_pen);
+    l_painter->drawText(0,l_log_index*LOG_PICHIG_A+20,"Expanding cover");
+    LOG_DRAW_AXISES;
+    LOG_MINKOWSKI;
+
+    for(uint ci=0;ci<cc;++ci)
+    {
+        lo_pen.setWidth(1);
+        lo_pen.setColor(Qt::red);
+        l_painter->setPen(lo_pen);
+        LOG_LINE(CF0,CF1);
+        LOG_LINE(CF0,CF2);
+        LOG_LINE(CF1,CF2);
+        LOG_NUMBER("Грань %i:",ci);
+        LOG_POINT("(%.2f;%.2f;%.2f)",CF0);
+        LOG_POINT("(%.2f;%.2f;%.2f)",CF1);
+        LOG_POINT("(%.2f;%.2f;%.2f)",CF2);
+    };
+#endif // COLLISION_LOGGING
+
             //Ищем грань ближайшую к 0 0.
             __VTYPE LM = SURE_R_MAXDISTANCE;
             uint cf = 0;
@@ -754,9 +981,6 @@ while(!(exit_no_collision||exit_collision))
             for(uint ci=0;ci<cc;++ci)
             { // для каждой грани cover
             // (помним что для всех граней 0,0 внутри)
-                #define CF0 M[C[ci*3+0]]
-                #define CF1 M[C[ci*3+1]]
-                #define CF2 M[C[ci*3+2]]
                 __VTYPE L = fabs(dot(__NORMALIZE(cross(CF1-CF0,CF2-CF0)),-CF0));
                 // расстояние до 0,0
                 if(L<LM)
@@ -768,6 +992,10 @@ while(!(exit_no_collision||exit_collision))
 
             collision_distance = LM;
 
+            #ifdef COLLISION_LOGGING
+            LOG_NUMBER("Collision distance = %.4f",collision_distance);
+            #endif // COLLISION_LOGGING
+
             // в направлении от 0,0 есть еще точки?
             //std::cout << "Lm=" << LM << ";f " << cf << "\n";
             #define CFF0 M[C[cf*3+0]]
@@ -775,6 +1003,13 @@ while(!(exit_no_collision||exit_collision))
             #define CFF2 M[C[cf*3+2]]
             __VTYPE3 v = cross(CFF1-CFF0,CFF2-CFF0);
             collision_normal = __NORMALIZE(v);
+
+            #ifdef COLLISION_LOGGING
+            LOG_POINT("Collision normal = (%.2f,%.2f,%.2f)",collision_normal);
+
+            LOG_POINT("Vector (%.3f;%.3f;%.3f)",v);
+            #endif // COLLISION_LOGGING
+
             // ищем дальнюю точку в M в направлении v
             __VTYPE md = dot(v,CFF0);
             __VTYPE ld;
@@ -795,10 +1030,12 @@ while(!(exit_no_collision||exit_collision))
             }; // для каждой точки M[i]
 
             if(f){
+
+#ifdef COLLISION_LOGGING
+LOG_POINT("Adding (%.3f;%.3f;%.3f)",M[fndi]);
+#endif // COLLISION_LOGGING
+
             // cover нужно расширить добавив точку M[fndi]
-                //std::cout << "adding " << fndi  << "\n";
-                //std::cout << "ex ";
-                //std::cout << M[fndi].x << "|" << M[fndi].y << "|" << M[fndi].z << "\n";
                 incover[fndi] = true;
                 for(uint aci = 0;aci<cc;++aci)
                 { // для каждой грани cover
@@ -962,17 +1199,37 @@ while(!(exit_no_collision||exit_collision))
             collision_point = aver2;
         };
 
-        std::cout << "====== collide ======" << "\n";
-        std::cout << "cn=" << collision_normal.x << "|" << collision_normal.y << "|" << collision_normal.z << "\n";
-        //std::cout << "\n" << "o1=" << o1->X.x << "|" << o1->X.y << "|" << o1->X.z << ";";
-        //std::cout << "\n" << "o2=" << o2->X.x << "|" << o2->X.y << "|" << o2->X.z << ";";
-        std::cout << "cd=" << collision_distance << "\n";
-        std::cout << "cp=" << collision_point.x << "|" << collision_point.y << "|" << collision_point.z << "\n";
+#ifdef COLLISION_LOGGING
+            #ifdef COLLISION_LOGGING
+            LOG_POINT("Collision point = (%.2f,%.2f,%.2f)",collision_point);
+
+            #endif // COLLISION_LOGGING
+        std::wcout << L"====== collide ======" << "\n";
+        std::wcout << L"cn=" << collision_normal.x << L"|" << collision_normal.y << L"|" << collision_normal.z << L"\n";
+        std::wcout << L"o1=" << o1->X.x << L"|" << o1->X.y << L"|" << o1->X.z << L";" << L"\n";
+        std::wcout << L"o2=" << o2->X.x << L"|" << o2->X.y << L"|" << o2->X.z << L";" << L"\n";
+        std::wcout << L"cd=" << collision_distance << L"\n";
+        std::wcout << L"cp=" << collision_point.x << L"|" << collision_point.y << L"|" << collision_point.z << L"\n";
+
+        l_collision_index++;
+        QString Fname = "./screenshots/";
+        char FileName[100];
+        sprintf(FileName,"collide%i.png",l_collision_index);
+        Fname += FileName;
+        l_image->save(Fname);
+#endif // COLLISION_LOGGING
 
         if(collision_found)
             ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
     };  // тэттраэдр содержит 0,0
 };// while(!exit)
+
+#ifdef COLLISION_LOGGING
+l_painter->end();
+delete l_painter;
+delete l_image;
+#endif // COLLISION_LOGGING
+
                             };// mesh'ы
                             if(lv_o1->type==SURE_OBJ_PLANE&&lv_o2->type==SURE_OBJ_PLANE)
                             { // квадратик с квадратиком
@@ -1042,6 +1299,8 @@ void SurePhysThread::drawscene()
     GPUData->r_maxiters = EngineData->r_iters;
     GPUData->r_rechecks = EngineData->r_rechecks;
     GPUData->r_backlight = EngineData->r_backlight;
+    GPUData->m_amx = EngineData->m_amx;
+    GPUData->m_amy = EngineData->m_amy;
     if(EngineData->reset)GPUData->toreset=true;
     EngineData->reset = false;
 

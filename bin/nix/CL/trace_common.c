@@ -33,8 +33,8 @@
     __VTYPE3 dZ = __FCONV3(GPUData->cam_vec);
     __VTYPE3 dY = -__FCONV3(GPUData->cam_upvec);
     __VTYPE3 dX = cross(dZ,dY);
-    size_t mx = __SURE_GLOBAL_MX;
-    size_t my = __SURE_GLOBAL_MY;
+    size_t mx = GPUData->m_amx;
+    size_t my = GPUData->m_amy;
 
     if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
     __VTYPE rx = (Randomf[r]-0.5);
