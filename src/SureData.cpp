@@ -40,7 +40,7 @@ SureData::SureData()
   // Scene_floor();
 
   Scene_tetrs();
-  Scene_tetra(20,10,60,60,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
+  //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
   //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
 
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
@@ -205,6 +205,7 @@ my_double3& operator-=(my_double3 &a,const my_double3 &b)
 
 void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl)
 {
+    if(pl<SURE_R_DELTA)return;
     my_double3 v1 = my_double3{0,0,0};
     my_double3 v2 = my_double3{0,0,0};
     if(o1->movable)v1 = o1->velbypp(pp);
@@ -222,7 +223,7 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     if(o1->movable)o1->push(pp,pd,pl*0.5);
     if(!o2->movable)o1->push(pp,pd,pl*0.5);
 
-    if(o2->movable)o2->push(pp,v2xy,-1.0);
-    if(o1->movable)o1->push(pp,v1xy,-1.0);
+    if(o2->movable)o2->push(pp,v2xy,-1.0); // трение
+    if(o1->movable)o1->push(pp,v1xy,-1.0); // трение
 
  }

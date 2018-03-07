@@ -13,8 +13,8 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 1
-#define SURE_SMOOTH 1
+#define SURE_SCALE 2
+#define SURE_SMOOTH 2
 
 #define SURE_MAXRES_X 1920
 #define SURE_MAXRES_Y 1080
@@ -34,7 +34,7 @@
 #define SURE_DR_SQUARE  2
 #define SURE_DR_MESH    3
 
-#define SURE_R_DELTA       (1.0/100.0)
+#define SURE_R_DELTA       (1.0/1000.0)
 #define SURE_R_MAXDISTANCE 1000
 #define SURE_R_FADELIMIT   (6.0/100.0)
 #define SURE_R_RNDSIZE     12288
@@ -79,5 +79,7 @@
 #define SURE_P_DELAY 8  // время между кадрами -- физика
 
 #define SURE_P_DELTA       (1.0/10000.0)
+
+#define SURE_MINKOWSKI_MAX 10000
 
 #endif // SUREDEFINES_H_INCLUDED

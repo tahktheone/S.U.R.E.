@@ -474,6 +474,13 @@ void SureWidget::keyReleaseEvent(QKeyEvent *event){
     if(event->key()==Qt::Key_D){
         EngineData->cam_dx.y = 0;
     };
+    if(event->key()==Qt::Key_Z){
+        if(EngineData->subp_rnd) {
+            EngineData->subp_rnd = false;
+        } else {
+            EngineData->subp_rnd = true;
+        };
+    };
 };
 
 void SureWidget::mouseMoveEvent(QMouseEvent *event)
@@ -548,10 +555,11 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].X.x = EngineData->cam_x.x; //Координаты центра
         EngineData->objects[i].X.y = EngineData->cam_x.y; //Координаты центра
         EngineData->objects[i].X.z = EngineData->cam_x.z; //Координаты центра
-        EngineData->objects[i].lx = 35.0; // длина
-        EngineData->objects[i].ly = 35.0; // ширина
-        EngineData->objects[i].lz = 35.0; // высота
-        EngineData->Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
+        EngineData->objects[i].lx = 10.0; // длина
+        EngineData->objects[i].ly = 10.0; // ширина
+        EngineData->objects[i].lz = 10.0; // высота
+        EngineData->Mesh_GenerateCube(i,SURE_NORMALS_DEFAULT);
+        //EngineData->Mesh_GenerateTetr(i,SURE_NORMALS_DEFAULT);
         EngineData->MapTexture(i,SURE_MAPPING_PLANAR_XZ);
         EngineData->objects[i].ox = EngineData->cam_vec;
         EngineData->objects[i].oz = EngineData->cam_upvec;
@@ -573,7 +581,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         EngineData->objects[i].drawable.rgb.s[1] = 220.0; // цвет
         EngineData->objects[i].drawable.rgb.s[2] = 255.0; // цвет
         EngineData->objects[i].drawable.sided = true;
-        EngineData->objects[i].lp = 4;
+        EngineData->objects[i].lp = 20;
         EngineData->objects[i].initp4();
         EngineData->objects[i].movable = true;
         EngineData->objects[i].collidable = true;

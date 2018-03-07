@@ -333,7 +333,10 @@ struct SureObject
         ox=__NORMALIZE(ox);
         oy=__NORMALIZE(oy);
         oz=__NORMALIZE(oz);
+        __VTYPE3 OX = X;
         X=(p1+p2+p3+p4)*0.25;
+        __VTYPE3 DX = OX-X;
+        if(__LENGTH(DX)<SURE_R_DELTA)X=OX;
     }
     my_double3 velbypp(my_double3 pp)
     {
@@ -410,6 +413,7 @@ class SureData
         cl_float r_backlight = 0.5;
         cl_uint m_amx = 1920;
         cl_uint m_amy = 1080;
+        cl_bool subp_rnd = false;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
@@ -436,6 +440,7 @@ class SureData
 
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int object,int norm_type); // не забыть вернуть в private
+        void Mesh_GenerateCube(int object,int norm_type); // не забыть вернуть в private
         void MapTexture(int object,int type); // не забыть вернуть в private
 
         // Для отладки
@@ -447,7 +452,7 @@ class SureData
         int AddVertex(double x, double y, double z);
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
-        void Mesh_GenerateCube(int object,int norm_type);
+
         void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
         void Mesh_GenNormals(int object,int norm_type);
         void Mesh_FromFile(int object,const char* name);

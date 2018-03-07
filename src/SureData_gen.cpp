@@ -85,6 +85,7 @@ for(int ms = 0; ms<objects[object].mesh_count; ++ms)
 void SureData::Mesh_GenerateCube(int object,int norm_type)
 {
     objects[object].mesh_start = cur_meshes;
+    objects[object].vertex_start = cur_vertexes;
     double x = objects[object].lx;
     double y = objects[object].ly;
     double z = objects[object].lz;
@@ -109,6 +110,7 @@ void SureData::Mesh_GenerateCube(int object,int norm_type)
     AddMesh(cv+3,cv+5,cv  );
     AddMesh(cv+5,cv+3,cv+4);
     objects[object].mesh_count = 12;
+    objects[object].vertex_count = cur_vertexes - objects[object].vertex_start;
 
     Mesh_GenNormals(object,norm_type);
 

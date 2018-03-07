@@ -36,12 +36,19 @@
     size_t mx = GPUData->m_amx;
     size_t my = GPUData->m_amy;
 
-    if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-    __VTYPE rx = (Randomf[r]-0.5);
-    if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-    __VTYPE ry = (Randomf[r]-0.5);
-    __VTYPE kx = GPUData->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-    __VTYPE ky = GPUData->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
+    __VTYPE kx;
+    __VTYPE ky;
+    if(GPUData->subp_rnd){
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
+        __VTYPE rx = (Randomf[r]-0.5);
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
+        __VTYPE ry = (Randomf[r]-0.5);
+        kx = GPUData->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
+        ky = GPUData->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
+    }else{
+        kx = GPUData->xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
+        ky = GPUData->xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
+    };
     __VTYPE3 tv = dZ+kx*dX+ky*dY;
     __VTYPE3 tp = __FCONV3(GPUData->cam_x);
     tv = __NORMALIZE(tv);
