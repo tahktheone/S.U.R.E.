@@ -247,6 +247,16 @@
                         __GET_VERTEX(gm1,mesh.x);
                         __GET_VERTEX(gm2,mesh.y);
                         __GET_VERTEX(gm3,mesh.z);
+                        gm1.x = gm1.x * lv_dr->lx;
+                        gm1.y = gm1.y * lv_dr->ly;
+                        gm1.z = gm1.z * lv_dr->lz;
+                        gm2.x = gm2.x * lv_dr->lx;
+                        gm2.y = gm2.y * lv_dr->ly;
+                        gm2.z = gm2.z * lv_dr->lz;
+                        gm3.x = gm3.x * lv_dr->lx;
+                        gm3.y = gm3.y * lv_dr->ly;
+                        gm3.z = gm3.z * lv_dr->lz;
+
                         // Алгоритм Моллера — Трумбора
                         __VTYPE3 pvec = cross(ltv,gm3-gm1);
                         __VTYPE det = dot(gm2-gm1,pvec);

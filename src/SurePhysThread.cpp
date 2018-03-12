@@ -319,9 +319,11 @@ void SurePhysThread::run()
                                 ltp.z = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oz));
 
                                 // для каждой грани:
-                                for(uint im = 0;im<o2->mesh_count;++im)
+                                int limit = EngineData->ModelsInfo[o2->ModelID].mesh_count;
+                                int lstart = EngineData->ModelsInfo[o2->ModelID].mesh_start;
+                                for(uint im = 0;im<limit;++im)
                                 { // для каждой грани:
-                                    uint cm = o2->mesh_start + im;
+                                    uint cm = lstart + im;
                                     __SURE_VINT4 mesh;
                                     __VTYPE3 gm1;
                                     __VTYPE3 gm2;
@@ -330,6 +332,15 @@ void SurePhysThread::run()
                                     __GET_VERTEX(gm1,mesh.x);
                                     __GET_VERTEX(gm2,mesh.y);
                                     __GET_VERTEX(gm3,mesh.z);
+                        gm1.x = gm1.x * o2->lx;
+                        gm1.y = gm1.y * o2->ly;
+                        gm1.z = gm1.z * o2->lz;
+                        gm2.x = gm2.x * o2->lx;
+                        gm2.y = gm2.y * o2->ly;
+                        gm2.z = gm2.z * o2->lz;
+                        gm3.x = gm3.x * o2->lx;
+                        gm3.y = gm3.y * o2->ly;
+                        gm3.z = gm3.z * o2->lz;
 
                                     // сфера пересекается с плоскостью?
                                         // определяем нормаль
@@ -456,11 +467,16 @@ void SurePhysThread::run()
                                 bool l_up = false;
                                 bool l_down = false;
                                 // для каждой точки
-                                for(uint iv = 0;iv<o1->vertex_count;++iv)
+                                int l_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
+                                int l_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
+                                for(uint iv = 0;iv<l_limit;++iv)
                                 { // для каждой точки
-                                    uint cv = o1->vertex_start + iv;
+                                    uint cv = l_start + iv;
                                     __VTYPE3 pt;
                                     __GET_VERTEX(pt,cv);
+                                    pt.x = pt.x * o1->lx;
+                                    pt.y = pt.y * o1->ly;
+                                    pt.z = pt.z * o1->lz;
 
                                     // pt - lpt вектор от точки на плоскости к к точке mesh'а
                                     __VTYPE cd = dot(pt-ltp,loz);
@@ -612,15 +628,26 @@ __VTYPE3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
 
 // 1. Составляем разность минковского.
 // для каждой точки
-for(uint i1 = 0;i1<o1->vertex_count;++i1)
+int l1_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
+int l1_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
+int l2_limit = EngineData->ModelsInfo[o2->ModelID].vertex_count;
+int l2_start = EngineData->ModelsInfo[o2->ModelID].vertex_start;
+
+for(uint i1 = 0;i1<l1_limit;++i1)
 {
-    uint cv1 = o1->vertex_start + i1;
+    uint cv1 = l1_start + i1;
     __GET_VERTEX(p1,cv1);
+    p1.x = p1.x * o1->lx;
+    p1.y = p1.y * o1->ly;
+    p1.z = p1.z * o1->lz;
     gp1 = o1->ox*p1.x + o1->oy*p1.y+o1->oz*p1.z + o1->X;
-    for(uint i2 = 0;i2<o2->vertex_count;++i2)
+    for(uint i2 = 0;i2<l2_limit;++i2)
     { // каждая точка с каждой точкой
-        uint cv2 = o2->vertex_start + i2;
+        uint cv2 = l2_start + i2;
         __GET_VERTEX(p2,cv2);
+        p2.x = p2.x * o2->lx;
+        p2.y = p2.y * o2->ly;
+        p2.z = p2.z * o2->lz;
         gp2 = o2->ox*p2.x + o2->oy*p2.y+o2->oz*p2.z + o2->X;
         M[mc]=gp2-gp1;
         ++mc;
@@ -1195,30 +1222,33 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         G_max = -SURE_R_MAXDISTANCE; \
         G_min = SURE_R_MAXDISTANCE;
 
-        #define __GET_VERTEX_BYOBJ_G(o,id,gvertex) \
-        uint cv = o->vertex_start + id; \
+        #define __GET_VERTEX_BYOBJ_G(l_start,o,id,gvertex) \
+        uint cv = l_start + id; \
         __VTYPE3 lvertex; \
         __GET_VERTEX(lvertex,cv); \
+        lvertex.x = lvertex.x * o->lx; \
+        lvertex.y = lvertex.y * o->ly; \
+        lvertex.z = lvertex.z * o->lz; \
         gvertex = o->ox*lvertex.x + o->oy*lvertex.y+o->oz*lvertex.z + o->X;
 
-        #define __GET_MINMAX_BYVEC(o,vec,gmin,gmax) \
-        for(uint ii = 0;ii<o->vertex_count;++ii) \
+        #define __GET_MINMAX_BYVEC(o,vec,gmin,gmax,l_start,l_limit) \
+        for(uint ii = 0;ii<l_limit;++ii) \
         { \
             __VTYPE3 gp; \
-            __GET_VERTEX_BYOBJ_G(o,ii,gp); \
+            __GET_VERTEX_BYOBJ_G(l_start,o,ii,gp); \
             __VTYPE l = dot(vec,gp); \
             GL[ii]=l; \
             if(l>gmax)gmax=l; \
             if(l<gmin)gmin=l; \
         };
 
-        #define __GET_AVER_DIS_BYOBJ(o,av,avc,dis) \
-        for(uint ii = 0;ii<o->vertex_count;++ii) \
+        #define __GET_AVER_DIS_BYOBJ(o,av,avc,dis,l_start,l_limit) \
+        for(uint ii = 0;ii<l_limit;++ii) \
         { \
             if(GL[ii]>GD) \
             { \
                 __VTYPE3 gp; \
-                __GET_VERTEX_BYOBJ_G(o,ii,gp); \
+                __GET_VERTEX_BYOBJ_G(l_start,o,ii,gp); \
                 if(xmax<gp.x)xmax=gp.x; \
                 if(ymax<gp.y)ymax=gp.y; \
                 if(zmax<gp.z)zmax=gp.z; \
@@ -1253,7 +1283,7 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         __VTYPE g1dis;
         __VTYPE g2dis;
 
-        __GET_MINMAX_BYVEC(o1,n,G_min,G_max); // нашли самую дальюю и самую ближнюю точки
+        __GET_MINMAX_BYVEC(o1,n,G_min,G_max,l1_start,l1_limit); // нашли самую дальюю и самую ближнюю точки
         GD = G_max-G_min;
         GD *= 0.999; // отсекаем только дальние
         GD += G_min;
@@ -1261,7 +1291,7 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         __VTYPE3 colverts[16];
         int colverts_c = 0;
         __VTYPE l_dcn;
-        __GET_AVER_DIS_BYOBJ(o1,aver1,avc1,g1dis); // ищем среднее по дальним 5% точек
+        __GET_AVER_DIS_BYOBJ(o1,aver1,avc1,g1dis,l1_start,l1_limit); // ищем среднее по дальним 5% точек
         if(colverts_c>=3){
             // если в коллизии учавствует плоскость -- поворачиваем нормаль
             __VTYPE3 tcn = collision_normal;
@@ -1272,13 +1302,13 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
             collision_distance = collision_distance * fabs(l_dcn);
         };
 
-        __GET_MINMAX_BYVEC(o2,collision_normal,G_min,G_max); // нашли самую дальюю и самую ближнюю точки
+        __GET_MINMAX_BYVEC(o2,collision_normal,G_min,G_max,l2_start,l2_limit); // нашли самую дальюю и самую ближнюю точки
         GD = G_max-G_min;
         GD *= 0.999; // отсекаем только дальние
         GD += G_min;
         __RE_MINMAX;
         colverts_c = 0;
-        __GET_AVER_DIS_BYOBJ(o2,aver2,avc2,g2dis); // ищем среднее по дальним 5% точек
+        __GET_AVER_DIS_BYOBJ(o2,aver2,avc2,g2dis,l2_start,l2_limit); // ищем среднее по дальним 5% точек
         if(colverts_c>=3){
             // если в коллизии учавствует плоскость -- поворачиваем нормаль
             __VTYPE3 tcn = collision_normal;

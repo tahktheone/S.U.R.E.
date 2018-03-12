@@ -213,10 +213,11 @@ struct SureObject
     my_double3 v3;
     my_double3 v4;
     SureDrawable drawable;
-    cl_uint mesh_start;
-    cl_uint mesh_count;
-    cl_uint vertex_start = 0;
-    cl_uint vertex_count = 0;
+    cl_uint ModelID;
+    //cl_uint mesh_start;
+    //cl_uint mesh_count;
+    //cl_uint vertex_start = 0;
+    //cl_uint vertex_count = 0;
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -396,6 +397,16 @@ struct SureTextureData
     char name[20];
 };
 
+struct SureModelData
+{
+    bool toupdate;
+    int mesh_start;
+    int mesh_count;
+    int vertex_start;
+    int vertex_count;
+    char name[20];
+};
+
 class SureData
 {
     public:
@@ -427,26 +438,33 @@ class SureData
         cl_uint cur_vertexes = 0;
         cl_uint cur_meshes = 0;
         cl_uint cur_textures = 0;
+        cl_uint cur_models = 0;
+        SureModelData ModelsInfo[SURE_R_MAXTEX];
         SureTextureData TexturesInfo[SURE_R_MAXTEX];
 
         void LoadTexture(const char*);
+        void LoadModel(const char*);
         int GetTexture(const char*);
         int GenTexture(const char*,int type);
+        int GetModel(const char*);
+        int GenModel(const char*,int type);
 
         SureObject TemplateObject; // шаблонный объект
         uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
+        SureObject *ObjByID(uint i_id); // Объект по внешнему айдишнику
 
         SureObject objects[SURE_OBJ_MAX];
-        int CreateObject(int type);
         SureLink links[SURE_LIN_MAX];
         int m_links = 0;
         int m_objects = 0;
-        uint m_ObjExternID = 0;
+        uint m_ObjExternID = 1;
 
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
-        void Mesh_GenerateTetr(int object,int norm_type); // не забыть вернуть в private
-        void Mesh_GenerateCube(int object,int norm_type); // не забыть вернуть в private
-        void MapTexture(int object,int type); // не забыть вернуть в private
+        void Mesh_GenerateTetr(int i_model,int norm_type); // не забыть вернуть в private
+        void Mesh_GenerateCube(int i_model,int norm_type); // не забыть вернуть в private
+        void Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count,int norm_type);
+        void Mesh_GenNormals(int i_model,int norm_type);
+        void MapTexture(int i_model,int type); // не забыть вернуть в private
 
         // Для отладки
         float frametime = 0;
@@ -458,17 +476,13 @@ class SureData
         int AddVertex(my_double3 X);
         int AddMesh(int v1, int v2, int v3);
 
-        void Mesh_GenerateHull(int object,my_double3* vertexes,int vert_count,int norm_type);
-        void Mesh_GenNormals(int object,int norm_type);
-        void Mesh_FromFile(int object,const char* name);
-
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
-        void Scene_tetrs(); // Пол и светильник -- тетраэдры
-        void Scene_golem();
-        void Scene_metaball(double x, double y, double z, double sz,int nt);
-        void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
-        void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);
+        //void Scene_tetrs(); // Пол и светильник -- тетраэдры
+        //void Scene_golem();
+        //void Scene_metaball(double x, double y, double z, double sz,int nt);
+        //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
+        //void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);
 };
 
 struct SureOCLData{
