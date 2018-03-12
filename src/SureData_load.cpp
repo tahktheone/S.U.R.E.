@@ -136,6 +136,55 @@ int SureData::CreateObject(int type)
     return m_objects - 1;
 };
 
+uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
+{
+    int i = m_objects;
+    m_objects++;
+
+    SetDefaultRotationBasis(i);
+    objects[i].type = TemplateObject.type;
+    objects[i].mesh_start = cur_meshes;
+    objects[i].vertex_start = cur_vertexes;
+    objects[i].mesh_count = 0;
+    objects[i].vertex_count = 0;
+    objects[i].X = *i_X;
+    objects[i].ox = TemplateObject.ox;
+    objects[i].oy = TemplateObject.oy;
+    objects[i].oz = TemplateObject.oz;
+    objects[i].lx = TemplateObject.lx;
+    objects[i].ly = TemplateObject.ly;
+    objects[i].lz = TemplateObject.lz;
+    objects[i].lp = TemplateObject.lp;
+    objects[i].movable = TemplateObject.movable;
+    objects[i].collidable = TemplateObject.collidable;
+    //objects[i].drawable = TemplateObject.drawable;
+
+        objects[i].drawable.X  = objects[i].X;
+        objects[i].drawable.ox = objects[i].ox;
+        objects[i].drawable.oy = objects[i].oy;
+        objects[i].drawable.oz = objects[i].oz;
+        objects[i].drawable.lx = objects[i].lx;
+        objects[i].drawable.ly = objects[i].ly;
+        objects[i].drawable.lz = objects[i].lz;
+        objects[i].drawable.type = TemplateObject.drawable.type;
+        objects[i].drawable.radiance = TemplateObject.drawable.radiance;
+        objects[i].drawable.transp = TemplateObject.drawable.transp;
+        objects[i].drawable.transp_i = TemplateObject.drawable.transp_i;
+        objects[i].drawable.refr = TemplateObject.drawable.refr;
+        objects[i].drawable.dist_type = TemplateObject.drawable.dist_type;
+        objects[i].drawable.dist_sigma = TemplateObject.drawable.dist_sigma;
+        objects[i].drawable.dist_m = TemplateObject.drawable.dist_m;
+        objects[i].drawable.rgb = TemplateObject.drawable.rgb;
+        objects[i].drawable.sided = TemplateObject.drawable.sided;
+        objects[i].drawable.map_id = TemplateObject.drawable.map_id;
+        objects[i].drawable.advmap_id = TemplateObject.drawable.advmap_id;
+
+    objects[i].initp4();
+    objects[i].external_id = m_ObjExternID;
+    m_ObjExternID++;
+    return objects[i].external_id;
+};
+
 int SureData::AddVertex(double x, double y, double z)
 {
     __VERTEX_X(cur_vertexes) = x;

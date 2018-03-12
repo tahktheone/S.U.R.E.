@@ -186,6 +186,7 @@ uint mad24(uint,uint,uint);
 
 struct SureObject
 {
+    uint external_id;
     my_double3 X;  //Координаты центра
     my_double3 ox; //Локальная ось x
     my_double3 oy; //Локальная ось y
@@ -432,11 +433,15 @@ class SureData
         int GetTexture(const char*);
         int GenTexture(const char*,int type);
 
+        SureObject TemplateObject; // шаблонный объект
+        uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
+
         SureObject objects[SURE_OBJ_MAX];
         int CreateObject(int type);
         SureLink links[SURE_LIN_MAX];
         int m_links = 0;
         int m_objects = 0;
+        uint m_ObjExternID = 0;
 
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int object,int norm_type); // не забыть вернуть в private

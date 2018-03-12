@@ -36,10 +36,10 @@ SureData::SureData()
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  //Scene_box();
+  Scene_box();
   // Scene_floor();
 
-  Scene_tetrs();
+  //Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
   //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
 
@@ -208,6 +208,12 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     if(pl<SURE_R_DELTA)return;
     my_double3 v1 = my_double3{0,0,0};
     my_double3 v2 = my_double3{0,0,0};
+
+    if(o2->movable)o2->push(pp,pd,-pl*0.5);
+    if(!o1->movable)o2->push(pp,pd,-pl*0.5);
+    if(o1->movable)o1->push(pp,pd,pl*0.5);
+    if(!o2->movable)o1->push(pp,pd,pl*0.5);
+
     if(o1->movable)v1 = o1->velbypp(pp);
     if(o2->movable)v2 = o2->velbypp(pp);
     my_double3 oz = __NORMALIZE(pd);
@@ -217,11 +223,6 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     my_double3 v1xy = v1-v1z;
     my_double3 v2z = oz*l_v2z;
     my_double3 v2xy = v2-v2z;
-
-    if(o2->movable)o2->push(pp,pd,-pl*0.5);
-    if(!o1->movable)o2->push(pp,pd,-pl*0.5);
-    if(o1->movable)o1->push(pp,pd,pl*0.5);
-    if(!o2->movable)o1->push(pp,pd,pl*0.5);
 
     if(o2->movable)o2->push(pp,v2xy,-1.0); // трение
     if(o1->movable)o1->push(pp,v1xy,-1.0); // трение

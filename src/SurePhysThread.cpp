@@ -1225,6 +1225,8 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
                 if(xmin>gp.x)xmin=gp.x; \
                 if(ymin>gp.y)ymin=gp.y; \
                 if(zmin>gp.z)zmin=gp.z; \
+                colverts[colverts_c] = gp; \
+                colverts_c++; \
                 av = av + gp; \
                 avc = avc + 1.0; \
             }; \
@@ -1237,7 +1239,7 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         __VTYPE GD = 0;
         __VTYPE3 n = -collision_normal;
         __VTYPE GL[64]; // список расстояний проекций радиус-векторов
-                         // всех точек объекта на верктор столкновения
+                        // всех точек объекта на верктор столкновения
         __VTYPE xmax;
         __VTYPE ymax;
         __VTYPE zmax;
@@ -1256,14 +1258,36 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         GD *= 0.999; // отсекаем только дальние
         GD += G_min;
         __RE_MINMAX;
+        __VTYPE3 colverts[16];
+        int colverts_c = 0;
+        __VTYPE l_dcn;
         __GET_AVER_DIS_BYOBJ(o1,aver1,avc1,g1dis); // ищем среднее по дальним 5% точек
+        if(colverts_c>=3){
+            // если в коллизии учавствует плоскость -- поворачиваем нормаль
+            __VTYPE3 tcn = collision_normal;
+            collision_normal = __NORMALIZE(cross(colverts[1]-colverts[0],colverts[2]-colverts[0]));
+            l_dcn = dot(collision_normal,tcn);
+            if(l_dcn<0)
+                collision_normal = - collision_normal;
+            collision_distance = collision_distance * fabs(l_dcn);
+        };
 
         __GET_MINMAX_BYVEC(o2,collision_normal,G_min,G_max); // нашли самую дальюю и самую ближнюю точки
         GD = G_max-G_min;
         GD *= 0.999; // отсекаем только дальние
         GD += G_min;
         __RE_MINMAX;
+        colverts_c = 0;
         __GET_AVER_DIS_BYOBJ(o2,aver2,avc2,g2dis); // ищем среднее по дальним 5% точек
+        if(colverts_c>=3){
+            // если в коллизии учавствует плоскость -- поворачиваем нормаль
+            __VTYPE3 tcn = collision_normal;
+            collision_normal = __NORMALIZE(cross(colverts[1]-colverts[0],colverts[2]-colverts[0]));
+            l_dcn = dot(collision_normal,tcn);
+            if(l_dcn<0)
+                collision_normal = - collision_normal;
+            collision_distance = collision_distance * fabs(l_dcn);
+        };
 
         if(g1dis<g2dis)
         {
