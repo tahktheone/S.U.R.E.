@@ -9,10 +9,10 @@
     __SURE_GLOBAL struct SureDrawable* cur;
     __SURE_GLOBAL struct SureDrawable* col;
     __SURE_GLOBAL struct SureDrawable* lv_dr;
-    __VTYPE col_refr;
+    __VTYPE col_refr = 0.0;
     __SURE_UCHAR3 col_rgb;
     __SURE_UINT4 col_rgba;
-    __VTYPE col_transp;
+    __VTYPE col_transp = 0.0;
     int col_radiance;
 
     int col_dt; // тип рандомизации
@@ -30,26 +30,7 @@
     uint r = mad24(xx,xx+yy,xx+yy);
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
 
-    __VTYPE3 dZ = __FCONV3(GPUData->cam_vec);
-    __VTYPE3 dY = -__FCONV3(GPUData->cam_upvec);
-    __VTYPE3 dX = cross(dZ,dY);
-    size_t mx = GPUData->m_amx;
-    size_t my = GPUData->m_amy;
-
-    __VTYPE kx;
-    __VTYPE ky;
-    if(GPUData->subp_rnd){
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rx = (Randomf[r]-0.5);
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE ry = (Randomf[r]-0.5);
-        kx = GPUData->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-        ky = GPUData->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
-    }else{
-        kx = GPUData->xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-        ky = GPUData->xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
-    };
-    __VTYPE3 tv = dZ+kx*dX+ky*dY;
+    __VTYPE3 tv = DetermineTraceVector(x,y,GPUData,Randomf,&r);
     __VTYPE3 tp = __FCONV3(GPUData->cam_x);
     tv = __NORMALIZE(tv);
     cur = &Drawables[0];
@@ -368,7 +349,7 @@
         };
 
         bool recheck = true;
-        int c = 0;
+        uint c = 0;
 
         #if SURE_RLEVEL>20
         while(recheck&&++c<mrechecks)

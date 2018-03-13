@@ -35,7 +35,7 @@ void SureData::Mesh_GenerateTetr(int i_model,int norm_type)
 
 void SureData::Mesh_GenNormals(int i_model, int norm_type)
 {
-for(int ms = 0; ms<ModelsInfo[i_model].mesh_count; ++ms)
+for(uint ms = 0; ms<ModelsInfo[i_model].mesh_count; ++ms)
     {
         int im = ModelsInfo[i_model].mesh_start + ms;
         my_double3 v1;
@@ -281,6 +281,7 @@ void SureData::Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count
 
 int SureData::GenModel(const char* name,int type)
 {
+int result = cur_models;
 if(type == 0)
     Mesh_GenerateCube(cur_models,SURE_NORMALS_DEFAULT);
 if(type == 1)
@@ -288,6 +289,7 @@ if(type == 1)
 MapTexture(cur_models,SURE_MAPPING_PLANAR_XY);
 sprintf(ModelsInfo[cur_models].name,"%s",name);
 cur_models++;
+return result;
 };
 
 int SureData::GenTexture(const char* name,int type)

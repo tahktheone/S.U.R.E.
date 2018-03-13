@@ -187,6 +187,47 @@ void SureWidget::paintEvent(QPaintEvent * event)
     //{
         //EngineData->links[i].o1->X;
     //}
+    // Рисуем курсор
+    if(!mousemove)
+    {
+        painter.setPen(Qt::green);
+        painter.drawEllipse(QWidget::mapFromGlobal(QCursor::pos()),1,1);
+        painter.setPen(Qt::red);
+        painter.drawEllipse(QWidget::mapFromGlobal(QCursor::pos()),3,3);
+        painter.setPen(Qt::yellow);
+        painter.drawEllipse(QWidget::mapFromGlobal(QCursor::pos()),5,5);
+        painter.setPen(Qt::blue);
+        if(drawdebug>=50)
+        {
+            p.setY(rect().bottom()-25);
+            p.setX(5);
+            sprintf(s,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
+            painter.drawText(p,s);
+            int l_x = QWidget::mapFromGlobal(QCursor::pos()).x();
+            int l_y = QWidget::mapFromGlobal(QCursor::pos()).y();
+            __VTYPE3 dZ = EngineData->cam_vec;
+            __VTYPE3 dY = -EngineData->cam_upvec;
+            __VTYPE3 dX = cross(dZ,dY);
+    float mx = EngineData->m_amx;
+    float my = EngineData->m_amy;
+    __VTYPE kx;
+    __VTYPE ky;
+        kx = EngineData->xy_h*((float)l_x-mx/2.0)/mx;
+        ky = EngineData->xy_h*((float)l_y-my/2.0)/mx;
+    __VTYPE3 tv = dZ+kx*dX+ky*dY;
+    __VTYPE3 tp = __FCONV3(EngineData->cam_x);
+    tv = __NORMALIZE(tv);
+            p.setY(rect().bottom()-15);
+            p.setX(5);
+            sprintf(s,"TV = (%.3f;%.3f;%.3f)",tv.x,tv.y,tv.z);
+            painter.drawText(p,s);
+            p.setY(rect().bottom()-5);
+            p.setX(5);
+            sprintf(s,"TP = (%.3f;%.3f;%.3f)",tp.x,tp.y,tp.z);
+            painter.drawText(p,s);
+
+        };
+    };
     if(drawdebug>=70)
     {
     for(int i = 0;i<EngineData->m_objects;++i)
@@ -329,16 +370,16 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
         EngineData->cam_dw.x = 0.01;
     };
     if(event->key()==Qt::Key_Up){
-        EngineData->cam_dx.y = -0.5;
+        EngineData->cam_dw.y = 0.5;
     };
     if(event->key()==Qt::Key_Down){
-        EngineData->cam_dx.y = 0.5;
+        EngineData->cam_dw.y = -0.5;
     };
     if(event->key()==Qt::Key_Left){
-        EngineData->cam_dx.x = -0.5;
+        EngineData->cam_dw.z = -0.5;
     };
     if(event->key()==Qt::Key_Right){
-        EngineData->cam_dx.x = 0.5;
+        EngineData->cam_dw.z = 0.5;
     };
     if(event->key()==Qt::Key_8){
         EngineData->r_iters -= 2;
@@ -497,6 +538,28 @@ void SureWidget::mouseMoveEvent(QMouseEvent *event)
 	EngineData->cam_dw.y = (float)(last_y-event->y())*0.001;
 	last_x = event->x();
 	last_y = event->y();
+	//if(last_x<20||last_x>(lv_rect.width()-20)||last_y<20||last_y>(lv_rect.bottom()-20)){
+        QCursor::setPos(QWidget::mapToGlobal(QPoint(lv_rect.width()/2,lv_rect.height()/2)));
+        last_x = lv_rect.width()/2;
+        last_y = lv_rect.height()/2;
+    //};
+
+};
+
+void SureWidget::leaveEvent(QEvent *event)
+{
+    if(!mousemove)return;
+    QRect lv_rect = rect();
+    if(last_x==0){
+        last_x = QCursor::pos().x();
+    };
+    if(last_y==0){
+        last_y = QCursor::pos().y();
+    };
+	EngineData->cam_dw.z = (float)(QCursor::pos().x()-last_x)*0.001;
+	EngineData->cam_dw.y = (float)(last_y-QCursor::pos().y())*0.001;
+	last_x = QCursor::pos().x();
+	last_y = QCursor::pos().y();
 	if(last_x<20||last_x>(lv_rect.width()-20)||last_y<20||last_y>(lv_rect.bottom()-20)){
         QCursor::setPos(QWidget::mapToGlobal(QPoint(lv_rect.width()/2,lv_rect.height()/2)));
         last_x = lv_rect.width()/2;
@@ -507,37 +570,42 @@ void SureWidget::mouseMoveEvent(QMouseEvent *event)
 
 void SureWidget::mousePressEvent(QMouseEvent *event)
 {
-    EngineData->TemplateObject.movable = true;
-    EngineData->TemplateObject.collidable = true;
-    if (event->button() == Qt::LeftButton) {
-        EngineData->TemplateObject.type = SURE_OBJ_SPHERE;
-        EngineData->TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
-        EngineData->TemplateObject.lx = 1.0+10.0*(float)rand()/(float)RAND_MAX; // длина
-        EngineData->TemplateObject.lp = EngineData->TemplateObject.lx*1.7;
-        EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
-        EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("earth");
-        EngineData->TemplateObject.drawable.advmap_id = EngineData->GetTexture("earth_adv");
-        uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
-        EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
+    if(mousemove)
+    {
+        EngineData->TemplateObject.movable = true;
+        EngineData->TemplateObject.collidable = true;
+        if (event->button() == Qt::LeftButton) {
+            EngineData->TemplateObject.type = SURE_OBJ_SPHERE;
+            EngineData->TemplateObject.drawable.radiance = 0;
+            EngineData->TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
+            EngineData->TemplateObject.lx = 1.0+10.0*(float)rand()/(float)RAND_MAX; // длина
+            EngineData->TemplateObject.lp = EngineData->TemplateObject.lx*1.7;
+            EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
+            EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("earth");
+            EngineData->TemplateObject.drawable.advmap_id = EngineData->GetTexture("earth_adv");
+            uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
 
-    };
-    if (event->button() == Qt::RightButton) {
-        EngineData->TemplateObject.type = SURE_OBJ_MESH;
-        EngineData->TemplateObject.lx = 6.0; // длина
-        EngineData->TemplateObject.ly = 8.0; // ширина
-        EngineData->TemplateObject.lz = 5.0; // высота
-        EngineData->TemplateObject.lp = 10.0;
-        EngineData->TemplateObject.ModelID = EngineData->GetModel("cube");
-        EngineData->TemplateObject.ox = EngineData->cam_vec;
-        EngineData->TemplateObject.oz = EngineData->cam_upvec;
-        EngineData->TemplateObject.oy = cross(EngineData->cam_vec,EngineData->cam_upvec);
-        EngineData->TemplateObject.drawable.mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_start;
-        EngineData->TemplateObject.drawable.mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_count;
-        EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("colstones");
-        EngineData->TemplateObject.drawable.advmap_id = -1;
-        EngineData->TemplateObject.drawable.dist_type = SURE_D_EQUAL;
-        EngineData->TemplateObject.drawable.type = SURE_DR_MESH;
-        uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
-        EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
-    };
+        };
+        if (event->button() == Qt::RightButton) {
+            EngineData->TemplateObject.type = SURE_OBJ_MESH;
+            EngineData->TemplateObject.lx = 6.0; // длина
+            EngineData->TemplateObject.ly = 8.0; // ширина
+            EngineData->TemplateObject.lz = 5.0; // высота
+            EngineData->TemplateObject.lp = 10.0;
+            EngineData->TemplateObject.drawable.radiance = 0;
+            EngineData->TemplateObject.ModelID = EngineData->GetModel("cube");
+            EngineData->TemplateObject.ox = EngineData->cam_vec;
+            EngineData->TemplateObject.oz = EngineData->cam_upvec;
+            EngineData->TemplateObject.oy = cross(EngineData->cam_vec,EngineData->cam_upvec);
+            EngineData->TemplateObject.drawable.mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_start;
+            EngineData->TemplateObject.drawable.mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_count;
+            EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("colstones");
+            EngineData->TemplateObject.drawable.advmap_id = -1;
+            EngineData->TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+            EngineData->TemplateObject.drawable.type = SURE_DR_MESH;
+            uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
+        };
+    }; // if mousemove
 };

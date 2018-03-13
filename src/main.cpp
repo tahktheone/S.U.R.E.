@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     app.setApplicationVersion(SURE_VERSION);
 
     widget.setMouseTracking(true);
-    //widget.setCursor(QCursor(Qt::BlankCursor));
+    widget.setCursor(QCursor(Qt::BlankCursor));
 
     widget.rgbmatrix = new float[SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA];
 

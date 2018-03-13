@@ -319,8 +319,8 @@ void SurePhysThread::run()
                                 ltp.z = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oz));
 
                                 // для каждой грани:
-                                int limit = EngineData->ModelsInfo[o2->ModelID].mesh_count;
-                                int lstart = EngineData->ModelsInfo[o2->ModelID].mesh_start;
+                                uint limit = EngineData->ModelsInfo[o2->ModelID].mesh_count;
+                                uint lstart = EngineData->ModelsInfo[o2->ModelID].mesh_start;
                                 for(uint im = 0;im<limit;++im)
                                 { // для каждой грани:
                                     uint cm = lstart + im;
@@ -467,8 +467,8 @@ void SurePhysThread::run()
                                 bool l_up = false;
                                 bool l_down = false;
                                 // для каждой точки
-                                int l_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
-                                int l_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
+                                uint l_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
+                                uint l_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
                                 for(uint iv = 0;iv<l_limit;++iv)
                                 { // для каждой точки
                                     uint cv = l_start + iv;
@@ -628,10 +628,10 @@ __VTYPE3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
 
 // 1. Составляем разность минковского.
 // для каждой точки
-int l1_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
-int l1_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
-int l2_limit = EngineData->ModelsInfo[o2->ModelID].vertex_count;
-int l2_start = EngineData->ModelsInfo[o2->ModelID].vertex_start;
+uint l1_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
+uint l1_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
+uint l2_limit = EngineData->ModelsInfo[o2->ModelID].vertex_count;
+uint l2_start = EngineData->ModelsInfo[o2->ModelID].vertex_start;
 
 for(uint i1 = 0;i1<l1_limit;++i1)
 {
@@ -656,7 +656,7 @@ for(uint i1 = 0;i1<l1_limit;++i1)
 
 // [Тэтраэдр T. 4 точки. 2 раза -- для текущего шага и для следующего]
 uint TI[4];
-uint TNI[4];
+uint TNI[4] = {0,0,0,0};
 TI[0] = 0;
 TI[1] = 1;
 TI[2] = 2;

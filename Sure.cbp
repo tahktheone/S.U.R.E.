@@ -35,8 +35,9 @@
 					<Add option="-march=corei7-avx" />
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-std=c++11" />
+					<Add option="-Wall" />
 					<Add directory="/usr/include/qt5" />
 				</Compiler>
 				<Linker>
@@ -83,8 +84,10 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
+					<Add option="-Wall" />
 					<Add option="-std=c++11" />
 					<Add option="-m64" />
+					<Add option="-fopenmp" />
 					<Add directory="D:/Qt/A_qt510_64/include" />
 				</Compiler>
 				<Linker>
@@ -100,7 +103,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=corei7" />
-			<Add option="-fPIC -fPIE -fopenmp" />
+			<Add option="-fPIC -fPIE -fopenmp -Wall" />
 			<Add directory="./" />
 			<Add directory="./CL" />
 			<Add directory="./src" />

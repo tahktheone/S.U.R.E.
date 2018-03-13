@@ -68,15 +68,15 @@ SureData::SureData()
         TemplateObject.drawable.advmap_id = GetTexture("earth_adv");
         TemplateObject.initp4();
 
-    int i;
+
 
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  Scene_box();
+  //Scene_box();
   // Scene_floor();
 
-  //Scene_tetrs();
+  Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
   //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
 

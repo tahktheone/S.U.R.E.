@@ -2,6 +2,7 @@
  #include <SureDefines.h>
 
 #define __SURE_GLOBAL global
+#define __SURE_STRUCT struct
 #define __SURE_CONSTANT __constant
 #define __SURE_VINT4 int4
 #define __SURE_UCHAR3 uchar3
@@ -169,9 +170,9 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t Normals // нормали
                    )
 {
+
 // координаты обрабатываемой точки
 int x = get_global_id(0);
-
 int y = get_global_id(1);
 
 // для чтения изображений:

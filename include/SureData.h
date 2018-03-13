@@ -3,7 +3,7 @@
 
 #include <SureDefines.h>
 
-#define SURE_RLEVEL 10
+#define SURE_RLEVEL 100
 // 90 и ниже -- отключает рассеивание.
 // 60 и ниже -- без рандомизации и без теней
 // 20 и ниже -- без отражений и преломлений
@@ -17,6 +17,7 @@
 #define __NORMALIZE(A) normalize(A)
 #define __SURE_GLOBAL
 #define __SURE_CONSTANT
+#define __SURE_STRUCT
 #define __SURE_UCHAR3 my_uchar3
 #define __SURE_UCHAR4 my_uchar4
 #define __SURE_UINT4 my_uchar4
@@ -400,10 +401,10 @@ struct SureTextureData
 struct SureModelData
 {
     bool toupdate;
-    int mesh_start;
-    int mesh_count;
-    int vertex_start;
-    int vertex_count;
+    uint mesh_start;
+    uint mesh_count;
+    uint vertex_start;
+    uint vertex_count;
     char name[20];
 };
 
@@ -478,7 +479,7 @@ class SureData
 
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
-        //void Scene_tetrs(); // Пол и светильник -- тетраэдры
+        void Scene_tetrs(); // Пол и светильник -- тетраэдры
         //void Scene_golem();
         //void Scene_metaball(double x, double y, double z, double sz,int nt);
         //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);

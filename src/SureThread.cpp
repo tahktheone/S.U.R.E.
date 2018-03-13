@@ -327,7 +327,7 @@ void SureThread::run()
             ++r;
         };
         OCL_RUN_("clEnqueueWriteBuffer",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRandom,CL_FALSE,0,sizeof(cl_float)*SURE_R_RNDSIZE,(void*)Randomf,0,NULL,NULL));
-        GPUData->curandom = 0;
+
         //clock_gettime(CLOCK_MONOTONIC,&frametime);
 
         if(OCLData->OpenCL)
@@ -495,8 +495,8 @@ void SureThread::run()
             l_gws[0] = h_gr;
             l_gws[1] = h_gr;
 
-            for(int i_x_gr=0;i_x_gr<OCLData->sizes[0];i_x_gr+=h_gr)
-            for(int i_y_gr=0;i_y_gr<OCLData->sizes[1];i_y_gr+=h_gr){
+            for(uint i_x_gr=0;i_x_gr<OCLData->sizes[0];i_x_gr+=h_gr)
+            for(uint i_y_gr=0;i_y_gr<OCLData->sizes[1];i_y_gr+=h_gr){
                 l_start[0]=i_x_gr;
                 l_start[1]=i_y_gr;
                 OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь

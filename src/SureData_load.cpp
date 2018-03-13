@@ -45,18 +45,18 @@ void SureData::LoadModel(const char* name)
 
         int l_fract;
         int l_int;
-        int l_int_mul;
+        //int l_int_mul;
         int l_fract_div;
         int l_num;
         int l_sig;
 
         bool l_fract_on;
-        bool l_flush;
+        //bool l_flush;
 
         l_fract = 0;
         l_int = 0;
         l_fract_div = 1;
-        l_int_mul = 1;
+        //l_int_mul = 1;
         l_fract_on = false;
         l_num = 0;
         l_sig = 1;
@@ -70,7 +70,7 @@ void SureData::LoadModel(const char* name)
                 l_int = 0;
                 l_fract_div = 1;
                 l_vector_index = 0;
-                l_int_mul = 1;
+                //l_int_mul = 1;
                 l_sig = 1;
                 l_fract_on = false;
             };
@@ -136,7 +136,7 @@ void SureData::LoadModel(const char* name)
                 l_int = 0;
                 l_fract_div = 1;
                 l_sig = 1;
-                l_int_mul = 1;
+                //l_int_mul = 1;
                 l_vector_index = 0;
                 l_fract_on = false;
             };
@@ -167,7 +167,7 @@ void SureData::LoadModel(const char* name)
                 l_fract = 0;
                 l_int = 0;
                 l_fract_div = 1;
-                l_int_mul = 1;
+                //l_int_mul = 1;
                 l_fract_on = false;
                 l_sig = 1;
             };
@@ -178,7 +178,7 @@ void SureData::LoadModel(const char* name)
                 l_fract = 0;
                 l_int = 0;
                 l_fract_div = 1;
-                l_int_mul = 1;
+                //l_int_mul = 1;
                 l_sig = 1;
                 ++l_vector_index;
                 l_fract_on = false;
@@ -298,7 +298,7 @@ void SureData::LoadTexture(const char* name)
         std::wcout << L"Не удалось открыть файл " << fname << "\n";
     }else
     {
-        img.convertToFormat(QImage::Format_ARGB32);
+        img = img.convertToFormat(QImage::Format_ARGB32);
         int mx = img.size().width()-1;
         int my = img.size().height()-1;
         cl_uchar* tex = &TexturesData[cur_textures*SURE_R_TEXRES*SURE_R_TEXRES*4];

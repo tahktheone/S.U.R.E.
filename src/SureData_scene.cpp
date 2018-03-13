@@ -2,7 +2,6 @@
 
 void SureData::Scene_box() // коробка со светящимся потолком
 {
-int i;
 __VTYPE3 X;
   // свет
     TemplateObject.type = SURE_OBJ_PLANE;
@@ -86,7 +85,6 @@ __VTYPE3 X;
 
 void SureData::Scene_floor() // Пол и круглая лампа
 {
-int i;
 __VTYPE3 X;
     // пол
     TemplateObject.type = SURE_OBJ_PLANE;
@@ -123,101 +121,61 @@ __VTYPE3 X;
 
 };
 
-/*
 void SureData::Scene_tetrs() // Пол и лампа
 {
-int i;
-    // пол
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 0; //Координаты центра
-    objects[i].X.y = 0;
-    objects[i].X.z = -25;
-    objects[i].lx = 500.0; // длина
-    objects[i].ly = 500.0; // ширина
-    objects[i].lz = 100.0; // высота
 
-    objects[i].oz.x = 0;
-    objects[i].oz.y = 0;
-    objects[i].oz.z = -1;
-    objects[i].oz = __NORMALIZE(objects[i].oz);
-    objects[i].oy.x = 1;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 0;
-    objects[i].oy = __NORMALIZE(objects[i].oy);
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
-    objects[i].ox.z = 0;
-    objects[i].ox = __NORMALIZE(objects[i].ox);
+__VTYPE3 X;
 
-    objects[i].movable = false;
-    objects[i].collidable = true;
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.type = SURE_DR_MESH; // форма
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    X.x = 0; X.y = 0; X.z = -25;
+    TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.lx = 500.0;
+    TemplateObject.ly = 500.0;
+    TemplateObject.lz = 100.0;
+    TemplateObject.lp = 10.0;
+    TemplateObject.movable = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.type = SURE_DR_MESH; // форма
+    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.ModelID = GetModel("tetr");
+        TemplateObject.drawable.mesh_start = ModelsInfo[TemplateObject.ModelID].mesh_start;
+        TemplateObject.drawable.mesh_count = ModelsInfo[TemplateObject.ModelID].mesh_count;
 
-    Mesh_GenerateTetr(&objects[i],SURE_NORMALS_DEFAULT);
-    MapTexture(&objects[i],SURE_MAPPING_PLANAR_XY);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
-    objects[i].drawable.radiance = 0.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.0; // прозрачность
-    objects[i].drawable.refr = 1.99; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.rgb.s[2] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
-    objects[i].drawable.sided = false;
+    TemplateObject.drawable.refr = 1.01; // Коэффициент преломления
+    //TemplateObject.drawable.dist_type = SURE_D_NORM; // тип рандомизации
+    TemplateObject.drawable.dist_sigma = 3.0; // sigma рандомизации
 
-  // свет
-    i = CreateObject(SURE_OBJ_MESH);
-    objects[i].X.x = 0; //Координаты центра
-    objects[i].X.y = 0;
-    objects[i].X.z = 200;
-    objects[i].lx = 80.0; // длина
-    objects[i].ly = 80.0; // ширина
-    objects[i].lz = 10.0; // высота
 
-    objects[i].oz.x = 0;
-    objects[i].oz.y = 0;
-    objects[i].oz.z = -1;
-    objects[i].oz = __NORMALIZE(objects[i].oz);
-    objects[i].oy.x = 1;
-    objects[i].oy.y = 0;
-    objects[i].oy.z = 0;
-    objects[i].oy = __NORMALIZE(objects[i].oy);
-    objects[i].ox.x = 0;
-    objects[i].ox.y = 1;
-    objects[i].ox.z = 0;
-    objects[i].ox = __NORMALIZE(objects[i].ox);
+    CreateObjectFromTemplate(&X);   //пол
 
-    objects[i].movable = false;
-    objects[i].collidable = false;
 
-    ObjCoordsToDrawable(i);
-    objects[i].drawable.type = SURE_DR_MESH; // форма
-    Mesh_GenerateTetr(&objects[i],SURE_NORMALS_DEFAULT);
-    MapTexture(&objects[i],SURE_MAPPING_SPHERICAL);
-    objects[i].drawable.mesh_start = objects[i].mesh_start;
-    objects[i].drawable.mesh_count = objects[i].mesh_count;
-    objects[i].drawable.mesh_changed = true;
-    objects[i].drawable.radiance = 1.0; // свечение
-    objects[i].drawable.transp = 0.0; // прозрачность
-    objects[i].drawable.transp_i = 0.0; // прозрачность
-    objects[i].drawable.refr = 99.0; // Коэффициент преломления
-    objects[i].drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    objects[i].drawable.dist_sigma = 1.0; // sigma рандомизации
-    objects[i].drawable.dist_m = 0 ; // матожидание рандомизации
-    objects[i].drawable.rgb.s[0] = 250; // цвет
-    objects[i].drawable.rgb.s[1] = 250;
-    objects[i].drawable.rgb.s[2] = 200;
-    objects[i].drawable.sided = false;
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.drawable.map_id = -1;
+    X.x = 0; X.y = 0; X.z = 200;
+    TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.lx = 80.0;
+    TemplateObject.ly = 80.0;
+    TemplateObject.lz = 10.0;
+    TemplateObject.movable = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.type = SURE_DR_MESH; // форма
+    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.rgb.s[0] = 250; // цвет
+    TemplateObject.drawable.rgb.s[1] = 250;
+    TemplateObject.drawable.rgb.s[2] = 200;
+        TemplateObject.drawable.mesh_start = ModelsInfo[TemplateObject.ModelID].mesh_start;
+        TemplateObject.drawable.mesh_count = ModelsInfo[TemplateObject.ModelID].mesh_count;
+  CreateObjectFromTemplate(&X); // свет
 
 };
 
+/*
 void SureData::Scene_golem() // Пол и круглая лампа
 {
 int i;

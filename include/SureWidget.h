@@ -33,6 +33,7 @@ class SureWidget : public QWidget
         void keyReleaseEvent(QKeyEvent *event) Q_DECL_OVERRIDE;
         void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
         void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+        void leaveEvent(QEvent *event) Q_DECL_OVERRIDE;
     private:
         QImage *image;
         QPainter painter;

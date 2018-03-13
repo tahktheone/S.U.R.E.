@@ -62,14 +62,13 @@ struct SureGPUData {
     double xy_h; // Параметры изображения
     int m_drawables; //Количество объектов на сцене
     uchar toreset; // сброс кадра
-    uint curandom;  // текущий индекс в генераторе случайных чисел
     uchar r_maxiters;
     uchar r_rechecks;
     uint m_amx;
     uint m_amy;
     bool subp_rnd;
     float r_backlight;
-    struct SureDrawable* Drawables; // для GPU -- не имеет смысла, присутствует тут для целостности структуры:
+    struct SureDrawable* Drawables; // для GPU -- не имеет смысла, присутствует тут для целостности структуры
 #else
     cl_uchar reset = true; // сброс кадра -- фаза 2
     cl_double3 cam_x = cl_double3{0,0,0}; // Камера
@@ -78,7 +77,6 @@ struct SureGPUData {
     cl_double xy_h = cl_double{3.0}; // Угол обзора
     cl_int m_drawables = 0; //Количество объектов на сцене
     cl_uchar toreset = true; // сброс кадра -- фаза 1
-    cl_uint curandom = 0; // текущий индекс в генераторе случайных чисел
     cl_uchar r_maxiters = 20; // глубина анализа рендера
     cl_uchar r_rechecks = 20; // качество рендера
     cl_uint m_amx = 1920;
@@ -92,6 +90,7 @@ struct SureGPUData {
 __VTYPE3 PenVec(__VTYPE3 V1);
 bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, __VTYPE2 *t, bool *in,__VTYPE* id);
 __VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_GLOBAL float* Randomf);
+__VTYPE3 DetermineTraceVector(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureGPUData *GPUData,__SURE_GLOBAL float* Randomf,uint* rr);
 
 #define RT_SETCOL \
 col_refr = cur->refr / col->refr; \
