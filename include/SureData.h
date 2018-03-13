@@ -16,7 +16,9 @@
 #define __FCONV(A) A
 #define __NORMALIZE(A) normalize(A)
 #define __SURE_GLOBAL
+#define __SURE_LOCAL
 #define __SURE_CONSTANT
+#define __SURE_PRIVATE
 #define __SURE_STRUCT
 #define __SURE_UCHAR3 my_uchar3
 #define __SURE_UCHAR4 my_uchar4

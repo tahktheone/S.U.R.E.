@@ -96,25 +96,26 @@ struct SureGPUData {
 };
 
 __VTYPE3 PenVec(__VTYPE3 V1);
-bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, __VTYPE2 *t, bool *in,__VTYPE* id);
-__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_GLOBAL float* Randomf);
-__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_GLOBAL float* Randomf,uint* rr);
-__VTYPE3 DetermineTraceVector(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureCameraInfo *CameraInfo);
+bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
+__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_CONSTANT float* Randomf);
+__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_CONSTANT float* Randomf,uint* rr);
+__VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 
 #define RT_SETCOL \
-col_refr = cur->refr / col->refr; \
-if(cur->refr > col->refr){  \
-    col_rgb = cur->rgb;  \
-    col_transp = cur->transp;  \
-    col_dt = cur->dist_type;  \
-    col_ds = cur->dist_sigma;  \
-    col_dm = cur->dist_m;  \
+collision_found = true; \
+col_refr = cur.refr / col.refr; \
+if(cur.refr > col.refr){  \
+    col_rgb = cur.rgb;  \
+    col_transp = cur.transp;  \
+    col_dt = cur.dist_type;  \
+    col_ds = cur.dist_sigma;  \
+    col_dm = cur.dist_m;  \
 }else{  \
-    col_rgb = col->rgb;  \
-    col_transp = col->transp;  \
-    col_dt = col->dist_type;   \
-    col_ds = col->dist_sigma;  \
-    col_dm = col->dist_m;   \
+    col_rgb = col.rgb;  \
+    col_transp = col.transp;  \
+    col_dt = col.dist_type;   \
+    col_ds = col.dist_sigma;  \
+    col_dm = col.dist_m;   \
 }
 
 #endif // SUREGPUDATA_H_INCLUDED

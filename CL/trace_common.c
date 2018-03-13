@@ -1,18 +1,21 @@
-// Вспомогательные переменные для поиска пересечений
-    __VTYPE2 t;
-    bool in;
-    // поиск столкновения
-    __SURE_GLOBAL struct SureDrawable* lv_cur;
+// ускоряем работу с памятью на GPU: забираем информацию о камере в локальную память:
+__SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
+
+    // поиск пересечения
     __VTYPE3 cp; // collision point
     __VTYPE3 cn; // collision normal
-    __VTYPE id; // intersect dist
-    __SURE_GLOBAL struct SureDrawable* cur;
-    __SURE_GLOBAL struct SureDrawable* col;
-    __SURE_GLOBAL struct SureDrawable* lv_dr;
-    __VTYPE col_refr = 0.0;
+    __VTYPE intersect_dist; // intersect dist
+    bool collision_found = false;
+
+    __SURE_PRIVATE __SURE_STRUCT SureDrawable lv_cur; // drawable в котором находимся на начало шага трассировки
+    __SURE_PRIVATE __SURE_STRUCT SureDrawable cur; // drawable в котором находимся на конец шага трассировки
+    __SURE_PRIVATE __SURE_STRUCT SureDrawable col; // drwable который обнаружен на пути трассировки
+    __SURE_PRIVATE __SURE_STRUCT SureDrawable lv_dr; // drawable который сейчас анализируется
+
+    __VTYPE col_refr;
     __SURE_UCHAR3 col_rgb;
     __SURE_UINT4 col_rgba;
-    __VTYPE col_transp = 0.0;
+    __VTYPE col_transp;
     int col_radiance;
 
     int col_dt; // тип рандомизации
@@ -32,18 +35,18 @@
 
     __VTYPE3 tv;
 
-    if(GPUData->CameraInfo.subp_rnd){
-        tv = DetermineTraceVectorSAA(x,y,&GPUData->CameraInfo,Randomf,&r);
+    if(CameraInfo.subp_rnd){
+        tv = DetermineTraceVectorSAA(x,y,&CameraInfo,Randomf,&r);
     }else{
-        tv = DetermineTraceVector(x,y,&GPUData->CameraInfo);
+        tv = DetermineTraceVector(x,y,&CameraInfo);
     };
 
-    __VTYPE3 tp = __FCONV3(GPUData->CameraInfo.cam_x);
+    __VTYPE3 tp = __FCONV3(CameraInfo.cam_x);
     tv = __NORMALIZE(tv);
-    cur = &Drawables[0];
+    cur = Drawables[0];
     rgb.x = 0; rgb.y = 0; rgb.z = 0;
     fade.x = 1; fade.y = 1; fade.z = 1;
-    tl = 0; ri = 0; in = false;
+    tl = 0; ri = 0;// in = false;
     uint miters = GPUData->r_maxiters;
     uint mrechecks = GPUData->r_rechecks;
 
@@ -51,38 +54,39 @@
     {
         ++ri;
         lv_cur = cur;
-        id = SURE_R_MAXDISTANCE;
-        col = 0;
+        intersect_dist = SURE_R_MAXDISTANCE;
+        collision_found = false;
         col_in = false;
 
         for(int i=1;i<GPUData->m_drawables;++i)
         {
-            lv_dr = &Drawables[i];
-            switch(lv_dr->type)
+            lv_dr = Drawables[i];
+            switch(lv_dr.type)
             {
                 case SURE_DR_SPHERE:
                 {
-                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr->X),__FCONV(lv_dr->lx),&t,&in,&id))
+                    bool InSphere = false;
+                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr.X),__FCONV(lv_dr.lx),&InSphere,&intersect_dist))
                     {
-                       if(lv_dr->sided||!in)
+                       if(lv_dr.sided||!InSphere)
                        {
                            col = lv_dr;
                            cur = lv_cur;
-                           col_radiance = lv_dr->radiance;
+                           col_radiance = lv_dr.radiance;
                        }else{
-                           col = &Drawables[0];
+                           col = Drawables[0];
                            cur = lv_dr;
                            col_radiance = 0;
                        };
                         RT_SETCOL;
-                        cp = tp + id*tv;
-                        if(lv_dr->map_id>=0)
+                        cp = tp + intersect_dist*tv;
+                        if(lv_dr.map_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr->X);             // вектор к точке пересечения
-                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
-                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
-                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
+                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr.X);             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr.oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
                             uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
@@ -91,15 +95,15 @@
                             uv.x*=0.5;
                             __GET_TEXTURE(SURE_R_TEXRES*uv.x,
                                           SURE_R_TEXRES*uv.y,
-                                          lv_dr->map_id);
+                                          lv_dr.map_id);
                         };
-                        if(lv_dr->advmap_id>=0)
+                        if(lv_dr.advmap_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr->X);             // вектор к точке пересечения
-                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
-                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
-                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
+                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr.X);             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr.oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
                             uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
@@ -108,13 +112,13 @@
                             uv.x*=0.5;
                             __GET_ADVMAP(SURE_R_TEXRES*uv.x,
                                           SURE_R_TEXRES*uv.y,
-                                          lv_dr->advmap_id);
+                                          lv_dr.advmap_id);
                         };
-                        if(in)
+                        if(InSphere)
                         {
-                            cn = __FCONV3(lv_dr->X) - cp;
+                            cn = __FCONV3(lv_dr.X) - cp;
                         }else{
-                            cn = cp - __FCONV3(lv_dr->X);
+                            cn = cp - __FCONV3(lv_dr.X);
                         };
                         cn = __NORMALIZE(cn);
                     }; // if(CollideRaySphered)
@@ -123,110 +127,114 @@
 
                 case SURE_DR_SQUARE:
                 {
-                    __VTYPE3 vtp = tp-__FCONV3(lv_dr->X);
-                    __VTYPE dist = dot(__FCONV3(lv_dr->oz),vtp);                // Расстояние до плоскости
+                    __VTYPE3 vtp = tp-__FCONV3(lv_dr.X);
+                    __VTYPE dist = dot(__FCONV3(lv_dr.oz),vtp);                // Расстояние до плоскости
                     if(dist<(__VTYPE)SURE_R_DELTA&&dist>-(__VTYPE)SURE_R_DELTA)break;  // Вплотную -- игнорируем
-                    __VTYPE dir = dot(__FCONV3(lv_dr->oz),tv);                  // проекция луча на нормаль
+                    __VTYPE dir = dot(__FCONV3(lv_dr.oz),tv);                  // проекция луча на нормаль
                     __VTYPE t = - dist/dir;                           // Расстояние до точки пересечения
-                    if(t<(__VTYPE)SURE_R_DELTA||t>id)break;                   // Слишком близко или дальше чем уже найденное пересечение
+                    if(t<(__VTYPE)SURE_R_DELTA||t>intersect_dist)break;                   // Слишком близко или дальше чем уже найденное пересечение
                     __VTYPE3 l_cp = tp+t*tv;                       // точка пересечение
-                    __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - l_cp;             // вектор к точке пересечения
-                    __VTYPE lx = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
-                    __VTYPE ly = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
-                    if(lx>lv_dr->lx||lx<-lv_dr->lx||ly>lv_dr->ly||ly<-lv_dr->ly)break; // Нет попадания в область
-                    id = t;
+                    __VTYPE3 l_vtcp = __FCONV3(lv_dr.X) - l_cp;             // вектор к точке пересечения
+                    __VTYPE lx = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
+                    __VTYPE ly = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
+                    if(lx>lv_dr.lx||lx<-lv_dr.lx||ly>lv_dr.ly||ly<-lv_dr.ly)break; // Нет попадания в область
+                    intersect_dist = t;
                     cp = l_cp;
                     if(dir>0.0) // с внутренней стороны
                     {
-                        if(lv_dr->sided)
+                        if(lv_dr.sided)
                         { // материал двухсторонний
                             col = lv_dr;
                             cur = lv_cur;
-                            col_radiance = lv_dr->radiance;
+                            col_radiance = lv_dr.radiance;
                         }else{  // материал односторонний
-                            col = &Drawables[0];
+                            col = Drawables[0];
                             cur = lv_dr;
                             col_radiance = 0.0;
                         };
                         RT_SETCOL;
-                        if(lv_dr->map_id>=0)
+                        if(lv_dr.map_id>=0)
                         {
-                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
-                                          lv_dr->map_id);
+                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
+                                          lv_dr.map_id);
                         };
-                        if(lv_dr->advmap_id>=0)
+                        if(lv_dr.advmap_id>=0)
                         {
-                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
-                                          lv_dr->advmap_id);
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
+                                          lv_dr.advmap_id);
                         };
-                        cn = -__FCONV3(lv_dr->oz);
+                        cn = -__FCONV3(lv_dr.oz);
                     }else{ // с внешней стороны
                         col = lv_dr;
                         cur = lv_cur;
-                        col_radiance = lv_dr->radiance;
+                        col_radiance = lv_dr.radiance;
                         RT_SETCOL;
-                        if(lv_dr->map_id>=0)
+                        if(lv_dr.map_id>=0)
                         {
-                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
-                                          lv_dr->map_id);
+                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
+                                          lv_dr.map_id);
                         };
-                        if(lv_dr->advmap_id>=0)
+                        if(lv_dr.advmap_id>=0)
                         {
-                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
-                                          lv_dr->advmap_id);
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
+                                          lv_dr.advmap_id);
                         };
-                        cn = __FCONV3(lv_dr->oz);
+                        cn = __FCONV3(lv_dr.oz);
                     };
                     break;
                 }; // Квадрат
                 case SURE_DR_MESH:
                 {
                     __VTYPE3 ltv;
-                    ltv.x = dot(tv,__FCONV3(lv_dr->ox));
-                    ltv.y = dot(tv,__FCONV3(lv_dr->oy));
-                    ltv.z = dot(tv,__FCONV3(lv_dr->oz));
+                    ltv.x = dot(tv,__FCONV3(lv_dr.ox));
+                    ltv.y = dot(tv,__FCONV3(lv_dr.oy));
+                    ltv.z = dot(tv,__FCONV3(lv_dr.oz));
                     __VTYPE3 ltp;
-                    ltp.x = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->ox));
-                    ltp.y = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oy));
-                    ltp.z = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oz));
+                    ltp.x = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.ox));
+                    ltp.y = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.oy));
+                    ltp.z = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.oz));
 
                     __VTYPE t_in = -SURE_R_MAXDISTANCE;
                     __VTYPE t_out = SURE_R_MAXDISTANCE;
                     __VTYPE t = 0;
 
-                    t = -(ltp.x-lv_dr->lx)/ltv.x;
+                    t = -(ltp.x-lv_dr.lx)/ltv.x;
                     if((ltv.x)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.x+lv_dr->lx)/ltv.x;
+                    t = -(ltp.x+lv_dr.lx)/ltv.x;
                     if((-ltv.x)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.y-lv_dr->ly)/ltv.y;
+                    t = -(ltp.y-lv_dr.ly)/ltv.y;
                     if((ltv.y)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.y+lv_dr->ly)/ltv.y;
+                    t = -(ltp.y+lv_dr.ly)/ltv.y;
                     if((-ltv.y)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.z-lv_dr->lz)/ltv.z;
+                    t = -(ltp.z-lv_dr.lz)/ltv.z;
                     if((ltv.z)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.z+lv_dr->lz)/ltv.z;
+                    t = -(ltp.z+lv_dr.lz)/ltv.z;
                     if((-ltv.z)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
                     if(t_in>t_out||t_out<SURE_R_DELTA)break;
 
-                    for(uint im = 0;im<lv_dr->mesh_count;++im)
+                        __VTYPE lx = lv_dr.lx;
+                        __VTYPE ly = lv_dr.ly;
+                        __VTYPE lz = lv_dr.lz;
+
+                    for(uint im = 0;im<lv_dr.mesh_count;++im)
                     { // Для каждой meshины
-                        uint cm = lv_dr->mesh_start + im;
+                        uint cm = lv_dr.mesh_start + im;
                         __SURE_VINT4 mesh;
                         __VTYPE3 gm1;
                         __VTYPE3 gm2;
@@ -235,15 +243,17 @@
                         __GET_VERTEX(gm1,mesh.x);
                         __GET_VERTEX(gm2,mesh.y);
                         __GET_VERTEX(gm3,mesh.z);
-                        gm1.x = gm1.x * lv_dr->lx;
-                        gm1.y = gm1.y * lv_dr->ly;
-                        gm1.z = gm1.z * lv_dr->lz;
-                        gm2.x = gm2.x * lv_dr->lx;
-                        gm2.y = gm2.y * lv_dr->ly;
-                        gm2.z = gm2.z * lv_dr->lz;
-                        gm3.x = gm3.x * lv_dr->lx;
-                        gm3.y = gm3.y * lv_dr->ly;
-                        gm3.z = gm3.z * lv_dr->lz;
+
+                        gm1.x *= lx;
+                        gm1.y *= ly;
+                        gm1.z *= lz;
+                        gm2.x *= lx;
+                        gm2.y *= ly;
+                        gm2.z *= lz;
+                        gm3.x *= lx;
+                        gm3.y *= ly;
+                        gm3.z *= lz;
+
 
                         // Алгоритм Моллера — Трумбора
                         __VTYPE3 pvec = cross(ltv,gm3-gm1);
@@ -257,7 +267,7 @@
                         __VTYPE v = dot(ltv, qvec) * inv_det;
                         if (v < 0.0 || (u + v) > 1.0 ) continue;
                         __VTYPE tt = dot(gm3-gm1, qvec) * inv_det;
-                        if(tt<(__VTYPE)SURE_R_DELTA||tt>id)continue; // Слишком близко или дальше чем уже найденное пересечение
+                        if(tt<(__VTYPE)SURE_R_DELTA||tt>intersect_dist)continue; // Слишком близко или дальше чем уже найденное пересечение
                         __VTYPE3 l_cp = tp+tv*tt;                    // точка пересечения
                         __VTYPE3 locn = cross(gm2-gm1,gm3-gm1);
                         __VTYPE dir = dot(ltv,locn);
@@ -268,53 +278,53 @@
                         __GET_NORMAL2(n2,cm);
                         __GET_NORMAL3(n3,cm);
                         __VTYPE3 ln = n1*(1-u-v)+n2*u+n3*v;
-                        __VTYPE3 n = ln.x*__FCONV3(lv_dr->ox)+
-                                     ln.y*__FCONV3(lv_dr->oy)+
-                                     ln.z*__FCONV3(lv_dr->oz);
+                        __VTYPE3 n = ln.x*__FCONV3(lv_dr.ox)+
+                                     ln.y*__FCONV3(lv_dr.oy)+
+                                     ln.z*__FCONV3(lv_dr.oz);
                         n = __NORMALIZE(n);
                         if(dir>0.0) // с внутренней стороны
                         {
-                            if(lv_dr->sided)
+                            if(lv_dr.sided)
                             { // материал двухсторонний
                                 col = lv_dr;
                                 cur = lv_cur;
-                                col_radiance = lv_dr->radiance;
+                                col_radiance = lv_dr.radiance;
                             }else{  // материал односторонний
                                 #if SURE_RLEVEL<30
                                     continue;
                                 #else
-                                    col = &Drawables[0];
+                                    col = Drawables[0];
                                     cur = lv_dr;
                                     col_radiance = 0;
                                 #endif
                             };
-                            id = tt;
+                            intersect_dist = tt;
                             cp = l_cp;
                             RT_SETCOL;
-                            if(lv_dr->map_id>=0)
+                            if(lv_dr.map_id>=0)
                             {
-                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr.map_id);
                             };
-                            if(lv_dr->advmap_id>=0)
+                            if(lv_dr.advmap_id>=0)
                             {
-                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
+                                __GET_ADVMAP_UV(cm,lv_dr.advmap_id);
                             };
                             cn = -n;
                         }else{ // с внешней стороны
                             col = lv_dr;
                             cur = lv_cur;
-                            col_radiance = lv_dr->radiance;
-                            id = tt;
+                            col_radiance = lv_dr.radiance;
+                            intersect_dist = tt;
                             cp = l_cp;
                             RT_SETCOL;
                             cn = n;
-                            if(lv_dr->map_id>=0)
+                            if(lv_dr.map_id>=0)
                             {
-                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr.map_id);
                             };
-                            if(lv_dr->advmap_id>=0)
+                            if(lv_dr.advmap_id>=0)
                             {
-                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
+                                __GET_ADVMAP_UV(cm,lv_dr.advmap_id);
                             };
                         };
                     }; // Для каждой meshины
@@ -322,24 +332,25 @@
                 }; // Mesh
                 default:
                     break;
-            }; // switch(lv_dr->type)
+            }; // switch(lv_dr.type)
         };// Цикл по Drawables
         #if SURE_RLEVEL>90
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur->transp_i;
-        if(rr<id)
+        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur.transp_i;
+        if(rr<intersect_dist)
         {
             col = cur;
+            collision_found = true;
             col_radiance = 0;
             RT_SETCOL;
-            id = rr;
+            intersect_dist = rr;
             cn = -tv;
-            cp = tp+id*tv;
+            cp = tp+intersect_dist*tv;
             col_in =true;
         };
         #endif // SURE_RLEVEL>90
 
-        if(col==0)break; // луч улетел в никуда
+        if(!collision_found)break; // луч улетел в никуда
 
         if(col_radiance>0)
         {
@@ -396,7 +407,7 @@
                                 if(dot(rv,cn)<0){recheck=true;}else{ // результат отражение направлен от плоскости
                                     tp = cp;
                                     tv = __NORMALIZE(rv);
-                                    tl += id;
+                                    tl += intersect_dist;
                                     fade.x *= col_rgb.x/255.0;
                                     fade.y *= col_rgb.y/255.0;
                                     fade.z *= col_rgb.z/255.0;
@@ -406,7 +417,7 @@
                             tp = cp;
                             tv = __NORMALIZE(rv);
                             cn = -cn;
-                            tl += id;
+                            tl += intersect_dist;
                             #if SURE_RLEVEL>90
                             if(col_transp<1.0)
                             {
@@ -440,7 +451,7 @@
                         tp = cp;
                         rv = __NORMALIZE(rv);
                         tv = rv;
-                        tl+=id;
+                        tl+=intersect_dist;
                         fade.x *= col_rgb.x/255.0;
                         fade.y *= col_rgb.y/255.0;
                         fade.z *= col_rgb.z/255.0;
@@ -459,7 +470,7 @@
                     rv = tv+l*cnr;
                     tp = cp;
                     tv = __NORMALIZE(rv);
-                    tl+=id;
+                    tl+=intersect_dist;
                     fade.x *= col_rgb.x/255.0;
                     fade.y *= col_rgb.y/255.0;
                     fade.z *= col_rgb.z/255.0;

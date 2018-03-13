@@ -13,7 +13,7 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 1
+#define SURE_SCALE 4
 #define SURE_SMOOTH 1
 
 #define SURE_MAXRES_X 1920

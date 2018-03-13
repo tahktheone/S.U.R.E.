@@ -1,4 +1,5 @@
 #include "SureLog.h"
+#include <time.h>
 
 SureLog::SureLog(const char *i_prefix)
 {
