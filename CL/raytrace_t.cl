@@ -170,7 +170,6 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t Normals // нормали
                    )
 {
-
 // координаты обрабатываемой точки
 int x = get_global_id(0);
 int y = get_global_id(1);
@@ -186,8 +185,7 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
 int2 coords;
 __VTYPE2 map_uv;
 uint4 advmap;
-
-if(x>=GPUData->m_amx||y>=GPUData->m_amy)return; // не рисуем за перделами области
+if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
  #include <trace_common.c>
 }

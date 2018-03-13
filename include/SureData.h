@@ -127,6 +127,8 @@ __GET_ADVMAP(map_px,map_py,id); \
 
 #include <CL/cl.h>
 
+#include <SureLog.h>
+
 // Математика для CPU-части:
 // my_double3 имитирует cl_double3
  struct my_double3 {
@@ -414,19 +416,15 @@ class SureData
         SureData();
         virtual ~SureData();
         void SureClear();
+        SureLog *Log;
+        char LogLine[255];
         // камера
-        my_double3 cam_x = my_double3{-30,0,5};
-        my_double3 cam_vec = my_double3{1,0,0};
-        my_double3 cam_upvec = my_double3{0,0,1};
+        SureCameraInfo CameraInfo;
         my_double3 cam_dx = my_double3{0,0,0};
         my_double3 cam_dw = my_double3{0,0,0};
-        double xy_h = 3.0;
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
         cl_float r_backlight = 0.5;
-        cl_uint m_amx = 1920;
-        cl_uint m_amy = 1080;
-        cl_bool subp_rnd = false;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
@@ -480,7 +478,7 @@ class SureData
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
         void Scene_tetrs(); // Пол и светильник -- тетраэдры
-        //void Scene_golem();
+        void Scene_golem();
         //void Scene_metaball(double x, double y, double z, double sz,int nt);
         //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
         //void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);
@@ -515,13 +513,18 @@ struct SureOCLData{
 // Работа с OpenCL из CPU-части:
 void ocl_errtext(cl_int);
 int SourceFromFile(const char*,char*);
-#define OCL_RUN(text,module) if(OCLData.OpenCL){ret=module;if(ret!=CL_SUCCESS){std::wcout << L"Ошибка OpenCL! " << text << L": "; ocl_errtext(ret) ;std::cout << "\n";OCLData.OpenCL=false;};}
-#define OCL_GET(text,item,module) if(OCLData.OpenCL){item=module;if(ret!=CL_SUCCESS){std::wcout << L"Ошибка OpenCL! " << text << L": "; ocl_errtext(ret) ;std::cout << "\n";OCLData.OpenCL=false;};}
-#define OCL_RUN_(text,module) if(OCLData->OpenCL){ret=module;if(ret!=CL_SUCCESS){std::wcout << L"Ошибка OpenCL! " << text << L": "; ocl_errtext(ret) ;std::cout << "\n";OCLData->OpenCL=false;};}
-#define OCL_GET_(text,item,module) if(OCLData->OpenCL){item=module;if(ret!=CL_SUCCESS){std::wcout << L"Ошибка OpenCL! " << text << L": "; ocl_errtext(ret) ;std::cout << "\n";OCLData->OpenCL=false;};}
+
+// Почему дублируются макросы:
+// OCL_RUN и OCL_GET обращаются к OCLData напрямую, а OCL_RUN_и OCL_GET_ по указателю.
+// Потому, что вызываются из разных потоков.
+#define OCL_RUN(text,module) if(OCLData.OpenCL){ret=module;if(ret!=CL_SUCCESS){Log->AddOCLError(ret,text);OCLData.OpenCL=false;};}
+#define OCL_GET(text,item,module) if(OCLData.OpenCL){item=module;if(ret!=CL_SUCCESS){Log->AddOCLError(ret,text);OCLData.OpenCL=false;};}
+#define OCL_RUN_(text,module) if(OCLData->OpenCL){ret=module;if(ret!=CL_SUCCESS){Log->AddOCLError(ret,text);OCLData->OpenCL=false;};}
+#define OCL_GET_(text,item,module) if(OCLData->OpenCL){item=module;if(ret!=CL_SUCCESS){Log->AddOCLError(ret,text);OCLData->OpenCL=false;};}
+
 #define OCL_PROGRAM(prog,name,params) source_size = SourceFromFile(name,source_str); OCL_GET_("clCreateProgramWithSource",prog,clCreateProgramWithSource (context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret)); \
  OCL_RUN_("clBuildProgram",clBuildProgram(prog,1,&device,params,NULL,NULL)); if(ret!=CL_SUCCESS) { OCLData->OpenCL = true; OCL_RUN_("clGetProgramBuildInfo",clGetProgramBuildInfo \
- (prog,device,CL_PROGRAM_BUILD_LOG,30000,(void*)log_data,&logsize)); if(ret==CL_SUCCESS) { std::wcout << L"Журнал компиляции " << name << params << L":\n" << log_data << "\n"; }; OCLData->OpenCL = false; }
+ (prog,device,CL_PROGRAM_BUILD_LOG,30000,(void*)log_data,&logsize)); if(ret==CL_SUCCESS) { char line[255]; sprintf(line,"Имя=%s;Параметры=%s",name,params);Log->AddLine(line);Log->AddBigText("Журнал компиляции",log_data);}; OCLData->OpenCL = false; }
 
 
 #endif // SUREDATA_H

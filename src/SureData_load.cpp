@@ -3,6 +3,7 @@ void SureData::LoadModel(const char* name)
 {
 
     char filename[100];
+
     sprintf(filename,"./models/%s.obj",name);
     FILE *fl = fopen(filename,"r");
     wchar_t* line;
@@ -19,7 +20,8 @@ void SureData::LoadModel(const char* name)
 
     if(fl!=nullptr)
     {
-        std::wcout << L"Загрузка " << name << "...\n";
+        sprintf(LogLine,"Загрузка %s...",name);
+        Log->AddLine(LogLine);
         line = (wchar_t*) malloc (512);
         fwide(fl,1);
         ModelsInfo[cur_models].mesh_start = cur_meshes;
@@ -212,9 +214,8 @@ void SureData::LoadModel(const char* name)
             curr_c = fgetwc(fl);
         };
 
-        std::wcout << L"vertexes=" << vertexes <<  L";faces=" << faces << L"\n";
-        //std::cout << "max=" << maxcoords.x << ";" << maxcoords.y << ";" << maxcoords.z << "\n";
-        //std::cout << "min=" << mincoords.x << ";" << mincoords.y << ";" << mincoords.z << "\n";
+        sprintf(LogLine,"%i вершин %i граней загружено",vertexes,faces);
+        Log->AddLine(LogLine);
 
         int vstart = cur_vertexes-1;
         ModelsInfo[cur_models].vertex_start = cur_vertexes;
@@ -281,8 +282,11 @@ void SureData::LoadModel(const char* name)
         };
         free (line);
     }else{
-        std::wcout << L"Не найдена модель " << name << "!\n";
+        sprintf(LogLine,"Не найдена модель %s",name);
+        Log->AddLine(LogLine);
     };
+
+    sprintf(ModelsInfo[cur_models].name,"%s",name);
 
     cur_models++;
 };
@@ -295,7 +299,8 @@ void SureData::LoadTexture(const char* name)
     sprintf(fname,"./maps/%s.png",name);
     if(!img.load(fname))
     {
-        std::wcout << L"Не удалось открыть файл " << fname << "\n";
+        sprintf(LogLine,"Не удалось открыть файл %s",fname);
+        Log->AddLine(LogLine);
     }else
     {
         img = img.convertToFormat(QImage::Format_ARGB32);

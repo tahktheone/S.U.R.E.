@@ -22,6 +22,7 @@ SureData::SureData()
         UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         srand(time(NULL));
+        Log = new SureLog("engine");
 
         LoadTexture("parket");
         LoadTexture("earth_adv");
@@ -73,108 +74,27 @@ SureData::SureData()
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  //Scene_box();
+  Scene_box();
   // Scene_floor();
 
-  Scene_tetrs();
+  //Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
   //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
 
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
   //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
-  //Scene_golem();
+  Scene_golem();
   //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
   //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }
 
 SureData::~SureData()
 {
-
+    delete Log;
 }
 
 #include <func_common.c>
-
-void ocl_errtext(cl_int i_ret)
-{
-    std::wcout << " " << i_ret << " ";
-    switch(i_ret)
-    {
-        case  CL_SUCCESS: std::wcout << "CL_SUCCESS ";break;
-        case  CL_DEVICE_NOT_FOUND: std::wcout << "CL_DEVICE_NOT_FOUND ";break;
-        case  CL_DEVICE_NOT_AVAILABLE: std::wcout << "CL_DEVICE_NOT_AVAILABLE ";break;
-        case  CL_COMPILER_NOT_AVAILABLE: std::wcout << "CL_COMPILER_NOT_AVAILABLE ";break;
-        case  CL_MEM_OBJECT_ALLOCATION_FAILURE: std::wcout << "CL_MEM_OBJECT_ALLOCATION_FAILURE ";break;
-        case  CL_OUT_OF_RESOURCES: std::wcout << "CL_OUT_OF_RESOURCES ";break;
-        case  CL_OUT_OF_HOST_MEMORY: std::wcout << "CL_OUT_OF_HOST_MEMORY ";break;
-        case  CL_PROFILING_INFO_NOT_AVAILABLE: std::wcout << "CL_PROFILING_INFO_NOT_AVAILABLE ";break;
-        case  CL_MEM_COPY_OVERLAP: std::wcout << "CL_MEM_COPY_OVERLAP ";break;
-        case  CL_IMAGE_FORMAT_MISMATCH: std::wcout << "CL_IMAGE_FORMAT_MISMATCH ";break;
-        case  CL_IMAGE_FORMAT_NOT_SUPPORTED: std::wcout << "CL_IMAGE_FORMAT_NOT_SUPPORTED ";break;
-        case  CL_BUILD_PROGRAM_FAILURE: std::wcout << "CL_BUILD_PROGRAM_FAILURE ";break;
-        case  CL_MAP_FAILURE: std::wcout << "CL_MAP_FAILURE ";break;
-        case  CL_MISALIGNED_SUB_BUFFER_OFFSET: std::wcout << "CL_MISALIGNED_SUB_BUFFER_OFFSET ";break;
-        case  CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST: std::wcout << "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST ";break;
-        case  CL_COMPILE_PROGRAM_FAILURE: std::wcout << "CL_COMPILE_PROGRAM_FAILURE ";break;
-        case  CL_LINKER_NOT_AVAILABLE: std::wcout << "CL_LINKER_NOT_AVAILABLE ";break;
-        case  CL_LINK_PROGRAM_FAILURE: std::wcout << "CL_LINK_PROGRAM_FAILURE ";break;
-        case  CL_DEVICE_PARTITION_FAILED: std::wcout << "CL_DEVICE_PARTITION_FAILED ";break;
-        case  CL_KERNEL_ARG_INFO_NOT_AVAILABLE: std::wcout << "CL_KERNEL_ARG_INFO_NOT_AVAILABLE ";break;
-        case  CL_INVALID_VALUE: std::wcout << "CL_INVALID_VALUE ";break;
-        case  CL_INVALID_DEVICE_TYPE: std::wcout << "CL_INVALID_DEVICE_TYPE ";break;
-        case  CL_INVALID_PLATFORM: std::wcout << "CL_INVALID_PLATFORM ";break;
-        case  CL_INVALID_DEVICE: std::wcout << "CL_INVALID_DEVICE ";break;
-        case  CL_INVALID_CONTEXT: std::wcout << "CL_INVALID_CONTEXT ";break;
-        case  CL_INVALID_QUEUE_PROPERTIES: std::wcout << "CL_INVALID_QUEUE_PROPERTIES ";break;
-        case  CL_INVALID_COMMAND_QUEUE: std::wcout << "CL_INVALID_COMMAND_QUEUE ";break;
-        case  CL_INVALID_HOST_PTR: std::wcout << "CL_INVALID_HOST_PTR ";break;
-        case  CL_INVALID_MEM_OBJECT: std::wcout << "CL_INVALID_MEM_OBJECT ";break;
-        case  CL_INVALID_IMAGE_FORMAT_DESCRIPTOR: std::wcout << "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR ";break;
-        case  CL_INVALID_IMAGE_SIZE: std::wcout << "CL_INVALID_IMAGE_SIZE ";break;
-        case  CL_INVALID_SAMPLER: std::wcout << "CL_INVALID_SAMPLER ";break;
-        case  CL_INVALID_BINARY: std::wcout << "CL_INVALID_BINARY ";break;
-        case  CL_INVALID_BUILD_OPTIONS: std::wcout << "CL_INVALID_BUILD_OPTIONS ";break;
-        case  CL_INVALID_PROGRAM: std::wcout << "CL_INVALID_PROGRAM ";break;
-        case  CL_INVALID_PROGRAM_EXECUTABLE: std::wcout << "CL_INVALID_PROGRAM_EXECUTABLE ";break;
-        case  CL_INVALID_KERNEL_NAME: std::wcout << "CL_INVALID_KERNEL_NAME ";break;
-        case  CL_INVALID_KERNEL_DEFINITION: std::wcout << "CL_INVALID_KERNEL_DEFINITION ";break;
-        case  CL_INVALID_KERNEL: std::wcout << "CL_INVALID_KERNEL ";break;
-        case  CL_INVALID_ARG_INDEX: std::wcout << "CL_INVALID_ARG_INDEX ";break;
-        case  CL_INVALID_ARG_VALUE: std::wcout << "CL_INVALID_ARG_VALUE ";break;
-        case  CL_INVALID_ARG_SIZE: std::wcout << "CL_INVALID_ARG_SIZE ";break;
-        case  CL_INVALID_KERNEL_ARGS: std::wcout << "CL_INVALID_KERNEL_ARGS ";break;
-        case  CL_INVALID_WORK_DIMENSION: std::wcout << "CL_INVALID_WORK_DIMENSION ";break;
-        case  CL_INVALID_WORK_GROUP_SIZE: std::wcout << "CL_INVALID_WORK_GROUP_SIZE ";break;
-        case  CL_INVALID_WORK_ITEM_SIZE: std::wcout << "CL_INVALID_WORK_ITEM_SIZE ";break;
-        case  CL_INVALID_GLOBAL_OFFSET: std::wcout << "CL_INVALID_GLOBAL_OFFSET ";break;
-        case  CL_INVALID_EVENT_WAIT_LIST: std::wcout << "CL_INVALID_EVENT_WAIT_LIST ";break;
-        case  CL_INVALID_EVENT: std::wcout << "CL_INVALID_EVENT ";break;
-        case  CL_INVALID_OPERATION: std::wcout << "CL_INVALID_OPERATION ";break;
-        case  CL_INVALID_GL_OBJECT: std::wcout << "CL_INVALID_GL_OBJECT ";break;
-        case  CL_INVALID_BUFFER_SIZE: std::wcout << "CL_INVALID_BUFFER_SIZE ";break;
-        case  CL_INVALID_MIP_LEVEL: std::wcout << "CL_INVALID_MIP_LEVEL ";break;
-        case  CL_INVALID_GLOBAL_WORK_SIZE: std::wcout << "CL_INVALID_GLOBAL_WORK_SIZE ";break;
-        case  CL_INVALID_PROPERTY: std::wcout << "CL_INVALID_PROPERTY ";break;
-        case  CL_INVALID_IMAGE_DESCRIPTOR: std::wcout << "CL_INVALID_IMAGE_DESCRIPTOR ";break;
-        case  CL_INVALID_COMPILER_OPTIONS: std::wcout << "CL_INVALID_COMPILER_OPTIONS ";break;
-        case  CL_INVALID_LINKER_OPTIONS: std::wcout << "CL_INVALID_LINKER_OPTIONS ";break;
-        case  CL_INVALID_DEVICE_PARTITION_COUNT: std::wcout << "CL_INVALID_DEVICE_PARTITION_COUNT ";break;
-    };
-};
-
-int SourceFromFile(const char* i_fname,char* e_source)
-{
-    FILE *fp;
-    int e_size = 0;
-    fp = fopen(i_fname, "r");
-    if (!fp) {
-        std::wcout << L"Не удается найти файл " << i_fname << "\n";
-    }else{
-        e_size = fread(e_source,1,SURE_CL_MAXSOURCE,fp);
-    };
-    fclose( fp );
-    return e_size;
-};
 
 cl_double3 normalize(cl_double3 Vec)
 {

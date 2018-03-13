@@ -5,9 +5,25 @@ SureThread::~SureThread()
     //dtor
 }
 
+int SureThread::SourceFromFile(const char* i_fname,char* e_source)
+{
+    FILE *fp;
+    int e_size = 0;
+    fp = fopen(i_fname, "r");
+    if (!fp) {
+        char LogLine[500];
+        sprintf(LogLine,"Не удается открыть файл %s",i_fname);
+        Log->AddLine(LogLine);
+    }else{
+        e_size = fread(e_source,1,SURE_CL_MAXSOURCE,fp);
+    };
+    fclose( fp );
+    return e_size;
+};
+
 void SureThread::oclInit()
 {
-
+    char LogLine[500];
     cl_platform_id platforms[5];
     cl_uint platforms_num;
     OCL_RUN_("clGetPlatformIDs",clGetPlatformIDs(5,platforms,&platforms_num));
@@ -15,9 +31,9 @@ void SureThread::oclInit()
     for(cl_uint i = 0;i<platforms_num;++i)
     {
         OCL_RUN_("clGetPlatformInfo",clGetPlatformInfo(platforms[i],CL_PLATFORM_NAME,100,&l_info,NULL));
-        if(ret==CL_SUCCESS){ std::wcout << L"Платформа №" << i << ":" << l_info << "\n";};
+        if(ret==CL_SUCCESS){ sprintf(LogLine,"Платформа №%i (%s)",i,l_info);Log->AddLine(LogLine);};
     };
-    std::wcout << L"Используется платформа №0." << "\n";
+    Log->AddLine("Используется платформа №0");
     // всыбираем устройство
     cl_device_id devices[5];
     cl_uint dev_num;
@@ -28,102 +44,101 @@ void SureThread::oclInit()
     {
         for(cl_uint i = 0;i<dev_num;++i)
         {
-            std::wcout << L"Устройство №" << i << ":" << "\n";
+            sprintf(LogLine,"Устройство №%i:",i); Log->AddLine(LogLine);
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_NAME,300,(void*)devname,&ret_size));
-            if(ret==CL_SUCCESS){ std::wcout << L"Имя:" << devname << "\n"; };
+            if(ret==CL_SUCCESS){ sprintf(LogLine,"Имя - %s",devname); Log->AddLine(LogLine); };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_VENDOR,300,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Поставщик:" << devname << "\n";
+               sprintf(LogLine,"Поставщик - %s",devname); Log->AddLine(LogLine);
             };
             cl_ulong mem_size;
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_GLOBAL_MEM_SIZE,300,(void*)&mem_size,&ret_size));
             if(ret==CL_SUCCESS)
             {
                mem_size /= 1024*1024;
-               std::wcout << L"Память:" << mem_size << L"МБ\n";
+               sprintf(LogLine,"Память: %i МБ",(int)mem_size); Log->AddLine(LogLine);
             };
 
             cl_uint cores;
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_COMPUTE_UNITS,300,(void*)&cores,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Ядра:" << cores << "\n";
+               sprintf(LogLine,"Ядра: %i",cores); Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_CLOCK_FREQUENCY,300,(void*)&cores,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Частота:" << cores << L"МГц\n";
+                sprintf(LogLine,"Частота: %i МГц",cores); Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_ADDRESS_BITS,300,(void*)&cores,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Разрядность адреса:" << cores << "\n";
+               sprintf(LogLine,"Разрядность адреса: %i бит",cores); Log->AddLine(LogLine);
             };
 
-            std::wcout << L"Параметры параллелизации (размер группы/изменерия/размерность):\n";
+            Log->AddLine("Параметры параллелизации (размер группы/изменерия/размерность):");
 
-            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_GROUP_SIZE,300,(void*)&cores,&ret_size));
+            cl_uint grps = 0;
+            cl_uint dims = 0;
+
+            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_GROUP_SIZE,300,(void*)&grps,&ret_size));
             if(ret==CL_SUCCESS)
-            {
-               std::wcout << cores << "/";
-               OCLData->g_workgroup_size = sqrt(cores)/2;
-            };
+            { OCLData->g_workgroup_size = sqrt(grps)/2; };
+            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,300,(void*)&dims,&ret_size));
 
-            OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,300,(void*)&cores,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
-               std::wcout << cores << "/";
-            };
+            sprintf(LogLine,"Размер группы параррелизации %i, изменений %i",grps,dims);
+            Log->AddLine(LogLine);
 
-            int l_dims = cores;
             size_t l_szs[100];
+
+            Log->AddLine("Размерности:");
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_SIZES,300,(void*)l_szs,&ret_size));
             if(ret==CL_SUCCESS)
             {
-                std::wcout << "(";
-                for(int i=0;i<l_dims;++i){
-                    std::wcout << l_szs[i] << ";";
+                for(uint i=0;i<dims;++i){
+                    sprintf(LogLine,"Измерение %i размер %i",i,(int)l_szs[i]);
+                    Log->AddLine(LogLine);
                 };
-                std::wcout << ")";
             };
 
-            std::wcout << "\n";
-
-            /*
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_EXTENSIONS,500,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Доступные расширения:" << devname << "\n";
+               Log->AddBigText("Доступные расширения:",devname);
             };
-            */
+
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE,300,(void*)&cores,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"макс. разрядность вектора double:" << cores << "\n";
+                    sprintf(LogLine,"Макс. разрядность вектора double: %i",cores);
+                    Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_OPENCL_C_VERSION,500,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Поддерживается версия OpenCL:" << devname << "\n";
+                    sprintf(LogLine,"Поддерживается версия OpenCL: %s",devname);
+                    Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_VERSION,500,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Версия устройства:" << devname << "\n";
+                    sprintf(LogLine,"Версия устройства: %s",devname);
+                    Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DRIVER_VERSION,500,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS)
             {
-               std::wcout << L"Версия драйвера:" << devname << "\n";
+                    sprintf(LogLine,"Версия драйвера: %s",devname);
+                    Log->AddLine(LogLine);
             };
 
             bool img_supp;
@@ -133,16 +148,16 @@ void SureThread::oclInit()
             {
                 if(img_supp)
                 {
-                    std::wcout << L"Аппаратная поддержка изображений -- есть\n";
+                    Log->AddLine("Аппаратная поддержка изображений есть");
                 }else{
-                    std::wcout << L"Аппаратной поддержки изображений -- нет :(\n";
+                    Log->AddLine("Аппаратной поддержки изображений нет");
                 };
             };
 
         };
     };
     device = devices[0];
-    std::wcout << L"Используется устройство №0." << "\n";
+    Log->AddLine("Используется устройство №0.");
     // создание вычислительного контекста для GPU (видеокарты)
     OCL_GET_("clCreateContext",context,clCreateContext( NULL, 1, &device, NULL, NULL, &ret));
 
@@ -168,23 +183,24 @@ void SureThread::oclInit()
         &formats_c));
     if(ret==CL_SUCCESS)
     {
-        std::wcout << L"Поддерживаемые форматы изображений:\n";
+
+        Log->AddLine("Поддерживаемые форматы изображений:");
         for(cl_uint u = 0;u<formats_c;++u)
         {
             if((formats[u].image_channel_order==cif_vertex.image_channel_order)&&
               (formats[u].image_channel_data_type==cif_vertex.image_channel_data_type))
             {
-                std::wcout << L"CL_RGBA/CL_FLOAT(vertex image) -- поддерживается\n";
+                Log->AddLine("CL_RGBA/CL_FLOAT(vertex image) -- поддерживается");
             };
             if((formats[u].image_channel_order==cif_mesh.image_channel_order)&&
               (formats[u].image_channel_data_type==cif_mesh.image_channel_data_type))
             {
-                std::wcout << L"CL_RGBA/CL_SIGNED_INT32(mesh image) -- поддерживается\n";
+                Log->AddLine("CL_RGBA/CL_SIGNED_INT32(mesh image) -- поддерживается");
             };
             if((formats[u].image_channel_order==cif_textures.image_channel_order)&&
               (formats[u].image_channel_data_type==cif_textures.image_channel_data_type))
             {
-                std::wcout << L"CL_BGRA/CL_UNSIGNED_INT8(textures image) -- поддерживается\n";
+                Log->AddLine("CL_BGRA/CL_UNSIGNED_INT8(textures image) -- поддерживается");
             };
 
         };
@@ -274,7 +290,7 @@ void SureThread::oclInit()
     OCL_RUN_("clSetKernelArg 8t",clSetKernelArg(OCLData->kernel_n, 7, sizeof(cl_mem), (void*)&OCLData->cmUVMap));
     OCL_RUN_("clSetKernelArg 9t",clSetKernelArg(OCLData->kernel_n, 8, sizeof(cl_mem), (void*)&OCLData->cmNormals));
     if(!OCLData->OpenCL)
-        std::wcout << L"Запускаемся без OpenCL!\n";
+        Log->AddLine("Запускаемся без OpenCL!");
 
 }
 
@@ -309,6 +325,7 @@ void SureThread::run()
     struct timespec lframestart; // время начала текущего фрейма
     struct timespec lframetime; // время отсечения
     float tick = 0;
+    Log = new SureLog("render");
 
     oclInit();
     OCL_RUN_("clEnqueueWriteBuffer",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA,(void*)widget->rgbmatrix,0,NULL,NULL));
@@ -341,8 +358,8 @@ void SureThread::run()
                 OCLData->kernel = &OCLData->kernel_f;
             if(OCLData->rtype==SURE_RT_N)
                 OCLData->kernel = &OCLData->kernel_n;
-            OCLData->sizes[0] = GPUData->m_amx; //widget->rect().right()*SURE_FAA/SURE_SCALE;
-            OCLData->sizes[1] = GPUData->m_amy;//widget->rect().bottom()*SURE_FAA/SURE_SCALE;
+            OCLData->sizes[0] = GPUData->CameraInfo.m_amx; //widget->rect().right()*SURE_FAA/SURE_SCALE;
+            OCLData->sizes[1] = GPUData->CameraInfo.m_amy;//widget->rect().bottom()*SURE_FAA/SURE_SCALE;
             OCLData->sizes[0] /= OCLData->g_workgroup_size;
             OCLData->sizes[0] *= OCLData->g_workgroup_size;
             OCLData->sizes[0] += OCLData->g_workgroup_size;
@@ -536,6 +553,7 @@ void SureThread::run()
         };
     };
     oclDelete();
+    delete Log;
 } // run()
 
 void SureThread::raytrace()
@@ -549,8 +567,8 @@ void SureThread::raytrace()
     cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
     cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
 
-    int amx = GPUData->m_amx;
-    int amy = GPUData->m_amy;
+    int amx = GPUData->CameraInfo.m_amx;
+    int amy = GPUData->CameraInfo.m_amy;
     #pragma omp parallel for schedule(dynamic)
     for(int y=0;y<amy;++y)
         {

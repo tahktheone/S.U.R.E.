@@ -1,7 +1,7 @@
 #ifndef SUREDEFINES_H_INCLUDED
 #define SUREDEFINES_H_INCLUDED
 
-#define SURE_VERSION "0.0002"
+#define SURE_VERSION "0.0003"
 #define SURE_TITLE "S.U.R.E."
 
 #define SURE_CL_MAXSOURCE 100000
@@ -13,8 +13,8 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 2
-#define SURE_SMOOTH 2
+#define SURE_SCALE 1
+#define SURE_SMOOTH 1
 
 #define SURE_MAXRES_X 1920
 #define SURE_MAXRES_Y 1080

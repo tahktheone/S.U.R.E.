@@ -969,7 +969,7 @@ while(!(exit_no_collision||exit_collision))
                     Fname += FileName;
                     l_image->save(Fname);
                 #endif // COLLISION_LOGGING_00
-                std::wcout << L"f!";
+                EngineData->Log->AddLine("f!");
             };
         }else{ // расстояние до 0,0 больше преыдущего
             exit_no_collision = true;
@@ -1194,7 +1194,7 @@ LOG_POINT("Добавляем (%.3f;%.3f;%.3f)",M[fndi]);
         l_image->save(Fname);
         #endif // COLLISION_LOGGING_ERR_SAVE_I
                     cover_expanded = true;
-                    std::wcout << L"i!\n";
+                    EngineData->Log->AddLine("i!");
                 };
                 ++iter;
 
@@ -1376,14 +1376,14 @@ delete l_image;
             EngineData->reset = true;
         }; // !paused
         // BEG Поворот и перемещение камеры:
-        my_double3 dx = EngineData->cam_vec;
-        my_double3 dz = EngineData->cam_upvec;
+        my_double3 dx = EngineData->CameraInfo.cam_vec;
+        my_double3 dz = EngineData->CameraInfo.cam_upvec;
         my_double3 dy;
         dy = cross(dz,dx);
 
-        EngineData->cam_x.x += dx.x*EngineData->cam_dx.x+dy.x*EngineData->cam_dx.y+dz.x*EngineData->cam_dx.z;
-        EngineData->cam_x.y += dx.y*EngineData->cam_dx.x+dy.y*EngineData->cam_dx.y+dz.y*EngineData->cam_dx.z;
-        EngineData->cam_x.z += dx.z*EngineData->cam_dx.x+dy.z*EngineData->cam_dx.y+dz.z*EngineData->cam_dx.z;
+        EngineData->CameraInfo.cam_x.s[0] += dx.x*EngineData->cam_dx.x+dy.x*EngineData->cam_dx.y+dz.x*EngineData->cam_dx.z;
+        EngineData->CameraInfo.cam_x.s[1] += dx.y*EngineData->cam_dx.x+dy.y*EngineData->cam_dx.y+dz.y*EngineData->cam_dx.z;
+        EngineData->CameraInfo.cam_x.s[2] += dx.z*EngineData->cam_dx.x+dy.z*EngineData->cam_dx.y+dz.z*EngineData->cam_dx.z;
 
         if(EngineData->cam_dw.z!=0||EngineData->cam_dw.y!=0||EngineData->cam_dw.x!=0)
         {
@@ -1398,8 +1398,8 @@ delete l_image;
             dx1 = dx*c2+dy*s2+dz*s1;
             dz1 = dz*c1-dx*(s1*c0)+dy*(c2*s0)-dx*(s2*s0);
 
-            EngineData->cam_upvec = __NORMALIZE(dz1);
-            EngineData->cam_vec = __NORMALIZE(dx1);
+            EngineData->CameraInfo.cam_upvec = __NORMALIZE(dz1);
+            EngineData->CameraInfo.cam_vec = __NORMALIZE(dx1);
 
             EngineData->reset = true;
         };
@@ -1422,16 +1422,10 @@ delete l_image;
 
 void SurePhysThread::drawscene()
 {
-    GPUData->cam_x = EngineData->cam_x;
-    GPUData->cam_vec = EngineData->cam_vec;
-    GPUData->cam_upvec = EngineData->cam_upvec;
-    GPUData->xy_h = EngineData->xy_h;
+    GPUData->CameraInfo = EngineData->CameraInfo;
     GPUData->r_maxiters = EngineData->r_iters;
     GPUData->r_rechecks = EngineData->r_rechecks;
     GPUData->r_backlight = EngineData->r_backlight;
-    GPUData->m_amx = EngineData->m_amx;
-    GPUData->m_amy = EngineData->m_amy;
-    GPUData->subp_rnd = EngineData->subp_rnd;
     if(EngineData->reset)GPUData->toreset=true;
     EngineData->reset = false;
 

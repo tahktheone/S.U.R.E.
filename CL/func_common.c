@@ -52,28 +52,33 @@ __VTYPE3 PenVec(__VTYPE3 V1)
     return V2;
 };
 
-__VTYPE3 DetermineTraceVector(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureGPUData *GPUData,__SURE_GLOBAL float* Randomf,uint* rr)
+__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_GLOBAL float* Randomf,uint* rr)
 {
-    __VTYPE3 dZ = __FCONV3(GPUData->cam_vec);
-    __VTYPE3 dY = -__FCONV3(GPUData->cam_upvec);
+    __VTYPE3 dZ = __FCONV3(CameraInfo->cam_vec);
+    __VTYPE3 dY = -__FCONV3(CameraInfo->cam_upvec);
     __VTYPE3 dX = cross(dZ,dY);
-    size_t mx = GPUData->m_amx;
-    size_t my = GPUData->m_amy;
+    size_t mx = CameraInfo->m_amx;
+    size_t my = CameraInfo->m_amy;
     uint r = *rr;
-    __VTYPE kx;
-    __VTYPE ky;
-    if(GPUData->subp_rnd){
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
         __VTYPE rx = (Randomf[r]-0.5);
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
         __VTYPE ry = (Randomf[r]-0.5);
-        kx = GPUData->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-        ky = GPUData->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
-    }else{
-        kx = GPUData->xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-        ky = GPUData->xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
-    };
+    __VTYPE kx = CameraInfo->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
+    __VTYPE ky = CameraInfo->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
     *rr = r;
+    return dZ+kx*dX+ky*dY;
+};
+
+__VTYPE3 DetermineTraceVector(int x,int y,__SURE_CONSTANT __SURE_STRUCT SureCameraInfo *CameraInfo)
+{
+    __VTYPE3 dZ = __FCONV3(CameraInfo->cam_vec);
+    __VTYPE3 dY = -__FCONV3(CameraInfo->cam_upvec);
+    __VTYPE3 dX = cross(dZ,dY);
+    size_t mx = CameraInfo->m_amx;
+    size_t my = CameraInfo->m_amy;
+    __VTYPE kx = CameraInfo->xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
+    __VTYPE ky = CameraInfo->xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
     return dZ+kx*dX+ky*dY;
 };
 

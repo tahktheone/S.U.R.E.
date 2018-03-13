@@ -17,6 +17,7 @@
 					<Add option="-std=c++11" />
 					<Add option="-g" />
 					<Add directory="/usr/include/qt5" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add library="/usr/lib/x86_64-linux-gnu/libQt5Core.so" />
@@ -39,6 +40,7 @@
 					<Add option="-std=c++11" />
 					<Add option="-Wall" />
 					<Add directory="/usr/include/qt5" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add library="/usr/lib/x86_64-linux-gnu/libQt5Core.so" />
@@ -59,6 +61,7 @@
 					<Add option="-m64" />
 					<Add option="-g" />
 					<Add directory="D:/Qt/A_qt510_64/include" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-m64" />
@@ -89,6 +92,7 @@
 					<Add option="-m64" />
 					<Add option="-fopenmp" />
 					<Add directory="D:/Qt/A_qt510_64/include" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-m64" />
@@ -130,6 +134,7 @@
 		<Unit filename="README.md" />
 		<Unit filename="TODO.txt" />
 		<Unit filename="include/SureData.h" />
+		<Unit filename="include/SureLog.h" />
 		<Unit filename="include/SurePhysThread.h" />
 		<Unit filename="include/SureThread.h" />
 		<Unit filename="include/SureWidget.h" />
@@ -149,6 +154,7 @@
 			<Option link="0" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/SureLog.cpp" />
 		<Unit filename="src/SurePhysThread.cpp" />
 		<Unit filename="src/SureThread.cpp" />
 		<Unit filename="src/SureWidget.cpp" />

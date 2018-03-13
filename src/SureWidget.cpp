@@ -19,8 +19,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
     image = new QImage(x,y,QImage::Format_ARGB32);
     int my = image->rect().bottom();
     int mx = image->rect().right();
-    EngineData->m_amx = rect().right()*SURE_FAA/SURE_SCALE;
-    EngineData->m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
+    EngineData->CameraInfo.m_amx = rect().right()*SURE_FAA/SURE_SCALE;
+    EngineData->CameraInfo.m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
     clock_gettime(CLOCK_MONOTONIC,&framestart);
     double lv_max = 0;
     double lv_med = 0;
@@ -153,7 +153,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     sprintf(s,"DR:%.2f ms PH:%.2f ms PS:%.2f ms",rendertime,EngineData->frametime,posttime);
     painter.drawText(p,s);
     p.setY(30);
-    sprintf(s,"X=%.4f Y=%.4f FOV=%.2f",EngineData->cam_x.x,EngineData->cam_x.y,EngineData->xy_h);
+    sprintf(s,"X=%.4f Y=%.4f FOV=%.2f",EngineData->CameraInfo.cam_x.s[0],EngineData->CameraInfo.cam_x.s[1],EngineData->CameraInfo.xy_h);
     painter.drawText(p,s);
     p.setY(45);
     if(OCLData->OpenCL)
@@ -205,18 +205,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
             painter.drawText(p,s);
             int l_x = QWidget::mapFromGlobal(QCursor::pos()).x();
             int l_y = QWidget::mapFromGlobal(QCursor::pos()).y();
-            __VTYPE3 dZ = EngineData->cam_vec;
-            __VTYPE3 dY = -EngineData->cam_upvec;
-            __VTYPE3 dX = cross(dZ,dY);
-    float mx = EngineData->m_amx;
-    float my = EngineData->m_amy;
-    __VTYPE kx;
-    __VTYPE ky;
-        kx = EngineData->xy_h*((float)l_x-mx/2.0)/mx;
-        ky = EngineData->xy_h*((float)l_y-my/2.0)/mx;
-    __VTYPE3 tv = dZ+kx*dX+ky*dY;
-    __VTYPE3 tp = __FCONV3(EngineData->cam_x);
-    tv = __NORMALIZE(tv);
+            __VTYPE3 tv = DetermineTraceVector(l_x,l_y,&EngineData->CameraInfo);
+            __VTYPE3 tp = __FCONV3(EngineData->CameraInfo.cam_x);
             p.setY(rect().bottom()-15);
             p.setX(5);
             sprintf(s,"TV = (%.3f;%.3f;%.3f)",tv.x,tv.y,tv.z);
@@ -225,7 +215,6 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p.setX(5);
             sprintf(s,"TP = (%.3f;%.3f;%.3f)",tp.x,tp.y,tp.z);
             painter.drawText(p,s);
-
         };
     };
     if(drawdebug>=70)
@@ -233,20 +222,20 @@ void SureWidget::paintEvent(QPaintEvent * event)
     for(int i = 0;i<EngineData->m_objects;++i)
     {
         SureObject* lv_o = &EngineData->objects[i];
-        my_double3 dZ = EngineData->cam_vec;
-        my_double3 vtc = EngineData->cam_x-lv_o->X;
+        my_double3 dZ = EngineData->CameraInfo.cam_vec;
+        my_double3 vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->X;
         double dz = dot(dZ,vtc);
         if(dz<0)
         {
-            my_double3 dY = -EngineData->cam_upvec;
+            my_double3 dY = -(__VTYPE3)EngineData->CameraInfo.cam_upvec;
             my_double3 dX = cross(dZ,dY);
-            vtc = EngineData->cam_x-lv_o->p1;
+            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p1;
             dz = dot(dZ,vtc);               // Локальные координаты
             double lx = dot(dX,vtc)/dz;               // Локальные координаты
             double ly = dot(dY,vtc)/dz;               // Локальные координаты
             //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->xy_h;
-            ly /= EngineData->xy_h;
+            lx /= EngineData->CameraInfo.xy_h;
+            ly /= EngineData->CameraInfo.xy_h;
             lx*=mx;
             ly*=mx;
             lx+=mx/2.0;
@@ -255,13 +244,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p1.setX(lx);
             p1.setY(ly);
 
-            vtc = EngineData->cam_x-lv_o->p2;
+            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p2;
             dz = dot(dZ,vtc);               // Локальные координаты
             lx = dot(dX,vtc)/dz;               // Локальные координаты
             ly = dot(dY,vtc)/dz;               // Локальные координаты
             //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->xy_h;
-            ly /= EngineData->xy_h;
+            lx /= EngineData->CameraInfo.xy_h;
+            ly /= EngineData->CameraInfo.xy_h;
             lx*=mx;
             ly*=mx;
             lx+=mx/2.0;
@@ -275,13 +264,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
                 (p2.y()>0&&p2.y()<my))
                 painter.drawLine(p1,p2);
 
-            vtc = EngineData->cam_x-lv_o->p3;
+            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p3;
             dz = dot(dZ,vtc);               // Локальные координаты
             lx = dot(dX,vtc)/dz;               // Локальные координаты
             ly = dot(dY,vtc)/dz;               // Локальные координаты
             //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->xy_h;
-            ly /= EngineData->xy_h;
+            lx /= EngineData->CameraInfo.xy_h;
+            ly /= EngineData->CameraInfo.xy_h;
             lx*=mx;
             ly*=mx;
             lx+=mx/2.0;
@@ -295,13 +284,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
                 (p3.y()>0&&p3.y()<my))
                 painter.drawLine(p1,p3);
 
-            vtc = EngineData->cam_x-lv_o->p4;
+            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p4;
             dz = dot(dZ,vtc);               // Локальные координаты
             lx = dot(dX,vtc)/dz;               // Локальные координаты
             ly = dot(dY,vtc)/dz;               // Локальные координаты
             //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->xy_h;
-            ly /= EngineData->xy_h;
+            lx /= EngineData->CameraInfo.xy_h;
+            ly /= EngineData->CameraInfo.xy_h;
             lx*=mx;
             ly*=mx;
             lx+=mx/2.0;
@@ -338,11 +327,11 @@ void SureWidget::paintEvent(QPaintEvent * event)
 
 void SureWidget::keyPressEvent(QKeyEvent *event){
     if(event->key()==Qt::Key_Plus){
-        EngineData->xy_h /= 1.1;
+        EngineData->CameraInfo.xy_h /= 1.1;
         EngineData->reset = true;
     };
     if(event->key()==Qt::Key_Minus){
-        EngineData->xy_h *= 1.1;
+        EngineData->CameraInfo.xy_h *= 1.1;
         EngineData->reset = true;
     };
     if(event->key()==Qt::Key_W){
@@ -440,35 +429,35 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
             {
                 OCLData->rtype = SURE_RT_D;
                 OCLData->OpenCL = true;
-                std::wcout << L"Переключились на GPU-рендер вариант 1\n";
+                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 1");
                 break;
             };
             case SURE_RT_D:
             {
                 OCLData->rtype = SURE_RT_T;
                 OCLData->OpenCL = true;
-                std::wcout << L"Переключились на GPU-рендер вариант 2\n";
+                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 2");
                 break;
             };
             case SURE_RT_T:
             {
                 OCLData->rtype = SURE_RT_F;
                 OCLData->OpenCL = true;
-                std::wcout << L"Переключились на GPU-рендер вариант 3\n";
+                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 3");
                 break;
             };
             case SURE_RT_F:
             {
                 OCLData->rtype = SURE_RT_N;
                 OCLData->OpenCL = true;
-                std::wcout << L"Переключились на GPU-рендер вариант 4\n";
+                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 4");
                 break;
             };
             case SURE_RT_N:
             {
                 OCLData->rtype = SURE_RT_NOCL;
                 OCLData->OpenCL = false;
-                std::wcout << L"Переключились на CPU-рендер\n";
+                EngineData->Log->AddLine("Переключились на СPU-рендер");
                 break;
             };
             default:
@@ -516,10 +505,10 @@ void SureWidget::keyReleaseEvent(QKeyEvent *event){
         EngineData->cam_dx.y = 0;
     };
     if(event->key()==Qt::Key_Z){
-        if(EngineData->subp_rnd) {
-            EngineData->subp_rnd = false;
+        if(EngineData->CameraInfo.subp_rnd) {
+            EngineData->CameraInfo.subp_rnd = false;
         } else {
-            EngineData->subp_rnd = true;
+            EngineData->CameraInfo.subp_rnd = true;
         };
     };
 };
@@ -583,8 +572,9 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
             EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("earth");
             EngineData->TemplateObject.drawable.advmap_id = EngineData->GetTexture("earth_adv");
-            uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
+            __VTYPE3 X = EngineData->CameraInfo.cam_x;
+            uint o = EngineData->CreateObjectFromTemplate(&X);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
 
         };
         if (event->button() == Qt::RightButton) {
@@ -595,17 +585,18 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.lp = 10.0;
             EngineData->TemplateObject.drawable.radiance = 0;
             EngineData->TemplateObject.ModelID = EngineData->GetModel("cube");
-            EngineData->TemplateObject.ox = EngineData->cam_vec;
-            EngineData->TemplateObject.oz = EngineData->cam_upvec;
-            EngineData->TemplateObject.oy = cross(EngineData->cam_vec,EngineData->cam_upvec);
+            EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
+            EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
+            EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
             EngineData->TemplateObject.drawable.mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_start;
             EngineData->TemplateObject.drawable.mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_count;
             EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("colstones");
             EngineData->TemplateObject.drawable.advmap_id = -1;
             EngineData->TemplateObject.drawable.dist_type = SURE_D_EQUAL;
             EngineData->TemplateObject.drawable.type = SURE_DR_MESH;
-            uint o = EngineData->CreateObjectFromTemplate(&EngineData->cam_x);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->cam_vec,0.8);
+            __VTYPE3 X = EngineData->CameraInfo.cam_x;
+            uint o = EngineData->CreateObjectFromTemplate(&X);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
         };
     }; // if mousemove
 };

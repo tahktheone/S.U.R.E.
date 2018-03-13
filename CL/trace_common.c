@@ -30,8 +30,15 @@
     uint r = mad24(xx,xx+yy,xx+yy);
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
 
-    __VTYPE3 tv = DetermineTraceVector(x,y,GPUData,Randomf,&r);
-    __VTYPE3 tp = __FCONV3(GPUData->cam_x);
+    __VTYPE3 tv;
+
+    if(GPUData->CameraInfo.subp_rnd){
+        tv = DetermineTraceVectorSAA(x,y,&GPUData->CameraInfo,Randomf,&r);
+    }else{
+        tv = DetermineTraceVector(x,y,&GPUData->CameraInfo);
+    };
+
+    __VTYPE3 tp = __FCONV3(GPUData->CameraInfo.cam_x);
     tv = __NORMALIZE(tv);
     cur = &Drawables[0];
     rgb.x = 0; rgb.y = 0; rgb.z = 0;

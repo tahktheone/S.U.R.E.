@@ -34,7 +34,9 @@ class SureThread : public QThread
 
     protected:
     private:
+        int SourceFromFile(const char* i_fname,char* e_source);
         SureWidget* parent;
+        SureLog* Log;
 };
 
 #endif // SURETHREAD_H
