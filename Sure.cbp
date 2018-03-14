@@ -124,12 +124,24 @@
 			<Option link="0" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="CL/raytrace.cl" />
+		<Unit filename="CL/raytrace_d.cl" />
 		<Unit filename="CL/raytrace_t.cl" />
 		<Unit filename="CL/trace_common.c">
 			<Option compilerVar="CC" />
 			<Option compile="0" />
 			<Option link="0" />
 			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="CL/trace_common_d.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="CL/trace_common_t.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
 		</Unit>
 		<Unit filename="README.md" />
 		<Unit filename="TODO.txt" />

@@ -86,8 +86,8 @@ void SureThread::oclInit()
             cl_uint dims = 0;
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_GROUP_SIZE,300,(void*)&grps,&ret_size));
-            if(ret==CL_SUCCESS)
-            { OCLData->g_workgroup_size = sqrt(grps)/2; };
+            // пока убираем автоматическое определение размера группы. Пока не ясно помогает ли это
+            // if(ret==CL_SUCCESS){ OCLData->g_workgroup_size = sqrt(grps)/2; };
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,300,(void*)&dims,&ret_size));
 
             sprintf(LogLine,"Размер группы параррелизации %i, изменений %i",grps,dims);
@@ -243,16 +243,19 @@ void SureThread::oclInit()
     size_t logsize;
     // ^^^ Объявления для макроса OCL_PROGRAM()
 
-    OCL_PROGRAM(program_d,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_RLEVEL=99");
-    OCL_PROGRAM(program_t,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=99");
-    OCL_PROGRAM(program_f,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=50");
+    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=100");
+    OCL_PROGRAM(program_t,"./CL/raytrace_d.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=60");
+    OCL_PROGRAM(program_f,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=40");
+    //OCL_PROGRAM(program_d,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_RLEVEL=99");
+    //OCL_PROGRAM(program_t,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=99");
+    //OCL_PROGRAM(program_f,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=50");
     OCL_PROGRAM(program_n,"./CL/raytrace_t.cl","-w -cl-fast-relaxed-math -I./CL -D SURE_GPU_FLOAT -D SURE_RLEVEL=10");
     OCL_GET_("clCreateKernel",OCLData->kernel_t,clCreateKernel(program_t,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_f,clCreateKernel(program_f,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_d,clCreateKernel(program_d,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_n,clCreateKernel(program_n,"Trace",NULL));
-    OCLData->kernel = &OCLData->kernel_t;
-    OCLData->rtype = SURE_RT_T;
+    OCLData->kernel = &OCLData->kernel_d;
+    OCLData->rtype = SURE_RT_D;
     OCL_RUN_("clSetKernelArg 0t",clSetKernelArg(OCLData->kernel_t, 0, sizeof(cl_mem), (void*)&OCLData->cmRGBmatrix));
     OCL_RUN_("clSetKernelArg 1t",clSetKernelArg(OCLData->kernel_t, 1, sizeof(cl_mem), (void*)&OCLData->cmRandom));
     OCL_RUN_("clSetKernelArg 2t",clSetKernelArg(OCLData->kernel_t, 2, sizeof(cl_mem), (void*)&OCLData->cmGPUData));
@@ -506,7 +509,7 @@ void SureThread::run()
             l_lws[0] = OCLData->g_workgroup_size;
             l_lws[1] = OCLData->g_workgroup_size;
             l_lws[2] = 1;
-            int h_gr = OCLData->g_workgroup_size*4;
+            int h_gr = 32; //OCLData->g_workgroup_size*16;
             size_t l_start[2];
             size_t l_gws[2];
             l_gws[0] = h_gr;
@@ -574,7 +577,7 @@ void SureThread::raytrace()
         {
         for(int x=0;x<amx;++x)
         {
-           #include <trace_common.c>
+           #include <trace_common_d.c>
         };//X
     };//Y ; parallel
 }

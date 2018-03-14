@@ -12,6 +12,10 @@
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
 #define __MAD(A,B,C) mad(A,B,C)
+#define __SURE_DECLARE_RANDOM __global
+#define __XX x
+#define __YY y
+#define __ZZ z
 
 #ifdef SURE_GPU_FLOAT
 
@@ -101,20 +105,20 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-        col_transp = 1.01 - (col_rgba.w/255.0); \
-        col_rgb.x = col_rgba.x; \
-        col_rgb.y = col_rgba.y; \
-        col_rgb.z = col_rgba.z; \
-        if(col_transp>0.5)col_dt=SURE_D_NORM;
+        uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+        DrawableCollided.transp = 1.01 - (col_rgba.w/255.0); \
+        DrawableCollided.rgb.x = col_rgba.x; \
+        DrawableCollided.rgb.y = col_rgba.y; \
+        DrawableCollided.rgb.z = col_rgba.z; \
+        if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
 
 #define __GET_ADVMAP(ix,iy,id) \
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
         advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-        col_radiance = advmap.x; \
-        col_ds = advmap.y/20.0;
+        DrawableCollided.radiance = advmap.x; \
+        DrawableCollided.dist_sigma = advmap.y/20.0;
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -129,12 +133,12 @@ v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-col_transp = 1.01 - (col_rgba.w / 255.0); \
-col_rgb.x = col_rgba.x; \
-col_rgb.y = col_rgba.y; \
-col_rgb.z = col_rgba.z; \
-if(col_transp>0.5)col_dt=SURE_D_NORM;
+uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+DrawableCollided.transp = 1.01 - (col_rgba.w / 255.0); \
+DrawableCollided.rgb.x = col_rgba.x; \
+DrawableCollided.rgb.y = col_rgba.y; \
+DrawableCollided.rgb.z = col_rgba.z; \
+if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
 
 
 #define __GET_ADVMAP_UV(cm,id) \
@@ -151,8 +155,8 @@ map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-col_radiance = advmap.x; \
-col_ds = advmap.y/100.0;
+DrawableCollided.radiance = advmap.x; \
+DrawableCollided.dist_sigma = advmap.y/100.0;
 
 #define GPU
 
@@ -161,9 +165,9 @@ col_ds = advmap.y/100.0;
 
 __kernel
 __attribute__(( vec_type_hint(__VTYPE3)))
-__attribute__((work_group_size_hint(16, 16, 1)))
+__attribute__((work_group_size_hint(8, 8, 1)))
 void Trace(        __global float* rgbmatrix, // картинка, в которую рисуем
-                   __constant float* Randomf, // массив случайных чисел
+                   __SURE_DECLARE_RANDOM float* Randomf, // массив случайных чисел
                    __constant struct SureGPUData* GPUData, // структура с общими настройками рендера
                    __global struct SureDrawable* Drawables, // набор объектов для отрисовки
                    __read_only image2d_t VrtxCLImg, // Набор vertexов
@@ -175,7 +179,6 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
 {
 // координаты обрабатываемой точки
 int x = get_global_id(0);
-
 int y = get_global_id(1);
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
@@ -185,12 +188,9 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
 int2 coords;
-
 __VTYPE2 map_uv;
-
 uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
- #include <trace_common.c>
-
+ #include <trace_common_d.c>
 }

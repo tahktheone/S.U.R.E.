@@ -3,7 +3,7 @@
 
 #include <SureDefines.h>
 
-#define SURE_RLEVEL 100
+#define SURE_RLEVEL 99
 // 90 и ниже -- отключает рассеивание.
 // 60 и ниже -- без рандомизации и без теней
 // 20 и ниже -- без отражений и преломлений
@@ -12,7 +12,7 @@
 #define __VTYPE double
 #define __VTYPE2 my_double2
 #define __VTYPE3 my_double3
-#define __FCONV3(A) (my_double3)A
+#define __FCONV3(A) (my_double3)(A)
 #define __FCONV(A) A
 #define __NORMALIZE(A) normalize(A)
 #define __SURE_GLOBAL
@@ -20,14 +20,18 @@
 #define __SURE_CONSTANT
 #define __SURE_PRIVATE
 #define __SURE_STRUCT
+#define __SURE_DECLARE_RANDOM
 #define __SURE_UCHAR3 my_uchar3
 #define __SURE_UCHAR4 my_uchar4
 #define __SURE_UINT4 my_uchar4
 #define __SURE_VINT4 my_int4
-#define __SURE_MIN(A,B) A<B?A:B
-#define __SURE_MAX(A,B) A>B?A:B
+#define __SURE_MIN(A,B) (A<B?A:B)
+#define __SURE_MAX(A,B) (A>B?A:B)
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
-#define __MAD(A,B,C) A*B+C
+#define __MAD(A,B,C) (A*B+C)
+#define __XX s[0]
+#define __YY s[1]
+#define __ZZ s[2]
 
 #define __VERTEX_X(A) VrtxCLImg[A*4]
 #define __VERTEX_Y(A) VrtxCLImg[A*4+1]
@@ -84,29 +88,26 @@
         uint iix = ix; \
         uint iiy = iy+SURE_R_TEXRES*id; \
         uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
-        col_rgba.z = *tex; tex++; \
-        col_rgba.y = *tex; tex++; \
-        col_rgba.x = *tex; tex++; \
-        col_rgba.w = *tex; \
-        col_transp = 1.01 - (col_rgba.w / 255.0); \
-        col_rgb.x = col_rgba.x; \
-        col_rgb.y = col_rgba.y; \
-        col_rgb.z = col_rgba.z; \
-        if(col_transp>0.5)col_dt=SURE_D_NORM;
+        DrawableCollided.rgb.s[2] = *tex; tex++; \
+        DrawableCollided.rgb.s[1] = *tex; tex++; \
+        DrawableCollided.rgb.s[0] = *tex; tex++; \
+        DrawableCollided.transp = 1.01 - ((double)*tex / 255.0); \
+        if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
 
 #define __GET_ADVMAP(ix,iy,id) \
         uint iix = ix; \
         uint iiy = iy+SURE_R_TEXRES*id; \
         uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
-        col_radiance = *tex; tex++; \
-        col_ds = *tex/20.0;
+        DrawableCollided.radiance = *tex; tex++; \
+        DrawableCollided.dist_sigma = *tex/20.0;
+
 
 #define __GET_TEXTURE_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
                                   (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
 __VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \
                                   (__MESH_UV3_V(cm)-__MESH_UV1_V(cm))*v; \
-__GET_TEXTURE(map_px,map_py,id); \
+__GET_TEXTURE(map_px,map_py,id);
 
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
@@ -488,7 +489,7 @@ class SureData
 
 struct SureOCLData{
     bool OpenCL = true;
-    int rtype = SURE_RT_NOCL;
+    int rtype = SURE_RT_D;
     cl_kernel* kernel;
 
     cl_kernel kernel_t;
@@ -497,7 +498,7 @@ struct SureOCLData{
     cl_kernel kernel_n;
 
     size_t sizes[2] = {1920,1080};
-    int g_workgroup_size = 16;
+    int g_workgroup_size = 8;
     // OpenCL штуки
     cl_command_queue cqCommandQue;
     cl_mem cmRGBmatrix;

@@ -53,7 +53,7 @@ __VTYPE3 PenVec(__VTYPE3 V1)
     return V2;
 };
 
-__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_CONSTANT float* Randomf,uint* rr)
+__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr)
 {
     __VTYPE3 dZ = __FCONV3(CameraInfo->cam_vec);
     __VTYPE3 dY = -__FCONV3(CameraInfo->cam_upvec);
@@ -83,7 +83,7 @@ __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraIn
     return dZ+kx*dX+ky*dY;
 };
 
-__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_CONSTANT float* Randomf)
+__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_DECLARE_RANDOM float* Randomf)
 {
     #if SURE_RLEVEL<60
     return cn;

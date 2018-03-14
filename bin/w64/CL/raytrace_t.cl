@@ -1,7 +1,10 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
- #include <SureDefines.h>
+#include <SureDefines.h>
 
-#define __SURE_GLOBAL global
+#define __SURE_GLOBAL __global
+#define __SURE_STRUCT struct
+#define __SURE_LOCAL __local
+#define __SURE_PRIVATE __private
 #define __SURE_CONSTANT __constant
 #define __SURE_VINT4 int4
 #define __SURE_UCHAR3 uchar3
@@ -152,6 +155,7 @@ col_radiance = advmap.x; \
 col_ds = advmap.y/100.0;
 
 #define GPU
+
 #include <SureGPUData.h>
 #include <func_common.c>
 
@@ -159,8 +163,8 @@ __kernel
 __attribute__(( vec_type_hint(__VTYPE3)))
 __attribute__((work_group_size_hint(16, 16, 1)))
 void Trace(        __global float* rgbmatrix, // картинка, в которую рисуем
-                   __global float* Randomf, // массив случайных чисел
-                   constant struct SureGPUData* GPUData, // структура с общими настройками рендера
+                   __constant float* Randomf, // массив случайных чисел
+                   __constant struct SureGPUData* GPUData, // структура с общими настройками рендера
                    __global struct SureDrawable* Drawables, // набор объектов для отрисовки
                    __read_only image2d_t VrtxCLImg, // Набор vertexов
                    __read_only image2d_t Textures, // Текстуры
@@ -169,22 +173,25 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t Normals // нормали
                    )
 {
+
 // координаты обрабатываемой точки
 int x = get_global_id(0);
 int y = get_global_id(1);
-
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE            |
                               CLK_FILTER_NEAREST;
+
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;
 
 int2 coords;
+
 __VTYPE2 map_uv;
 uint4 advmap;
-
+if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
- #include <trace_common.c>
+ #include <trace_common_d.c>
+
 }

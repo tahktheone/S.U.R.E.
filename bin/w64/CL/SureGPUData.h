@@ -53,45 +53,56 @@ struct SureDrawable {
 
 };
 
-struct SureGPUData {
+struct SureCameraInfo {
 #ifdef GPU
-    uchar reset; // сброс кадра
     double3 cam_x; // Камера
     double3 cam_vec;
     double3 cam_upvec;
     double xy_h; // Параметры изображения
-    int m_drawables; //Количество объектов на сцене
-    uchar toreset; // сброс кадра
-    uint curandom;  // текущий индекс в генераторе случайных чисел
-    uchar r_maxiters;
-    uchar r_rechecks;
     uint m_amx;
     uint m_amy;
-    float r_backlight;
-    struct SureDrawable* Drawables; // для GPU -- не имеет смысла, присутствует тут для целостности структуры:
+    bool subp_rnd;
 #else
-    cl_uchar reset = true; // сброс кадра -- фаза 2
-    cl_double3 cam_x = cl_double3{0,0,0}; // Камера
-    cl_double3 cam_vec = cl_double3{0,0,0};
-    cl_double3 cam_upvec = cl_double3{0,0,0};
+    cl_double3 cam_x = cl_double3{-30,0,5}; // Камера
+    cl_double3 cam_vec = cl_double3{1,0,0};
+    cl_double3 cam_upvec = cl_double3{0,0,1};
     cl_double xy_h = cl_double{3.0}; // Угол обзора
-    cl_int m_drawables = 0; //Количество объектов на сцене
-    cl_uchar toreset = true; // сброс кадра -- фаза 1
-    cl_uint curandom = 0; // текущий индекс в генераторе случайных чисел
-    cl_uchar r_maxiters = 20; // глубина анализа рендера
-    cl_uchar r_rechecks = 20; // качество рендера
     cl_uint m_amx = 1920;
     cl_uint m_amy = 1080;
+    cl_bool subp_rnd = false;
+#endif // GPU
+};
+
+struct SureGPUData {
+#ifdef GPU
+    uchar reset; // сброс кадра
+    struct SureCameraInfo CameraInfo;
+    int m_drawables; //Количество объектов на сцене
+    uchar toreset; // сброс кадра
+    uchar r_maxiters;
+    uchar r_rechecks;
+    float r_backlight;
+    struct SureDrawable* Drawables; // для GPU -- не имеет смысла, присутствует тут для целостности структуры
+#else
+    cl_uchar reset = true; // сброс кадра -- фаза 2
+    SureCameraInfo CameraInfo;
+    cl_int m_drawables = 0; //Количество объектов на сцене
+    cl_uchar toreset = true; // сброс кадра -- фаза 1
+    cl_uchar r_maxiters = 20; // глубина анализа рендера
+    cl_uchar r_rechecks = 20; // качество рендера
     cl_float r_backlight = 0.5;
     SureDrawable* Drawables; // Для CPU -- указатель на массив с объектами сцены
 #endif // GPU
 };
 
 __VTYPE3 PenVec(__VTYPE3 V1);
-bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, __VTYPE2 *t, bool *in,__VTYPE* id);
-__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_GLOBAL float* Randomf);
+bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
+__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_CONSTANT float* Randomf);
+__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_CONSTANT float* Randomf,uint* rr);
+__VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 
 #define RT_SETCOL \
+collision_found = true; \
 col_refr = cur->refr / col->refr; \
 if(cur->refr > col->refr){  \
     col_rgb = cur->rgb;  \

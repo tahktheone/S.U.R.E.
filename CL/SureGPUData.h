@@ -97,25 +97,42 @@ struct SureGPUData {
 
 __VTYPE3 PenVec(__VTYPE3 V1);
 bool CollideRaySphered(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
-__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_CONSTANT float* Randomf);
-__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_CONSTANT float* Randomf,uint* rr);
+__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_DECLARE_RANDOM float* Randomf);
+__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 
 #define RT_SETCOL \
 collision_found = true; \
-col_refr = cur.refr / col.refr; \
-if(cur.refr > col.refr){  \
-    col_rgb = cur.rgb;  \
-    col_transp = cur.transp;  \
-    col_dt = cur.dist_type;  \
-    col_ds = cur.dist_sigma;  \
-    col_dm = cur.dist_m;  \
+col_refr = cur->refr / col->refr; \
+if(cur->refr > col->refr){  \
+    col_rgb = cur->rgb;  \
+    col_transp = cur->transp;  \
+    col_dt = cur->dist_type;  \
+    col_ds = cur->dist_sigma;  \
+    col_dm = cur->dist_m;  \
 }else{  \
-    col_rgb = col.rgb;  \
-    col_transp = col.transp;  \
-    col_dt = col.dist_type;   \
-    col_ds = col.dist_sigma;  \
-    col_dm = col.dist_m;   \
+    col_rgb = col->rgb;  \
+    col_transp = col->transp;  \
+    col_dt = col->dist_type;   \
+    col_ds = col->dist_sigma;  \
+    col_dm = col->dist_m;   \
+}
+
+#define RT_SETCOL_D \
+collision_found = true; \
+DrawableCollided.refr = cur->refr / col->refr; \
+if(cur->refr > col->refr){  \
+    DrawableCollided.rgb = cur->rgb;  \
+    DrawableCollided.transp = cur->transp;  \
+    DrawableCollided.dist_type = cur->dist_type;  \
+    DrawableCollided.dist_sigma = cur->dist_sigma;  \
+    DrawableCollided.dist_m = cur->dist_m;  \
+}else{  \
+    DrawableCollided.rgb = col->rgb;  \
+    DrawableCollided.transp = col->transp;  \
+    DrawableCollided.dist_type = col->dist_type;   \
+    DrawableCollided.dist_sigma = col->dist_sigma;  \
+    DrawableCollided.dist_m = col->dist_m;   \
 }
 
 #endif // SUREGPUDATA_H_INCLUDED

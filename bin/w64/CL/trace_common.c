@@ -1,14 +1,17 @@
-// Вспомогательные переменные для поиска пересечений
-    __VTYPE2 t;
-    bool in;
-    // поиск столкновения
-    __SURE_GLOBAL struct SureDrawable* lv_cur;
+// ускоряем работу с памятью на GPU: забираем информацию о камере в локальную память:
+__SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
+
+    // поиск пересечения
     __VTYPE3 cp; // collision point
     __VTYPE3 cn; // collision normal
-    __VTYPE id; // intersect dist
-    __SURE_GLOBAL struct SureDrawable* cur;
-    __SURE_GLOBAL struct SureDrawable* col;
-    __SURE_GLOBAL struct SureDrawable* lv_dr;
+    __VTYPE intersect_dist; // intersect dist
+    bool collision_found = false;
+
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_dr; // drawable который сейчас анализируется
+
     __VTYPE col_refr;
     __SURE_UCHAR3 col_rgb;
     __SURE_UINT4 col_rgba;
@@ -30,34 +33,33 @@
     uint r = mad24(xx,xx+yy,xx+yy);
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
 
-    __VTYPE3 dZ = __FCONV3(GPUData->cam_vec);
-    __VTYPE3 dY = -__FCONV3(GPUData->cam_upvec);
+    __VTYPE3 dZ = __FCONV3(CameraInfo.cam_vec);
+    __VTYPE3 dY = -__FCONV3(CameraInfo.cam_upvec);
     __VTYPE3 dX = cross(dZ,dY);
-    size_t mx = GPUData->m_amx;
-    size_t my = GPUData->m_amy;
-
-    if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-    __VTYPE rx = (Randomf[r]-0.5);
-    if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-    __VTYPE ry = (Randomf[r]-0.5);
-    __VTYPE kx = GPUData->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-    __VTYPE ky = GPUData->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
+    size_t mx = CameraInfo.m_amx;
+    size_t my = CameraInfo.m_amy;
+    __VTYPE kx = CameraInfo.xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
+    __VTYPE ky = CameraInfo.xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
     __VTYPE3 tv = dZ+kx*dX+ky*dY;
-    __VTYPE3 tp = __FCONV3(GPUData->cam_x);
+
+    __VTYPE3 tp = __FCONV3(CameraInfo.cam_x);
     tv = __NORMALIZE(tv);
     cur = &Drawables[0];
     rgb.x = 0; rgb.y = 0; rgb.z = 0;
     fade.x = 1; fade.y = 1; fade.z = 1;
-    tl = 0; ri = 0; in = false;
+    tl = 0; ri = 0;// in = false;
     uint miters = GPUData->r_maxiters;
+    #if SURE_RLEVEL < 50
+        miters = 2;
+    #endif // SURE_RLEVEL
     uint mrechecks = GPUData->r_rechecks;
 
     while((tl<SURE_R_MAXDISTANCE)&&((fade.x+fade.y+fade.z)>SURE_R_FADELIMIT)&&(ri<miters))
     {
         ++ri;
         lv_cur = cur;
-        id = SURE_R_MAXDISTANCE;
-        col = 0;
+        intersect_dist = SURE_R_MAXDISTANCE;
+        collision_found = false;
         col_in = false;
 
         for(int i=1;i<GPUData->m_drawables;++i)
@@ -67,9 +69,10 @@
             {
                 case SURE_DR_SPHERE:
                 {
-                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr->X),__FCONV(lv_dr->lx),&t,&in,&id))
+                    bool InSphere = false;
+                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr->X),__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
                     {
-                       if(lv_dr->sided||!in)
+                       if(lv_dr->sided||!InSphere)
                        {
                            col = lv_dr;
                            cur = lv_cur;
@@ -80,7 +83,7 @@
                            col_radiance = 0;
                        };
                         RT_SETCOL;
-                        cp = tp + id*tv;
+                        cp = tp + intersect_dist*tv;
                         if(lv_dr->map_id>=0)
                         {
                             __VTYPE3 lc;
@@ -115,7 +118,7 @@
                                           SURE_R_TEXRES*uv.y,
                                           lv_dr->advmap_id);
                         };
-                        if(in)
+                        if(InSphere)
                         {
                             cn = __FCONV3(lv_dr->X) - cp;
                         }else{
@@ -133,13 +136,13 @@
                     if(dist<(__VTYPE)SURE_R_DELTA&&dist>-(__VTYPE)SURE_R_DELTA)break;  // Вплотную -- игнорируем
                     __VTYPE dir = dot(__FCONV3(lv_dr->oz),tv);                  // проекция луча на нормаль
                     __VTYPE t = - dist/dir;                           // Расстояние до точки пересечения
-                    if(t<(__VTYPE)SURE_R_DELTA||t>id)break;                   // Слишком близко или дальше чем уже найденное пересечение
+                    if(t<(__VTYPE)SURE_R_DELTA||t>intersect_dist)break;                   // Слишком близко или дальше чем уже найденное пересечение
                     __VTYPE3 l_cp = tp+t*tv;                       // точка пересечение
                     __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - l_cp;             // вектор к точке пересечения
                     __VTYPE lx = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
                     __VTYPE ly = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
                     if(lx>lv_dr->lx||lx<-lv_dr->lx||ly>lv_dr->ly||ly<-lv_dr->ly)break; // Нет попадания в область
-                    id = t;
+                    intersect_dist = t;
                     cp = l_cp;
                     if(dir>0.0) // с внутренней стороны
                     {
@@ -229,6 +232,18 @@
 
                     if(t_in>t_out||t_out<SURE_R_DELTA)break;
 
+                    ltv.x/=lv_dr->lx;
+                    ltv.y/=lv_dr->ly;
+                    ltv.z/=lv_dr->lz;
+                    __VTYPE t_k = __LENGTH(tv)/__LENGTH(ltv);
+                    ltv = __NORMALIZE(ltv);
+
+                    ltp.x/=lv_dr->lx;
+                    ltp.y/=lv_dr->ly;
+                    ltp.z/=lv_dr->lz;
+
+                    __VTYPE l_rounding = SURE_R_DELTA / t_k;
+
                     for(uint im = 0;im<lv_dr->mesh_count;++im)
                     { // Для каждой meshины
                         uint cm = lv_dr->mesh_start + im;
@@ -240,10 +255,11 @@
                         __GET_VERTEX(gm1,mesh.x);
                         __GET_VERTEX(gm2,mesh.y);
                         __GET_VERTEX(gm3,mesh.z);
+
                         // Алгоритм Моллера — Трумбора
                         __VTYPE3 pvec = cross(ltv,gm3-gm1);
                         __VTYPE det = dot(gm2-gm1,pvec);
-                        if(fabs(det)<SURE_R_DELTA) continue;
+                        if(fabs(det)<l_rounding) continue;
                         __VTYPE inv_det = 1.0 / det;
                         __VTYPE3 tvec = ltp - gm1;
                         __VTYPE u = dot(tvec, pvec) * inv_det;
@@ -251,8 +267,8 @@
                         __VTYPE3 qvec = cross(tvec, gm2-gm1);
                         __VTYPE v = dot(ltv, qvec) * inv_det;
                         if (v < 0.0 || (u + v) > 1.0 ) continue;
-                        __VTYPE tt = dot(gm3-gm1, qvec) * inv_det;
-                        if(tt<(__VTYPE)SURE_R_DELTA||tt>id)continue; // Слишком близко или дальше чем уже найденное пересечение
+                        __VTYPE tt = dot(gm3-gm1, qvec) * inv_det * t_k;
+                        if(tt<l_rounding||tt>intersect_dist)continue; // Слишком близко или дальше чем уже найденное пересечение
                         __VTYPE3 l_cp = tp+tv*tt;                    // точка пересечения
                         __VTYPE3 locn = cross(gm2-gm1,gm3-gm1);
                         __VTYPE dir = dot(ltv,locn);
@@ -283,7 +299,7 @@
                                     col_radiance = 0;
                                 #endif
                             };
-                            id = tt;
+                            intersect_dist = tt;
                             cp = l_cp;
                             RT_SETCOL;
                             if(lv_dr->map_id>=0)
@@ -299,7 +315,7 @@
                             col = lv_dr;
                             cur = lv_cur;
                             col_radiance = lv_dr->radiance;
-                            id = tt;
+                            intersect_dist = tt;
                             cp = l_cp;
                             RT_SETCOL;
                             cn = n;
@@ -322,19 +338,20 @@
         #if SURE_RLEVEL>90
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
         __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur->transp_i;
-        if(rr<id)
+        if(rr<intersect_dist)
         {
             col = cur;
+            collision_found = true;
             col_radiance = 0;
             RT_SETCOL;
-            id = rr;
+            intersect_dist = rr;
             cn = -tv;
-            cp = tp+id*tv;
+            cp = tp+intersect_dist*tv;
             col_in =true;
         };
         #endif // SURE_RLEVEL>90
 
-        if(col==0)break; // луч улетел в никуда
+        if(!collision_found)break; // луч улетел в никуда
 
         if(col_radiance>0)
         {
@@ -351,7 +368,7 @@
         };
 
         bool recheck = true;
-        int c = 0;
+        uint c = 0;
 
         #if SURE_RLEVEL>20
         while(recheck&&++c<mrechecks)
@@ -391,7 +408,7 @@
                                 if(dot(rv,cn)<0){recheck=true;}else{ // результат отражение направлен от плоскости
                                     tp = cp;
                                     tv = __NORMALIZE(rv);
-                                    tl += id;
+                                    tl += intersect_dist;
                                     fade.x *= col_rgb.x/255.0;
                                     fade.y *= col_rgb.y/255.0;
                                     fade.z *= col_rgb.z/255.0;
@@ -401,7 +418,7 @@
                             tp = cp;
                             tv = __NORMALIZE(rv);
                             cn = -cn;
-                            tl += id;
+                            tl += intersect_dist;
                             #if SURE_RLEVEL>90
                             if(col_transp<1.0)
                             {
@@ -435,7 +452,7 @@
                         tp = cp;
                         rv = __NORMALIZE(rv);
                         tv = rv;
-                        tl+=id;
+                        tl+=intersect_dist;
                         fade.x *= col_rgb.x/255.0;
                         fade.y *= col_rgb.y/255.0;
                         fade.z *= col_rgb.z/255.0;
@@ -454,7 +471,7 @@
                     rv = tv+l*cnr;
                     tp = cp;
                     tv = __NORMALIZE(rv);
-                    tl+=id;
+                    tl+=intersect_dist;
                     fade.x *= col_rgb.x/255.0;
                     fade.y *= col_rgb.y/255.0;
                     fade.z *= col_rgb.z/255.0;

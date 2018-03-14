@@ -1,27 +1,14 @@
-// ускоряем работу с памятью на GPU: забираем информацию о камере в локальную память:
-__SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
+    // ускоряем работу с памятью на GPU: забираем информацию о камере в локальную память:
+    __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
 
-    // поиск пересечения
-    __VTYPE3 cp; // collision point
-    __VTYPE3 cn; // collision normal
-    __VTYPE intersect_dist; // intersect dist
-    bool collision_found = false;
+    // drawable, с которым встретился луч (для хранения параметров изменения траектории)
+    __SURE_STRUCT SureDrawable DrawableCollided;
 
-    __SURE_PRIVATE __SURE_STRUCT SureDrawable lv_cur; // drawable в котором находимся на начало шага трассировки
-    __SURE_PRIVATE __SURE_STRUCT SureDrawable cur; // drawable в котором находимся на конец шага трассировки
-    __SURE_PRIVATE __SURE_STRUCT SureDrawable col; // drwable который обнаружен на пути трассировки
-    __SURE_PRIVATE __SURE_STRUCT SureDrawable lv_dr; // drawable который сейчас анализируется
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_dr; // drawable который сейчас анализируется
 
-    __VTYPE col_refr;
-    __SURE_UCHAR3 col_rgb;
-    __SURE_UINT4 col_rgba;
-    __VTYPE col_transp;
-    int col_radiance;
-
-    int col_dt; // тип рандомизации
-    __VTYPE col_ds; // sigma рандомизации
-    __VTYPE col_dm; // матожидание рандомизации
-    bool col_in; // рассеивание
     //Вспомогательные переменные для трассировки
     __VTYPE tl;
     uint ri;
@@ -34,7 +21,6 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
 
     __VTYPE3 tv;
-
     if(CameraInfo.subp_rnd){
         tv = DetermineTraceVectorSAA(x,y,&CameraInfo,Randomf,&r);
     }else{
@@ -43,50 +29,57 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
 
     __VTYPE3 tp = __FCONV3(CameraInfo.cam_x);
     tv = __NORMALIZE(tv);
-    cur = Drawables[0];
+    cur = &Drawables[0];
     rgb.x = 0; rgb.y = 0; rgb.z = 0;
     fade.x = 1; fade.y = 1; fade.z = 1;
     tl = 0; ri = 0;// in = false;
     uint miters = GPUData->r_maxiters;
     uint mrechecks = GPUData->r_rechecks;
+    #if SURE_RLEVEL < 50
+        miters = 2;
+    #endif // SURE_RLEVEL
 
     while((tl<SURE_R_MAXDISTANCE)&&((fade.x+fade.y+fade.z)>SURE_R_FADELIMIT)&&(ri<miters))
     {
         ++ri;
         lv_cur = cur;
-        intersect_dist = SURE_R_MAXDISTANCE;
-        collision_found = false;
-        col_in = false;
+
+        // параметры пересечения луча с объектом
+        __VTYPE3 collision_point;
+        __VTYPE3 collision_normal;
+        __VTYPE intersect_dist = SURE_R_MAXDISTANCE;
+        bool collision_found = false;
+        bool collision_inner = false;
 
         for(int i=1;i<GPUData->m_drawables;++i)
         {
-            lv_dr = Drawables[i];
-            switch(lv_dr.type)
+            lv_dr = &Drawables[i];
+            switch(lv_dr->type)
             {
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
-                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr.X),__FCONV(lv_dr.lx),&InSphere,&intersect_dist))
+                    if(CollideRaySphered(tp,tv,__FCONV3(lv_dr->X),__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
                     {
-                       if(lv_dr.sided||!InSphere)
+                       if(lv_dr->sided||!InSphere)
                        {
                            col = lv_dr;
                            cur = lv_cur;
-                           col_radiance = lv_dr.radiance;
+                           DrawableCollided.radiance = lv_dr->radiance;
                        }else{
-                           col = Drawables[0];
+                           col = &Drawables[0];
                            cur = lv_dr;
-                           col_radiance = 0;
+                           DrawableCollided.radiance = 0;
                        };
-                        RT_SETCOL;
-                        cp = tp + intersect_dist*tv;
-                        if(lv_dr.map_id>=0)
+                        RT_SETCOL_D;
+                        collision_point = tp + intersect_dist*tv;
+                        if(lv_dr->map_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr.X);             // вектор к точке пересечения
-                            lc.x = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
-                            lc.y = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
-                            lc.z = dot(__FCONV3(lv_dr.oz),l_vtcp);               // Локальные координаты
+                            __VTYPE3 l_vtcp = collision_point - __FCONV3(lv_dr->X);             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
                             uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
@@ -95,15 +88,15 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                             uv.x*=0.5;
                             __GET_TEXTURE(SURE_R_TEXRES*uv.x,
                                           SURE_R_TEXRES*uv.y,
-                                          lv_dr.map_id);
+                                          lv_dr->map_id);
                         };
-                        if(lv_dr.advmap_id>=0)
+                        if(lv_dr->advmap_id>=0)
                         {
                             __VTYPE3 lc;
-                            __VTYPE3 l_vtcp = cp - __FCONV3(lv_dr.X);             // вектор к точке пересечения
-                            lc.x = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
-                            lc.y = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
-                            lc.z = dot(__FCONV3(lv_dr.oz),l_vtcp);               // Локальные координаты
+                            __VTYPE3 l_vtcp = collision_point - __FCONV3(lv_dr->X);             // вектор к точке пересечения
+                            lc.x = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
+                            lc.y = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
+                            lc.z = dot(__FCONV3(lv_dr->oz),l_vtcp);               // Локальные координаты
                             lc = __NORMALIZE(lc);
                             __VTYPE3 uv;
                             uv.y = 0.5*(lc.z+1.0); // от 0 (низ) до 1 (верх)
@@ -112,129 +105,137 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                             uv.x*=0.5;
                             __GET_ADVMAP(SURE_R_TEXRES*uv.x,
                                           SURE_R_TEXRES*uv.y,
-                                          lv_dr.advmap_id);
+                                          lv_dr->advmap_id);
                         };
                         if(InSphere)
                         {
-                            cn = __FCONV3(lv_dr.X) - cp;
+                            collision_normal = __FCONV3(lv_dr->X) - collision_point;
                         }else{
-                            cn = cp - __FCONV3(lv_dr.X);
+                            collision_normal = collision_point - __FCONV3(lv_dr->X);
                         };
-                        cn = __NORMALIZE(cn);
+                        collision_normal = __NORMALIZE(collision_normal);
                     }; // if(CollideRaySphered)
                     break;
                 }; // Сфера
 
                 case SURE_DR_SQUARE:
                 {
-                    __VTYPE3 vtp = tp-__FCONV3(lv_dr.X);
-                    __VTYPE dist = dot(__FCONV3(lv_dr.oz),vtp);                // Расстояние до плоскости
+                    __VTYPE3 vtp = tp-__FCONV3(lv_dr->X);
+                    __VTYPE dist = dot(__FCONV3(lv_dr->oz),vtp);                // Расстояние до плоскости
                     if(dist<(__VTYPE)SURE_R_DELTA&&dist>-(__VTYPE)SURE_R_DELTA)break;  // Вплотную -- игнорируем
-                    __VTYPE dir = dot(__FCONV3(lv_dr.oz),tv);                  // проекция луча на нормаль
+                    __VTYPE dir = dot(__FCONV3(lv_dr->oz),tv);                  // проекция луча на нормаль
                     __VTYPE t = - dist/dir;                           // Расстояние до точки пересечения
                     if(t<(__VTYPE)SURE_R_DELTA||t>intersect_dist)break;                   // Слишком близко или дальше чем уже найденное пересечение
                     __VTYPE3 l_cp = tp+t*tv;                       // точка пересечение
-                    __VTYPE3 l_vtcp = __FCONV3(lv_dr.X) - l_cp;             // вектор к точке пересечения
-                    __VTYPE lx = dot(__FCONV3(lv_dr.ox),l_vtcp);               // Локальные координаты
-                    __VTYPE ly = dot(__FCONV3(lv_dr.oy),l_vtcp);               // Локальные координаты
-                    if(lx>lv_dr.lx||lx<-lv_dr.lx||ly>lv_dr.ly||ly<-lv_dr.ly)break; // Нет попадания в область
+                    __VTYPE3 l_vtcp = __FCONV3(lv_dr->X) - l_cp;             // вектор к точке пересечения
+                    __VTYPE lx = dot(__FCONV3(lv_dr->ox),l_vtcp);               // Локальные координаты
+                    __VTYPE ly = dot(__FCONV3(lv_dr->oy),l_vtcp);               // Локальные координаты
+                    if(lx>lv_dr->lx||lx<-lv_dr->lx||ly>lv_dr->ly||ly<-lv_dr->ly)break; // Нет попадания в область
                     intersect_dist = t;
-                    cp = l_cp;
+                    collision_point = l_cp;
                     if(dir>0.0) // с внутренней стороны
                     {
-                        if(lv_dr.sided)
+                        if(lv_dr->sided)
                         { // материал двухсторонний
                             col = lv_dr;
                             cur = lv_cur;
-                            col_radiance = lv_dr.radiance;
+                            DrawableCollided.radiance = lv_dr->radiance;
                         }else{  // материал односторонний
-                            col = Drawables[0];
+                            col = &Drawables[0];
                             cur = lv_dr;
-                            col_radiance = 0.0;
+                            DrawableCollided.radiance = 0.0;
                         };
-                        RT_SETCOL;
-                        if(lv_dr.map_id>=0)
+                        RT_SETCOL_D;
+                        if(lv_dr->map_id>=0)
                         {
-                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
-                                          lv_dr.map_id);
+                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->map_id);
                         };
-                        if(lv_dr.advmap_id>=0)
+                        if(lv_dr->advmap_id>=0)
                         {
-                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
-                                          lv_dr.advmap_id);
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->advmap_id);
                         };
-                        cn = -__FCONV3(lv_dr.oz);
+                        collision_normal = -__FCONV3(lv_dr->oz);
                     }else{ // с внешней стороны
                         col = lv_dr;
                         cur = lv_cur;
-                        col_radiance = lv_dr.radiance;
-                        RT_SETCOL;
-                        if(lv_dr.map_id>=0)
+                        DrawableCollided.radiance = lv_dr->radiance;
+                        RT_SETCOL_D;
+                        if(lv_dr->map_id>=0)
                         {
-                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
-                                          lv_dr.map_id);
+                            __GET_TEXTURE(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->map_id);
                         };
-                        if(lv_dr.advmap_id>=0)
+                        if(lv_dr->advmap_id>=0)
                         {
-                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr.lx)/lv_dr.lx,
-                                          SURE_R_TEXRES*0.5*(ly+lv_dr.ly)/lv_dr.ly,
-                                          lv_dr.advmap_id);
+                            __GET_ADVMAP(SURE_R_TEXRES*0.5*(lx+lv_dr->lx)/lv_dr->lx,
+                                          SURE_R_TEXRES*0.5*(ly+lv_dr->ly)/lv_dr->ly,
+                                          lv_dr->advmap_id);
                         };
-                        cn = __FCONV3(lv_dr.oz);
+                        collision_normal = __FCONV3(lv_dr->oz);
                     };
                     break;
                 }; // Квадрат
                 case SURE_DR_MESH:
                 {
                     __VTYPE3 ltv;
-                    ltv.x = dot(tv,__FCONV3(lv_dr.ox));
-                    ltv.y = dot(tv,__FCONV3(lv_dr.oy));
-                    ltv.z = dot(tv,__FCONV3(lv_dr.oz));
+                    ltv.x = dot(tv,__FCONV3(lv_dr->ox));
+                    ltv.y = dot(tv,__FCONV3(lv_dr->oy));
+                    ltv.z = dot(tv,__FCONV3(lv_dr->oz));
                     __VTYPE3 ltp;
-                    ltp.x = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.ox));
-                    ltp.y = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.oy));
-                    ltp.z = dot(tp-__FCONV3(lv_dr.X),__FCONV3(lv_dr.oz));
+                    ltp.x = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->ox));
+                    ltp.y = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oy));
+                    ltp.z = dot(tp-__FCONV3(lv_dr->X),__FCONV3(lv_dr->oz));
 
                     __VTYPE t_in = -SURE_R_MAXDISTANCE;
                     __VTYPE t_out = SURE_R_MAXDISTANCE;
                     __VTYPE t = 0;
 
-                    t = -(ltp.x-lv_dr.lx)/ltv.x;
+                    t = -(ltp.x-lv_dr->lx)/ltv.x;
                     if((ltv.x)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.x+lv_dr.lx)/ltv.x;
+                    t = -(ltp.x+lv_dr->lx)/ltv.x;
                     if((-ltv.x)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.y-lv_dr.ly)/ltv.y;
+                    t = -(ltp.y-lv_dr->ly)/ltv.y;
                     if((ltv.y)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.y+lv_dr.ly)/ltv.y;
+                    t = -(ltp.y+lv_dr->ly)/ltv.y;
                     if((-ltv.y)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.z-lv_dr.lz)/ltv.z;
+                    t = -(ltp.z-lv_dr->lz)/ltv.z;
                     if((ltv.z)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
-                    t = -(ltp.z+lv_dr.lz)/ltv.z;
+                    t = -(ltp.z+lv_dr->lz)/ltv.z;
                     if((-ltv.z)>0.0){ if(t<t_out) t_out = t;}
                     else{ if(t>t_in) t_in = t; };
 
                     if(t_in>t_out||t_out<SURE_R_DELTA)break;
 
-                        __VTYPE lx = lv_dr.lx;
-                        __VTYPE ly = lv_dr.ly;
-                        __VTYPE lz = lv_dr.lz;
+                    ltv.x/=lv_dr->lx;
+                    ltv.y/=lv_dr->ly;
+                    ltv.z/=lv_dr->lz;
+                    __VTYPE t_k = __LENGTH(tv)/__LENGTH(ltv);
+                    ltv = __NORMALIZE(ltv);
 
-                    for(uint im = 0;im<lv_dr.mesh_count;++im)
+                    ltp.x/=lv_dr->lx;
+                    ltp.y/=lv_dr->ly;
+                    ltp.z/=lv_dr->lz;
+
+                    __VTYPE l_rounding = SURE_R_DELTA / t_k;
+
+                    for(uint im = 0;im<lv_dr->mesh_count;++im)
                     { // Для каждой meshины
-                        uint cm = lv_dr.mesh_start + im;
+                        uint cm = lv_dr->mesh_start + im;
                         __SURE_VINT4 mesh;
                         __VTYPE3 gm1;
                         __VTYPE3 gm2;
@@ -244,21 +245,10 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                         __GET_VERTEX(gm2,mesh.y);
                         __GET_VERTEX(gm3,mesh.z);
 
-                        gm1.x *= lx;
-                        gm1.y *= ly;
-                        gm1.z *= lz;
-                        gm2.x *= lx;
-                        gm2.y *= ly;
-                        gm2.z *= lz;
-                        gm3.x *= lx;
-                        gm3.y *= ly;
-                        gm3.z *= lz;
-
-
                         // Алгоритм Моллера — Трумбора
                         __VTYPE3 pvec = cross(ltv,gm3-gm1);
                         __VTYPE det = dot(gm2-gm1,pvec);
-                        if(fabs(det)<SURE_R_DELTA) continue;
+                        if(fabs(det)<l_rounding) continue;
                         __VTYPE inv_det = 1.0 / det;
                         __VTYPE3 tvec = ltp - gm1;
                         __VTYPE u = dot(tvec, pvec) * inv_det;
@@ -266,8 +256,8 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                         __VTYPE3 qvec = cross(tvec, gm2-gm1);
                         __VTYPE v = dot(ltv, qvec) * inv_det;
                         if (v < 0.0 || (u + v) > 1.0 ) continue;
-                        __VTYPE tt = dot(gm3-gm1, qvec) * inv_det;
-                        if(tt<(__VTYPE)SURE_R_DELTA||tt>intersect_dist)continue; // Слишком близко или дальше чем уже найденное пересечение
+                        __VTYPE tt = dot(gm3-gm1, qvec) * inv_det * t_k;
+                        if(tt<l_rounding||tt>intersect_dist)continue; // Слишком близко или дальше чем уже найденное пересечение
                         __VTYPE3 l_cp = tp+tv*tt;                    // точка пересечения
                         __VTYPE3 locn = cross(gm2-gm1,gm3-gm1);
                         __VTYPE dir = dot(ltv,locn);
@@ -278,53 +268,53 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                         __GET_NORMAL2(n2,cm);
                         __GET_NORMAL3(n3,cm);
                         __VTYPE3 ln = n1*(1-u-v)+n2*u+n3*v;
-                        __VTYPE3 n = ln.x*__FCONV3(lv_dr.ox)+
-                                     ln.y*__FCONV3(lv_dr.oy)+
-                                     ln.z*__FCONV3(lv_dr.oz);
+                        __VTYPE3 n = ln.x*__FCONV3(lv_dr->ox)+
+                                     ln.y*__FCONV3(lv_dr->oy)+
+                                     ln.z*__FCONV3(lv_dr->oz);
                         n = __NORMALIZE(n);
                         if(dir>0.0) // с внутренней стороны
                         {
-                            if(lv_dr.sided)
+                            if(lv_dr->sided)
                             { // материал двухсторонний
                                 col = lv_dr;
                                 cur = lv_cur;
-                                col_radiance = lv_dr.radiance;
+                                DrawableCollided.radiance = lv_dr->radiance;
                             }else{  // материал односторонний
                                 #if SURE_RLEVEL<30
                                     continue;
                                 #else
-                                    col = Drawables[0];
+                                    col = &Drawables[0];
                                     cur = lv_dr;
-                                    col_radiance = 0;
+                                    DrawableCollided.radiance = 0;
                                 #endif
                             };
                             intersect_dist = tt;
-                            cp = l_cp;
-                            RT_SETCOL;
-                            if(lv_dr.map_id>=0)
+                            collision_point = l_cp;
+                            RT_SETCOL_D;
+                            if(lv_dr->map_id>=0)
                             {
-                                __GET_TEXTURE_UV(cm,lv_dr.map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
                             };
-                            if(lv_dr.advmap_id>=0)
+                            if(lv_dr->advmap_id>=0)
                             {
-                                __GET_ADVMAP_UV(cm,lv_dr.advmap_id);
+                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
                             };
-                            cn = -n;
+                            collision_normal = -n;
                         }else{ // с внешней стороны
                             col = lv_dr;
                             cur = lv_cur;
-                            col_radiance = lv_dr.radiance;
+                            DrawableCollided.radiance = lv_dr->radiance;
                             intersect_dist = tt;
-                            cp = l_cp;
-                            RT_SETCOL;
-                            cn = n;
-                            if(lv_dr.map_id>=0)
+                            collision_point = l_cp;
+                            RT_SETCOL_D;
+                            collision_normal = n;
+                            if(lv_dr->map_id>=0)
                             {
-                                __GET_TEXTURE_UV(cm,lv_dr.map_id);
+                                __GET_TEXTURE_UV(cm,lv_dr->map_id);
                             };
-                            if(lv_dr.advmap_id>=0)
+                            if(lv_dr->advmap_id>=0)
                             {
-                                __GET_ADVMAP_UV(cm,lv_dr.advmap_id);
+                                __GET_ADVMAP_UV(cm,lv_dr->advmap_id);
                             };
                         };
                     }; // Для каждой meshины
@@ -332,36 +322,36 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                 }; // Mesh
                 default:
                     break;
-            }; // switch(lv_dr.type)
+            }; // switch(lv_dr->type)
         };// Цикл по Drawables
         #if SURE_RLEVEL>90
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur.transp_i;
+        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur->transp_i;
         if(rr<intersect_dist)
         {
             col = cur;
             collision_found = true;
-            col_radiance = 0;
-            RT_SETCOL;
+            DrawableCollided.radiance = 0;
+            RT_SETCOL_D;
             intersect_dist = rr;
-            cn = -tv;
-            cp = tp+intersect_dist*tv;
-            col_in =true;
+            collision_normal = -tv;
+            collision_point = tp+intersect_dist*tv;
+            collision_inner =true;
         };
         #endif // SURE_RLEVEL>90
 
         if(!collision_found)break; // луч улетел в никуда
 
-        if(col_radiance>0)
+        if(DrawableCollided.radiance>0)
         {
             #if SURE_RLEVEL>60
-            rgb.x += fade.x*col_rgb.x;
-            rgb.y += fade.y*col_rgb.y;
-            rgb.z += fade.z*col_rgb.z;
+            rgb.x += fade.x*DrawableCollided.rgb.__XX;
+            rgb.y += fade.y*DrawableCollided.rgb.__YY;
+            rgb.z += fade.z*DrawableCollided.rgb.__ZZ;
             #else
-            rgb.x += 255.0*fade.x*col_rgb.x;
-            rgb.y += 255.0*fade.y*col_rgb.y;
-            rgb.z += 255.0*fade.z*col_rgb.z;
+            rgb.x += 255.0*fade.x*DrawableCollided.rgb.__XX;
+            rgb.y += 255.0*fade.y*DrawableCollided.rgb.__YY;
+            rgb.z += 255.0*fade.z*DrawableCollided.rgb.__ZZ;
             #endif // SURE_RLEVEL>60
             break;
         };
@@ -373,7 +363,7 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
         while(recheck&&++c<mrechecks)
         {
             #if SURE_RLEVEL>90
-            if(!col_in)
+            if(!collision_inner)
             { // Не рассеивание -- отражение/преломление
             #endif // SURE_RLEVEL
                 #if SURE_RLEVEL<60
@@ -383,48 +373,48 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                 __VTYPE rr = Randomf[r];
                 #endif
                 recheck = false;
-                if(rr<col_transp)
+                if(rr<DrawableCollided.transp)
                 { // сработала прозрачность -- считаем преломление
-                    __VTYPE3 cnr = randomize(cn,col_dt,col_ds,col_dm,&r,Randomf);
+                    __VTYPE3 cnr = randomize(collision_normal,DrawableCollided.dist_type,DrawableCollided.dist_sigma,DrawableCollided.dist_m,&r,Randomf);
                     __VTYPE l = dot(tv,cnr);
                     if(l>0){recheck = true;}else{ //Только если модифицированная нормаль не коллинеарна вектору трассировки
                         __VTYPE3 rv;
                         __VTYPE sTh = 0;
-                        if(col_transp>1.0)
+                        if(DrawableCollided.transp>1.0)
                         {
                             rv = tv;
                         }else{
-                            __VTYPE3 A = col_refr*(tv-l*cnr);
+                            __VTYPE3 A = __FCONV(DrawableCollided.refr)*(tv-l*cnr);
                             sTh = __LENGTH(A);  // Синус угла преломления
                             __VTYPE cTh = sqrt(1-sTh*sTh); // Косинус угла преломления
                             rv = A-cTh*cnr;
                         };
-                        if((dot(rv,cn)>=0||sTh>(__VTYPE)(1.0))&&col_transp<1.0)
+                        if((dot(rv,collision_normal)>=0||sTh>(__VTYPE)(1.0))&&DrawableCollided.transp<1.0)
                         {   // Oтражение (в т ч внутреннее)
                             l = -2*dot(tv,cnr);
                             if(l<0){recheck = true;}else{ //Только если модифицированная нормаль не коллинеарна вектору трассировки
                                 __VTYPE3 rv = l*cnr+tv;
-                                if(dot(rv,cn)<0){recheck=true;}else{ // результат отражение направлен от плоскости
-                                    tp = cp;
+                                if(dot(rv,collision_normal)<0){recheck=true;}else{ // результат отражение направлен от плоскости
+                                    tp = collision_point;
                                     tv = __NORMALIZE(rv);
                                     tl += intersect_dist;
-                                    fade.x *= col_rgb.x/255.0;
-                                    fade.y *= col_rgb.y/255.0;
-                                    fade.z *= col_rgb.z/255.0;
+                                    fade.x *= DrawableCollided.rgb.__XX/255.0;
+                                    fade.y *= DrawableCollided.rgb.__YY/255.0;
+                                    fade.z *= DrawableCollided.rgb.__ZZ/255.0;
                                 };// // результат отражение направлен от плоскости
                             }; //Только если модифицированная нормаль не коллинеарна вектору трассировки
                         }else{ // преломление
-                            tp = cp;
+                            tp = collision_point;
                             tv = __NORMALIZE(rv);
-                            cn = -cn;
+                            collision_normal = -collision_normal;
                             tl += intersect_dist;
                             #if SURE_RLEVEL>90
-                            if(col_transp<1.0)
+                            if(DrawableCollided.transp<1.0)
                             {
                             #endif // SURE_RLEVEL>90
-                                fade.x *= col_rgb.x/255.0;
-                                fade.y *= col_rgb.y/255.0;
-                                fade.z *= col_rgb.z/255.0;
+                                fade.x *= DrawableCollided.rgb.__XX/255.0;
+                                fade.y *= DrawableCollided.rgb.__YY/255.0;
+                                fade.z *= DrawableCollided.rgb.__ZZ/255.0;
                             #if SURE_RLEVEL>90
                             };
                             #endif // SURE_RLEVEL>90
@@ -433,28 +423,28 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
                     };// if(l>0) модифицированная нормаль не коллинеарна вектору трассировки
                 }else{ // не сработала прозрачность -- считаем отражение
                     #if SURE_RLEVEL<60
-                    if((col_dt==SURE_D_EQUAL)||(col_dt==SURE_D_NORM&&col_ds>0.1))
+                    if((DrawableCollided.dist_type==SURE_D_EQUAL)||(DrawableCollided.dist_type==SURE_D_NORM&&DrawableCollided.dist_sigma>0.1))
                     { // рассеивающая поверхность
-                        __VTYPE shade = 255.0*dot(cn,tv);
+                        __VTYPE shade = 255.0*dot(collision_normal,tv);
                         if(shade<0.0)shade=-shade;
-                        rgb.x = fade.x*shade*col_rgb.x;
-                        rgb.y = fade.y*shade*col_rgb.y;
-                        rgb.z = fade.y*shade*col_rgb.z;
+                        rgb.x = fade.x*shade*DrawableCollided.rgb.__XX;
+                        rgb.y = fade.y*shade*DrawableCollided.rgb.__YY;
+                        rgb.z = fade.y*shade*DrawableCollided.rgb.__ZZ;
                         break;
                     };
                     #endif // SURE_RLEVEL<60
-                    __VTYPE3 cnr = randomize(cn,col_dt,col_ds,col_dm,&r,Randomf);
+                    __VTYPE3 cnr = randomize(collision_normal,DrawableCollided.dist_type,DrawableCollided.dist_sigma,DrawableCollided.dist_m,&r,Randomf);
                     __VTYPE l = -2*dot(tv,cnr);
                     __VTYPE3 rv = __MAD(l,cnr,tv);
-                    if(dot(rv,cn)>=0)
+                    if(dot(rv,collision_normal)>=0)
                     { // Результат отражения направлен от объекта
-                        tp = cp;
+                        tp = collision_point;
                         rv = __NORMALIZE(rv);
                         tv = rv;
                         tl+=intersect_dist;
-                        fade.x *= col_rgb.x/255.0;
-                        fade.y *= col_rgb.y/255.0;
-                        fade.z *= col_rgb.z/255.0;
+                        fade.x *= DrawableCollided.rgb.__XX/255.0;
+                        fade.y *= DrawableCollided.rgb.__YY/255.0;
+                        fade.z *= DrawableCollided.rgb.__ZZ/255.0;
                     }else{ // результат отражения направлен внутрь объекта
                         recheck = true;
                     };
@@ -462,18 +452,18 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
             #if SURE_RLEVEL>90
             }else{ // Рассеивание
                 recheck = false;
-                __VTYPE3 cnr = randomize(cn,SURE_D_EQUAL,1.0,0.0,&r,Randomf);
+                __VTYPE3 cnr = randomize(collision_normal,SURE_D_EQUAL,1.0,0.0,&r,Randomf);
                 __VTYPE l = -2.0*dot(tv,cnr);
                 __VTYPE3 rv;
                 if(l>=0)
                 {
                     rv = tv+l*cnr;
-                    tp = cp;
+                    tp = collision_point;
                     tv = __NORMALIZE(rv);
                     tl+=intersect_dist;
-                    fade.x *= col_rgb.x/255.0;
-                    fade.y *= col_rgb.y/255.0;
-                    fade.z *= col_rgb.z/255.0;
+                    fade.x *= DrawableCollided.rgb.__XX/255.0;
+                    fade.y *= DrawableCollided.rgb.__YY/255.0;
+                    fade.z *= DrawableCollided.rgb.__ZZ/255.0;
                 }else{
                     recheck = true;
                 };
@@ -481,11 +471,11 @@ __SURE_STRUCT SureCameraInfo CameraInfo = GPUData->CameraInfo;
             #endif // SURE_RLEVEL>90
         }; // while recheck
         #else // RLEVEL<20
-        __VTYPE shade = 255.0*dot(cn,tv);
+        __VTYPE shade = 255.0*dot(collision_normal,tv);
         if(shade<0.0)shade=-shade;
-        rgb.x = shade*col_rgb.x;
-        rgb.y = shade*col_rgb.y;
-        rgb.z = shade*col_rgb.z;
+        rgb.x = shade*DrawableCollided.rgb.__XX;
+        rgb.y = shade*DrawableCollided.rgb.__YY;
+        rgb.z = shade*DrawableCollided.rgb.__ZZ;
         break;
         #endif // SURE_RLEVEL><20
     }; //WHILE Трассировка
