@@ -146,6 +146,7 @@
 		<Unit filename="README.md" />
 		<Unit filename="TODO.txt" />
 		<Unit filename="include/SureData.h" />
+		<Unit filename="include/SureDefinesCPU.h" />
 		<Unit filename="include/SureLog.h" />
 		<Unit filename="include/SurePhysThread.h" />
 		<Unit filename="include/SureThread.h" />
@@ -170,6 +171,12 @@
 		<Unit filename="src/SurePhysThread.cpp" />
 		<Unit filename="src/SureThread.cpp" />
 		<Unit filename="src/SureWidget.cpp" />
+		<Unit filename="src/func_CPU.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />

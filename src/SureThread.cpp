@@ -352,7 +352,6 @@ void SureThread::run()
 
         if(OCLData->OpenCL)
         {
-
             if(OCLData->rtype==SURE_RT_D)
                 OCLData->kernel = &OCLData->kernel_d;
             if(OCLData->rtype==SURE_RT_T)

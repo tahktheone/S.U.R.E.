@@ -1,0 +1,9 @@
+r_iters=10
+r_rechecks=10
+r_backlight=0,500
+paused=1
+CameraInfo.cam_x=(-42,6208;35,5464;59,3283)
+CameraInfo.cam_vec=(0,7311;-0,5242;-0,4367)
+CameraInfo.cam_upvec=(0,3709;-0,2323;0,8992)
+CameraInfo.xy_h=2,4793
+CameraInfo.subp_rnd=0

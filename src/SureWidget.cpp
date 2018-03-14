@@ -421,6 +421,12 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
             EngineData->paused = true;
         };
     };
+    if(event->key()==Qt::Key_F5){
+        EngineData->SaveState("initial");
+    };
+    if(event->key()==Qt::Key_F9){
+        EngineData->LoadState("initial");
+    };
     if(event->key()==Qt::Key_L){
         EngineData->reset = true;
         switch(OCLData->rtype)

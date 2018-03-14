@@ -84,7 +84,7 @@ SureData::SureData()
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
   //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
-  Scene_golem();
+  //Scene_golem();
   //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
   //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }
@@ -94,94 +94,65 @@ SureData::~SureData()
     delete Log;
 }
 
+void SureData::SaveState(const char *name)
+{
+    char fname[100];
+    char LogLine[200];
+    sprintf(fname,"./%s.state",name);
+    FILE *f = NULL;
+    f = fopen(fname,"w");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается создать/заменить файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+    fprintf(f,"r_iters=%i\n",r_iters);
+    fprintf(f,"r_rechecks=%i\n",r_rechecks);
+    fprintf(f,"r_backlight=%.3f\n",r_backlight);
+    fprintf(f,"paused=%i\n",paused);
+
+    fprintf(f,"CameraInfo.cam_x=(%.4f;%.4f;%.4f)\n",CameraInfo.cam_x.s[0],CameraInfo.cam_x.s[1],CameraInfo.cam_x.s[2]);
+    fprintf(f,"CameraInfo.cam_vec=(%.4f;%.4f;%.4f)\n",CameraInfo.cam_vec.s[0],CameraInfo.cam_vec.s[1],CameraInfo.cam_vec.s[2]);
+    fprintf(f,"CameraInfo.cam_upvec=(%.4f;%.4f;%.4f)\n",CameraInfo.cam_upvec.s[0],CameraInfo.cam_upvec.s[1],CameraInfo.cam_upvec.s[2]);
+    fprintf(f,"CameraInfo.xy_h=%.4f\n",CameraInfo.xy_h);
+    fprintf(f,"CameraInfo.subp_rnd=%i\n",CameraInfo.subp_rnd);
+
+    fclose(f);
+    sprintf(LogLine,"Успешно сохранено состояние %s",name);
+    Log->AddLine(LogLine);
+};
+
+void SureData::LoadState(const char *name)
+{
+    char fname[100];
+    char LogLine[200];
+    sprintf(fname,"./%s.state",name);
+    FILE *f = NULL;
+    f = fopen(fname,"r");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается открыть файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+    sprintf(LogLine,"Загружается состояние %s...",name);
+    Log->AddLine(LogLine);
+    if(fscanf(f,"r_iters=%hhu\n",&r_iters)<1) Log->AddLine("Ошибка чтения 1");
+    if(fscanf(f,"r_rechecks=%hhu\n",&r_rechecks)<1) Log->AddLine("Ошибка чтения 2");
+    if(fscanf(f,"r_backlight=%f\n",&r_backlight)<1) Log->AddLine("Ошибка чтения 3");
+    if(fscanf(f,"paused=%hhu\n",&paused)<1) Log->AddLine("Ошибка чтения 5");
+
+    if(fscanf(f,"CameraInfo.cam_x=(%lf;%lf;%lf)\n",&CameraInfo.cam_x.s[0],&CameraInfo.cam_x.s[1],&CameraInfo.cam_x.s[2])<3) Log->AddLine("Ошибка чтения 6");
+    if(fscanf(f,"CameraInfo.cam_vec=(%lf;%lf;%lf)\n",&CameraInfo.cam_vec.s[0],&CameraInfo.cam_vec.s[1],&CameraInfo.cam_vec.s[2])<3) Log->AddLine("Ошибка чтения 7");
+    if(fscanf(f,"CameraInfo.cam_upvec=(%lf;%lf;%lf)\n",&CameraInfo.cam_upvec.s[0],&CameraInfo.cam_upvec.s[1],&CameraInfo.cam_upvec.s[2])<3) Log->AddLine("Ошибка чтения 8");
+    if(fscanf(f,"CameraInfo.xy_h=%lf\n",&CameraInfo.xy_h)<1) Log->AddLine("Ошибка чтения 9");
+    if(fscanf(f,"CameraInfo.subp_rnd=%u\n",&CameraInfo.subp_rnd)<1) Log->AddLine("Ошибка чтения 10");
+
+    reset = true;
+
+    fclose(f);
+    sprintf(LogLine,"Успешно загружено состояние %s",name);
+    Log->AddLine(LogLine);
+};
+
 #include <func_common.c>
-
-cl_double3 normalize(cl_double3 Vec)
-{
-    cl_double3 vr;
-    double l = sqrt(Vec.s[0]*Vec.s[0] + Vec.s[1]*Vec.s[1] + Vec.s[2]*Vec.s[2]);
-    vr.s[0] = Vec.s[0]/l; vr.s[1] = Vec.s[1]/l; vr.s[2] = Vec.s[2]/l;
-    return vr;
-};
-
-my_double3 normalize(my_double3 Vec)
-{
-    my_double3 vr;
-    double l = sqrt(Vec.x*Vec.x + Vec.y*Vec.y + Vec.z*Vec.z);
-    vr.x = Vec.x/l; vr.y = Vec.y/l; vr.z = Vec.z/l;
-    return vr;
-};
-
-cl_double3 cross(cl_double3 v1, cl_double3 v2)
-{
-    cl_double3 vr;
-    vr.s[0] = v1.s[1]*v2.s[2] - v1.s[2]*v2.s[1];
-    vr.s[1] = v1.s[2]*v2.s[0] - v1.s[0]*v2.s[2];
-	vr.s[2] = v1.s[0]*v2.s[1] - v1.s[1]*v2.s[0];
-	return vr;
-};
-
-cl_double dot(cl_double3 v1, cl_double3 v2)
-{
-    return v1.s[0]*v2.s[0] + v1.s[1]*v2.s[1] + v1.s[2]*v2.s[2];
-};
-
-my_double3 cross(my_double3 v1, my_double3 v2)
-{
-    my_double3 vr;
-    vr.x = v1.y*v2.z - v1.z*v2.y;
-    vr.y = - v1.x*v2.z + v1.z*v2.x;
-	vr.z = v1.x*v2.y - v1.y*v2.x;
-	return vr;
-};
-
-double dot(my_double3 v1, my_double3 v2)
-{
-    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-};
-
-uint mad24(uint x,uint y,uint z)
-{
-    return x*y+z;
-};
-
-const my_double3 operator*(my_double3 a, double b)
-{ return my_double3(a.x*b,a.y*b,a.z*b); };
-
-const my_double3 operator*(double b, my_double3 a)
-{ return my_double3(a.x*b,a.y*b,a.z*b); };
-
-const my_double3 operator*(double b, my_uchar3 a)
-{ return my_double3(a.x*b,a.y*b,a.z*b); };
-
-my_double3& operator+=(my_double3 &a,const my_double3 &b)
-{ a.x+=b.x;a.y+=b.y;a.z+=b.z; return a; }
-
-my_double3& operator-=(my_double3 &a,const my_double3 &b)
-{ a.x-=b.x;a.y-=b.y;a.z-=b.z; return a; }
-
-void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl)
-{
-    if(pl<SURE_R_DELTA)return;
-    my_double3 v1 = my_double3{0,0,0};
-    my_double3 v2 = my_double3{0,0,0};
-
-    if(o2->movable)o2->push(pp,pd,-pl*0.5);
-    if(!o1->movable)o2->push(pp,pd,-pl*0.5);
-    if(o1->movable)o1->push(pp,pd,pl*0.5);
-    if(!o2->movable)o1->push(pp,pd,pl*0.5);
-
-    if(o1->movable)v1 = o1->velbypp(pp);
-    if(o2->movable)v2 = o2->velbypp(pp);
-    my_double3 oz = __NORMALIZE(pd);
-    double l_v1z = dot(oz,v1);
-    double l_v2z = dot(oz,v2);
-    my_double3 v1z = oz*l_v1z;
-    my_double3 v1xy = v1-v1z;
-    my_double3 v2z = oz*l_v2z;
-    my_double3 v2xy = v2-v2z;
-
-    if(o2->movable)o2->push(pp,v2xy,-1.0); // трение
-    if(o1->movable)o1->push(pp,v1xy,-1.0); // трение
-
- }
+#include <func_CPU.c>
