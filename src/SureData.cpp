@@ -84,7 +84,7 @@ SureData::SureData()
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
   //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
-  //Scene_golem();
+  Scene_golem();
   //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
   //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }
@@ -126,38 +126,68 @@ void SureData::SaveState(const char *name)
     fprintf(f,"Objects=%i\n",m_objects);
     for(int o = 0;o<m_objects;++o)
     {
-    /*
-    uint external_id;
-    my_double3 X;  //Координаты центра
-    my_double3 ox; //Локальная ось x
-    my_double3 oy; //Локальная ось y
-    my_double3 oz; //Нормаль (Локальная ось z)
-    double lx; // длина
-    double ly; // ширина
-    double lz; // высота
-    double lp = 4.0; // величина иннерциального тетраэдра
-    double rig = 0.7; // жесткость
-    int type; // тип
-    bool movable; // может двигаться
-    bool collidable;
-    bool mesh_changed;
-    my_double3 p1;
-    my_double3 p2;
-    my_double3 p3;
-    my_double3 p4;
-    my_double3 p1o;
-    my_double3 p2o;
-    my_double3 p3o;
-    my_double3 p4o;
-    my_double3 v1;
-    my_double3 v2;
-    my_double3 v3;
-    my_double3 v4;
-    cl_uint ModelID;
-    char ModelName[20];
-    SureDrawable drawable;
-    */
+        #define SAVE_FLOAT_VECTOR(A,B) \
+        fprintf(f,"%s (%.4f;%.4f;%.4f)\n",A,objects[o].B.x,objects[o].B.y,objects[o].B.z);
 
+        #define SAVE_FLOAT_VECTOR_DRAWABLE(A,B) \
+        fprintf(f,"%s (%.4f;%.4f;%.4f)\n",A,objects[o].drawable.B.s[0],objects[o].drawable.B.s[1],objects[o].drawable.B.s[2]);
+
+        fprintf(f,"ID=%i\n",objects[o].external_id);
+        SAVE_FLOAT_VECTOR("X",X);
+        SAVE_FLOAT_VECTOR("ox",ox);
+        SAVE_FLOAT_VECTOR("oy",oy);
+        SAVE_FLOAT_VECTOR("oz",oz);
+        fprintf(f,"Lxyz=(%.4f;%.4f;%.4f)\n",objects[o].lx,objects[o].ly,objects[o].lz);
+        fprintf(f,"pl=%.4f\n",objects[o].lp);
+        fprintf(f,"rig=%.4f\n",objects[o].rig);
+        fprintf(f,"type=%i\n",objects[o].type);
+        fprintf(f,"movable=%i\n",objects[o].movable);
+        fprintf(f,"collidable=%i\n",objects[o].collidable);
+
+        SAVE_FLOAT_VECTOR("p1",p1);
+        SAVE_FLOAT_VECTOR("p2",p2);
+        SAVE_FLOAT_VECTOR("p3",p3);
+        SAVE_FLOAT_VECTOR("p4",p4);
+        SAVE_FLOAT_VECTOR("p1o",p1o);
+        SAVE_FLOAT_VECTOR("p2o",p2o);
+        SAVE_FLOAT_VECTOR("p3o",p3o);
+        SAVE_FLOAT_VECTOR("p4o",p4o);
+        SAVE_FLOAT_VECTOR("v1",v1);
+        SAVE_FLOAT_VECTOR("v2",v2);
+        SAVE_FLOAT_VECTOR("v3",v3);
+        SAVE_FLOAT_VECTOR("v4",v4);
+
+        fprintf(f,"ModelName_collider=%s \n",objects[o].ModelName_collider);
+        fprintf(f,"ModelName_drawable=%s \n",objects[o].ModelName_drawable);
+        /* cl_uint ModelID_collider; cl_uint ModelID_drawable; */
+
+        SAVE_FLOAT_VECTOR_DRAWABLE("dr_X",X);
+        SAVE_FLOAT_VECTOR_DRAWABLE("dr_ox",ox);
+        SAVE_FLOAT_VECTOR_DRAWABLE("dr_oy",oy);
+        SAVE_FLOAT_VECTOR_DRAWABLE("dr_oz",oz);
+        fprintf(f,"dr_Lxyz=(%.4f;%.4f;%.4f)\n",objects[o].drawable.lx,objects[o].drawable.ly,objects[o].drawable.lz);
+        fprintf(f,"dr_type=%i\n",objects[o].drawable.type);
+        fprintf(f,"dr_radiance=%i\n",objects[o].drawable.radiance);
+        fprintf(f,"dr_ttr=(%.4f;%.4f;%.4f)\n",objects[o].drawable.transp,objects[o].drawable.transp_i,objects[o].drawable.refr);
+        fprintf(f,"dr_dist=(%i;%.4f,%.4f)\n",objects[o].drawable.dist_type,objects[o].drawable.dist_sigma,objects[o].drawable.dist_m);
+        fprintf(f,"dr_rgb=(%i;%i;%i)\n",objects[o].drawable.rgb.s[0],objects[o].drawable.rgb.s[1],objects[o].drawable.rgb.s[2]);
+        fprintf(f,"dr_sided=%i\n",objects[o].drawable.sided);
+
+        int lv_map = objects[o].drawable.map_id;
+
+        if(lv_map>=0&&lv_map<(int)cur_textures){
+            fprintf(f,"dr_map=%s \n",TexturesInfo[lv_map].name);
+        }else{
+            fprintf(f,"dr_map=NO \n");
+        };
+
+        lv_map = objects[o].drawable.advmap_id;
+
+        if(lv_map>=0&&lv_map<(int)cur_textures){
+            fprintf(f,"dr_advmap=%s \n",TexturesInfo[lv_map].name);
+        }else{
+            fprintf(f,"dr_advmap=NO \n");
+        };
     };
 
     fclose(f);
@@ -188,13 +218,83 @@ void SureData::LoadState(const char *name)
     if(fscanf(f,"r_iters=%hhu\n",&r_iters)<1) Log->AddLine("Ошибка чтения 1");
     if(fscanf(f,"r_rechecks=%hhu\n",&r_rechecks)<1) Log->AddLine("Ошибка чтения 2");
     if(fscanf(f,"r_backlight=%f\n",&r_backlight)<1) Log->AddLine("Ошибка чтения 3");
-    if(fscanf(f,"paused=%hhu\n",&paused)<1) Log->AddLine("Ошибка чтения 5");
+    if(fscanf(f,"paused=%hhu\n",(uchar *)&paused)<1) Log->AddLine("Ошибка чтения 5");
 
     if(fscanf(f,"CameraInfo.cam_x=(%lf;%lf;%lf)\n",&CameraInfo.cam_x.s[0],&CameraInfo.cam_x.s[1],&CameraInfo.cam_x.s[2])<3) Log->AddLine("Ошибка чтения 6");
     if(fscanf(f,"CameraInfo.cam_vec=(%lf;%lf;%lf)\n",&CameraInfo.cam_vec.s[0],&CameraInfo.cam_vec.s[1],&CameraInfo.cam_vec.s[2])<3) Log->AddLine("Ошибка чтения 7");
     if(fscanf(f,"CameraInfo.cam_upvec=(%lf;%lf;%lf)\n",&CameraInfo.cam_upvec.s[0],&CameraInfo.cam_upvec.s[1],&CameraInfo.cam_upvec.s[2])<3) Log->AddLine("Ошибка чтения 8");
     if(fscanf(f,"CameraInfo.xy_h=%lf\n",&CameraInfo.xy_h)<1) Log->AddLine("Ошибка чтения 9");
     if(fscanf(f,"CameraInfo.subp_rnd=%u\n",&CameraInfo.subp_rnd)<1) Log->AddLine("Ошибка чтения 10");
+
+    int lv_objects = 0;
+    if(fscanf(f,"Objects=%i\n",&lv_objects)<1) Log->AddLine("Ошибка чтения - количесто объектов");
+    m_objects = 0;
+    for(int o = 0;o<lv_objects;++o)
+    {
+
+        char VariableName[20];
+
+        #define READ_FLOAT_VECTOR(B) \
+        if(fscanf(f,"%s (%lf;%lf;%lf)\n",VariableName,&objects[m_objects].B.x,&objects[m_objects].B.y,&objects[m_objects].B.z)<4) Log->AddLine("Ошибка чтения файла состояния");
+
+        #define READ_FLOAT_VECTOR_DRAWABLE(B) \
+        if(fscanf(f,"%s (%lf;%lf;%lf)\n",VariableName,&objects[m_objects].drawable.B.s[0],&objects[m_objects].drawable.B.s[1],&objects[m_objects].drawable.B.s[2])<4) Log->AddLine("Ошибка чтения файла состояния");
+
+        if(fscanf(f,"ID=%u\n",&objects[m_objects].external_id)<1)Log->AddLine("Ошибка чтения");
+
+        READ_FLOAT_VECTOR(X);
+        READ_FLOAT_VECTOR(ox);
+        READ_FLOAT_VECTOR(oy);
+        READ_FLOAT_VECTOR(oz);
+
+        if(fscanf(f,"Lxyz=(%lf;%lf;%lf)\n",&objects[m_objects].lx,&objects[m_objects].ly,&objects[m_objects].lz)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"pl=%lf\n",&objects[m_objects].lp)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"rig=%lf\n",&objects[m_objects].rig)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"type=%u\n",&objects[m_objects].type)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"movable=%hhu\n",(uchar *)&objects[m_objects].movable)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"collidable=%hhu\n",(uchar *)&objects[m_objects].collidable)<1)Log->AddLine("Ошибка чтения");
+
+        READ_FLOAT_VECTOR(p1);
+        READ_FLOAT_VECTOR(p2);
+        READ_FLOAT_VECTOR(p3);
+        READ_FLOAT_VECTOR(p4);
+        READ_FLOAT_VECTOR(p1o);
+        READ_FLOAT_VECTOR(p2o);
+        READ_FLOAT_VECTOR(p3o);
+        READ_FLOAT_VECTOR(p4o);
+        READ_FLOAT_VECTOR(v1);
+        READ_FLOAT_VECTOR(v2);
+        READ_FLOAT_VECTOR(v3);
+        READ_FLOAT_VECTOR(v4);
+
+        if(fscanf(f,"ModelName_collider=%s \n",objects[m_objects].ModelName_collider)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"ModelName_drawable=%s \n",objects[m_objects].ModelName_drawable)<1)Log->AddLine("Ошибка чтения");
+        objects[m_objects].ModelID_collider=GetModel(objects[m_objects].ModelName_collider);
+        objects[m_objects].ModelID_drawable=GetModel(objects[m_objects].ModelName_drawable);
+
+        READ_FLOAT_VECTOR_DRAWABLE(X);
+        READ_FLOAT_VECTOR_DRAWABLE(ox);
+        READ_FLOAT_VECTOR_DRAWABLE(oy);
+        READ_FLOAT_VECTOR_DRAWABLE(oz);
+
+        if(fscanf(f,"dr_Lxyz=(%lf;%lf;%lf)\n",&objects[m_objects].drawable.lx,&objects[m_objects].drawable.ly,&objects[m_objects].drawable.lz)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_type=%u\n",&objects[m_objects].drawable.type)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_radiance=%i\n",&objects[m_objects].drawable.radiance)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_ttr=(%lf;%lf;%lf)\n",&objects[m_objects].drawable.transp,&objects[m_objects].drawable.transp_i,&objects[m_objects].drawable.refr)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_dist=(%i;%lf,%lf)\n",&objects[m_objects].drawable.dist_type,&objects[m_objects].drawable.dist_sigma,&objects[m_objects].drawable.dist_m)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_rgb=(%hhu;%hhu;%hhu)\n",&objects[m_objects].drawable.rgb.s[0],&objects[m_objects].drawable.rgb.s[1],&objects[m_objects].drawable.rgb.s[2])<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_sided=%hhu\n",(uchar *)&objects[m_objects].drawable.sided)<1)Log->AddLine("Ошибка чтения");
+
+        char lv_map[20] = "none";
+        if(fscanf(f,"dr_map=%s \n",lv_map)<1)Log->AddLine("Ошибка чтения");
+        objects[m_objects].drawable.map_id = GetTexture(lv_map);
+
+        char lv_advmap[20] = "none";
+        if(fscanf(f,"dr_advmap=%s \n",lv_advmap)<1)Log->AddLine("Ошибка чтения");
+        objects[m_objects].drawable.advmap_id = GetTexture(lv_advmap);
+
+        m_objects++;
+    };
 
     reset = true;
 

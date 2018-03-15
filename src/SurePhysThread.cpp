@@ -288,9 +288,9 @@ void SurePhysThread::run()
                                         collision_found = true; \
                                         collision_distance = dd; \
                                         __VTYPE3 vp = __NORMALIZE(dp); \
-                                        __VTYPE3 n = vp.x*__FCONV3(o2->ox)+ \
-                                                     vp.y*__FCONV3(o2->oy)+ \
-                                                     vp.z*__FCONV3(o2->oz); \
+                                        __VTYPE3 n = vp.x*o2->ox+ \
+                                                     vp.y*o2->oy+ \
+                                                     vp.z*o2->oz; \
                                         collision_normal = __NORMALIZE(n); \
                                         collision_point = o1->X-collision_normal*pl; \
                                     }; \
@@ -306,17 +306,17 @@ void SurePhysThread::run()
                                     collision_found = true; \
                                     collision_distance = cd; \
                                     __VTYPE3 cln = __NORMALIZE(cl); \
-                                    __VTYPE3 n = cln.x*__FCONV3(o2->ox)+ \
-                                                 cln.y*__FCONV3(o2->oy)+ \
-                                                 cln.z*__FCONV3(o2->oz); \
+                                    __VTYPE3 n = cln.x*o2->ox+ \
+                                                 cln.y*o2->oy+ \
+                                                 cln.z*o2->oz; \
                                     collision_normal = __NORMALIZE(n); \
                                     collision_point = o1->X-collision_normal*cdl; \
                                 };
 
                                 __VTYPE3 ltp; // координаты шара в локальных координатах mesh'ы
-                                ltp.x = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->ox));
-                                ltp.y = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oy));
-                                ltp.z = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oz));
+                                ltp.x = dot(o1->X-o2->X,o2->ox);
+                                ltp.y = dot(o1->X-o2->X,o2->oy);
+                                ltp.z = dot(o1->X-o2->X,o2->oz);
 
                                 // для каждой грани:
                                 uint limit = EngineData->ModelsInfo[o2->ModelID_collider].mesh_count;
@@ -367,9 +367,9 @@ void SurePhysThread::run()
                                                     {
                                                         collision_found = true;
                                                         collision_distance = cd;
-                                                        __VTYPE3 n = cn.x*__FCONV3(o2->ox)+
-                                                                     cn.y*__FCONV3(o2->oy)+
-                                                                     cn.z*__FCONV3(o2->oz); // нормаль в глобальных координатах
+                                                        __VTYPE3 n = cn.x*o2->ox+
+                                                                     cn.y*o2->oy+
+                                                                     cn.z*o2->oz; // нормаль в глобальных координатах
                                                         collision_normal = __NORMALIZE(n);
                                                         collision_point = o1->X+collision_normal*dd;
                                                     }; //cd<=collision_distance
@@ -435,26 +435,26 @@ void SurePhysThread::run()
                                 // определяем точку (как среднее)
 
                                 __VTYPE3 ltp; // переводим данные о плоскости в локальные координаты meshы
-                                ltp.x = dot(o2->X-__FCONV3(o1->X),__FCONV3(o1->ox));
-                                ltp.y = dot(o2->X-__FCONV3(o1->X),__FCONV3(o1->oy));
-                                ltp.z = dot(o2->X-__FCONV3(o1->X),__FCONV3(o1->oz));
+                                ltp.x = dot(o2->X-o1->X,o1->ox);
+                                ltp.y = dot(o2->X-o1->X,o1->oy);
+                                ltp.z = dot(o2->X-o1->X,o1->oz);
 
                                 __VTYPE3 lox;
-                                lox.x = dot(o2->ox,__FCONV3(o1->ox));
-                                lox.y = dot(o2->ox,__FCONV3(o1->oy));
-                                lox.z = dot(o2->ox,__FCONV3(o1->oz));
+                                lox.x = dot(o2->ox,o1->ox);
+                                lox.y = dot(o2->ox,o1->oy);
+                                lox.z = dot(o2->ox,o1->oz);
                                 lox = __NORMALIZE(lox);
 
                                 __VTYPE3 loy;
-                                loy.x = dot(o2->oy,__FCONV3(o1->ox));
-                                loy.y = dot(o2->oy,__FCONV3(o1->oy));
-                                loy.z = dot(o2->oy,__FCONV3(o1->oz));
+                                loy.x = dot(o2->oy,o1->ox);
+                                loy.y = dot(o2->oy,o1->oy);
+                                loy.z = dot(o2->oy,o1->oz);
                                 loy = __NORMALIZE(loy);
 
                                 __VTYPE3 loz;
-                                loz.x = dot(o2->oz,__FCONV3(o1->ox));
-                                loz.y = dot(o2->oz,__FCONV3(o1->oy));
-                                loz.z = dot(o2->oz,__FCONV3(o1->oz));
+                                loz.x = dot(o2->oz,o1->ox);
+                                loz.y = dot(o2->oz,o1->oy);
+                                loz.z = dot(o2->oz,o1->oz);
                                 loz = __NORMALIZE(loz);
 
                                 __VTYPE3 collision_point;
@@ -504,9 +504,9 @@ void SurePhysThread::run()
                                 if(l_up&&l_down&&collision_found){
                                     collision_normal = o2->oz;
                                     __VTYPE3 cp = collision_point * (1.0/collision_count); // среднее
-                                    collision_point = cp.x*__FCONV3(o1->ox)+
-                                                      cp.y*__FCONV3(o1->oy)+
-                                                      cp.z*__FCONV3(o1->oz)+
+                                    collision_point = cp.x*o1->ox+
+                                                      cp.y*o1->oy+
+                                                      cp.z*o1->oz+
                                                       o1->X;
                                     ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
                                 }; // столкновение есть
@@ -1366,7 +1366,7 @@ delete l_image;
                                 o1=lv_o1; o2=lv_o2;
                                 // Нет. Квадратики у нас -- стены и полы. Им не нужно между собой сталкиваться
 
-                            }; // mesh vs mesh
+                            }; // квадратик с квадратиком
                         }; // if(lv_o2->collidable&&lv_o2!=lv_o1)
                     }; //for(int j = 0;j<EngineData->m_objects;++j)
                 }; // if(lv_o1->movable&&lv_o1->collidable)
@@ -1462,37 +1462,32 @@ void SurePhysThread::drawscene()
     GPUData->Drawables[i].sided = true;
     GPUData->m_drawables++;
 
+
     for(int d = 0;d<EngineData->m_objects;++d)
     {
+        EngineData->objects[d].drawable.X = EngineData->objects[d].X;
+        EngineData->objects[d].drawable.lx = EngineData->objects[d].lx;
+        EngineData->objects[d].drawable.ly = EngineData->objects[d].ly;
+        EngineData->objects[d].drawable.lz = EngineData->objects[d].lz;
+        EngineData->objects[d].drawable.ox = EngineData->objects[d].ox;
+        EngineData->objects[d].drawable.oy = EngineData->objects[d].oy;
+        EngineData->objects[d].drawable.oz = EngineData->objects[d].oz;
+
         switch(EngineData->objects[d].type){
             case SURE_OBJ_SPHERE:
             {
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;
-                GPUData->Drawables[i].X = EngineData->objects[d].X;
                 GPUData->Drawables[i].lx = 0.95*EngineData->objects[d].lx;
-                GPUData->Drawables[i].ox = EngineData->objects[d].ox;
-                GPUData->Drawables[i].oy = EngineData->objects[d].oy;
-                GPUData->Drawables[i].oz = EngineData->objects[d].oz;
                 GPUData->m_drawables++;
                 break;
             };
-            /* case SURE_DR_MESH:
-            {
-
-                break;
-            }; */
             default:
             {
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;
-                GPUData->Drawables[i].X = EngineData->objects[d].X;
-                GPUData->Drawables[i].lx = EngineData->objects[d].lx;
-                GPUData->Drawables[i].ly = EngineData->objects[d].ly;
-                GPUData->Drawables[i].lz = EngineData->objects[d].lz;
-                GPUData->Drawables[i].ox = EngineData->objects[d].ox;
-                GPUData->Drawables[i].oy = EngineData->objects[d].oy;
-                GPUData->Drawables[i].oz = EngineData->objects[d].oz;
-                GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_start;
-                GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_count;
+                if(GPUData->Drawables[i].type==SURE_DR_MESH){
+                    GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_start;
+                    GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_count;
+                };
                 GPUData->m_drawables++;
                 break;
             };

@@ -17,8 +17,6 @@
 #define __YY y
 #define __ZZ z
 
-#ifdef SURE_GPU_FLOAT
-
 #define __VTYPE float
 #define __VTYPE2 float2
 #define __VTYPE3 float3
@@ -37,44 +35,6 @@ float3 c_d_f(double3 d)
     result.z = d.z;
     return result;
 };
-
-#else // !SURE_GPU_FLOAT
-
-#define __VTYPE double
-#define __VTYPE2 double2
-#define __VTYPE3 double3
-#define __FCONV3(A) A
-#define __DCONV2(A) c_d_f2(A)
-#define __DFCONV2(A) c_f_d2(A)
-#define __DCONV3(A) c_f_d(A)
-#define __FCONV(A) A
-#define __NORMALIZE(A) normalize(A)
-#define __LENGTH(A) length(A)
-
-double3 c_f_d(float3 d)
-{
-    double3 result;
-    result.x = d.x;
-    result.y = d.y;
-    result.z = d.z;
-    return result;
-};
-float2 c_d_f2(double2 d)
-{
-    float2 result;
-    result.x = d.x;
-    result.y = d.y;
-    return result;
-};
-double2 c_f_d2(float2 d)
-{
-    double2 result;
-    result.x = d.x;
-    result.y = d.y;
-    return result;
-};
-
-#endif
 
 #define __GET_NORMAL1(P,VID) \
 coords.y = VID>>CLSIZE_VERTEX_SHF; \
