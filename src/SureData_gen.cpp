@@ -288,6 +288,7 @@ if(type == 1)
     Mesh_GenerateTetr(cur_models,SURE_NORMALS_DEFAULT);
 MapTexture(cur_models,SURE_MAPPING_PLANAR_XY);
 sprintf(ModelsInfo[cur_models].name,"%s",name);
+ModelsInfo[cur_models].toupdate = true;
 cur_models++;
 return result;
 };

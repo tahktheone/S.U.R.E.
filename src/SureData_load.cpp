@@ -287,6 +287,7 @@ void SureData::LoadModel(const char* name)
     };
 
     sprintf(ModelsInfo[cur_models].name,"%s",name);
+    ModelsInfo[cur_models].toupdate = true;
 
     cur_models++;
 };
@@ -453,7 +454,7 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
     objects[i].lp = TemplateObject.lp;
     objects[i].movable = TemplateObject.movable;
     objects[i].collidable = TemplateObject.collidable;
-    //objects[i].drawable = TemplateObject.drawable;
+   // objects[i].drawable = TemplateObject.drawable;
 
         objects[i].drawable.X  = objects[i].X;
         objects[i].drawable.ox = objects[i].ox;
@@ -474,15 +475,16 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
         objects[i].drawable.sided = TemplateObject.drawable.sided;
         objects[i].drawable.map_id = TemplateObject.drawable.map_id;
         objects[i].drawable.advmap_id = TemplateObject.drawable.advmap_id;
-        objects[i].ModelID = TemplateObject.ModelID;
-        sprintf(objects[i].ModelName,"%s",TemplateObject.ModelName);
+        objects[i].ModelID_collider = TemplateObject.ModelID_collider;
+        sprintf(objects[i].ModelName_collider,"%s",TemplateObject.ModelName_collider);
+        objects[i].ModelID_drawable = TemplateObject.ModelID_drawable;
+        sprintf(objects[i].ModelName_drawable,"%s",TemplateObject.ModelName_drawable);
 
     if(TemplateObject.type==SURE_OBJ_MESH)
     {
         // передать vertex'ы и mesh'ы с нормалями
         objects[i].drawable.mesh_start = TemplateObject.drawable.mesh_start;
         objects[i].drawable.mesh_count = TemplateObject.drawable.mesh_count;
-        objects[i].drawable.mesh_changed = true;
     };
 
     objects[i].initp4();

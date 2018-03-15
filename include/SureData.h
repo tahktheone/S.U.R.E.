@@ -20,7 +20,6 @@ struct SureObject
     int type; // тип
     bool movable; // может двигаться
     bool collidable;
-    bool mesh_changed;
     my_double3 p1;
     my_double3 p2;
     my_double3 p3;
@@ -33,8 +32,10 @@ struct SureObject
     my_double3 v2;
     my_double3 v3;
     my_double3 v4;
-    cl_uint ModelID;
-    char ModelName[20];
+    cl_uint ModelID_collider;
+    char ModelName_collider[20];
+    cl_uint ModelID_drawable;
+    char ModelName_drawable[20];
     SureDrawable drawable;
 
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);

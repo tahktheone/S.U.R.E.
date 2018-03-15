@@ -23,7 +23,6 @@ struct SureDrawable {
     bool sided;
     uint mesh_start;
     uint mesh_count;
-    bool mesh_changed;
     int map_id;
     int advmap_id;
 #else
@@ -46,7 +45,6 @@ struct SureDrawable {
     cl_bool sided = false; // "Внутренняя" и "Наружная" стороны отличаются
     cl_uint mesh_start;
     cl_uint mesh_count;
-    cl_bool mesh_changed = false;
     cl_int map_id = -1;
     cl_int advmap_id = -1;
 #endif // CPU

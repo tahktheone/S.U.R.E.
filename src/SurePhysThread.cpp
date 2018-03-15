@@ -319,8 +319,8 @@ void SurePhysThread::run()
                                 ltp.z = dot(o1->X-__FCONV3(o2->X),__FCONV3(o2->oz));
 
                                 // для каждой грани:
-                                uint limit = EngineData->ModelsInfo[o2->ModelID].mesh_count;
-                                uint lstart = EngineData->ModelsInfo[o2->ModelID].mesh_start;
+                                uint limit = EngineData->ModelsInfo[o2->ModelID_collider].mesh_count;
+                                uint lstart = EngineData->ModelsInfo[o2->ModelID_collider].mesh_start;
                                 for(uint im = 0;im<limit;++im)
                                 { // для каждой грани:
                                     uint cm = lstart + im;
@@ -467,8 +467,8 @@ void SurePhysThread::run()
                                 bool l_up = false;
                                 bool l_down = false;
                                 // для каждой точки
-                                uint l_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
-                                uint l_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
+                                uint l_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
+                                uint l_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
                                 for(uint iv = 0;iv<l_limit;++iv)
                                 { // для каждой точки
                                     uint cv = l_start + iv;
@@ -628,10 +628,10 @@ __VTYPE3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
 
 // 1. Составляем разность минковского.
 // для каждой точки
-uint l1_limit = EngineData->ModelsInfo[o1->ModelID].vertex_count;
-uint l1_start = EngineData->ModelsInfo[o1->ModelID].vertex_start;
-uint l2_limit = EngineData->ModelsInfo[o2->ModelID].vertex_count;
-uint l2_start = EngineData->ModelsInfo[o2->ModelID].vertex_start;
+uint l1_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
+uint l1_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
+uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
+uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
 
 for(uint i1 = 0;i1<l1_limit;++i1)
 {
@@ -1486,9 +1486,13 @@ void SurePhysThread::drawscene()
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;
                 GPUData->Drawables[i].X = EngineData->objects[d].X;
                 GPUData->Drawables[i].lx = EngineData->objects[d].lx;
+                GPUData->Drawables[i].ly = EngineData->objects[d].ly;
+                GPUData->Drawables[i].lz = EngineData->objects[d].lz;
                 GPUData->Drawables[i].ox = EngineData->objects[d].ox;
                 GPUData->Drawables[i].oy = EngineData->objects[d].oy;
                 GPUData->Drawables[i].oz = EngineData->objects[d].oz;
+                GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_start;
+                GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_count;
                 GPUData->m_drawables++;
                 break;
             };

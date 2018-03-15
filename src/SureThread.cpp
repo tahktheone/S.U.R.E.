@@ -370,17 +370,15 @@ void SureThread::run()
             OCLData->sizes[1] += OCLData->g_workgroup_size;
             OCL_RUN_("clEnqueueWriteBuffer(GPUData)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmGPUData,CL_TRUE,0,sizeof(SureGPUData),(void*)GPUData,0,NULL,NULL));
             OCL_RUN_("clEnqueueWriteBuffer(Drawables)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmDrawables,CL_TRUE,0,sizeof(SureDrawable)*GPUData->m_drawables,(void*)GPUData->Drawables,0,NULL,NULL));
-            for(int o = 0;o<EngineData->m_objects;++o)
+            for(uint ModelID = 0;ModelID<EngineData->cur_models;++ModelID)
             {
-                if( EngineData->objects[o].drawable.mesh_changed&&
-                    EngineData->objects[o].drawable.type==SURE_DR_MESH)
+                if (EngineData->ModelsInfo[ModelID].toupdate)
                 {
-
                     size_t origin[3];
                     size_t region[3];
-                    int ymin = EngineData->objects[o].drawable.mesh_start>>CLSIZE_VERTEX_SHF;
-                    int ymax = (EngineData->objects[o].drawable.mesh_start
-                               +EngineData->objects[o].drawable.mesh_count)>>CLSIZE_VERTEX_SHF;
+                    int ymin = EngineData->ModelsInfo[ModelID].mesh_start>>CLSIZE_VERTEX_SHF;
+                    int ymax = (EngineData->ModelsInfo[ModelID].mesh_start
+                               +EngineData->ModelsInfo[ModelID].mesh_count)>>CLSIZE_VERTEX_SHF;
 
                     origin[0] = 0;
                     origin[1] = ymin;
@@ -401,9 +399,9 @@ void SureThread::run()
                                                   (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
                                                   0,NULL,NULL));
 
-                    ymin = EngineData->objects[o].drawable.mesh_start>>CLSIZE_VERTEX_SHF;
-                    ymax = (EngineData->objects[o].drawable.mesh_start
-                               +EngineData->objects[o].drawable.mesh_count)>>CLSIZE_VERTEX_SHF;
+                    ymin = EngineData->ModelsInfo[ModelID].mesh_start>>CLSIZE_VERTEX_SHF;
+                    ymax = (EngineData->ModelsInfo[ModelID].mesh_start
+                               +EngineData->ModelsInfo[ModelID].mesh_count)>>CLSIZE_VERTEX_SHF;
 
                     origin[0] = 0;
                     origin[1] = ymin;
@@ -439,9 +437,9 @@ void SureThread::run()
                     int v_min = SURE_R_MAXVERTEX;
                     int v_max = 0;
                     int* MeshCLImg = EngineData->MeshCLImg;
-                    for(cl_uint m = 0;m<EngineData->objects[o].drawable.mesh_count;++m)
+                    for(cl_uint m = 0;m<EngineData->ModelsInfo[ModelID].mesh_count;++m)
                     {
-                        int k = EngineData->objects[o].drawable.mesh_start+m;
+                        int k = EngineData->ModelsInfo[ModelID].mesh_start+m;
                         if(v_min>__MESH_V1(k))v_min = __MESH_V1(k);
                         if(v_max<__MESH_V1(k))v_max = __MESH_V1(k);
                         if(v_min>__MESH_V2(k))v_min = __MESH_V2(k);
@@ -475,7 +473,7 @@ void SureThread::run()
                                                   (void*)&EngineData->VrtxCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
                                                   0,NULL,NULL));
                    };
-                   EngineData->objects[o].drawable.mesh_changed = false;
+                   EngineData->ModelsInfo[ModelID].toupdate = false;
                 };
             };
             for(cl_uint t = 0;t<EngineData->cur_textures;++t)

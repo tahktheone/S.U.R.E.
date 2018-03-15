@@ -185,6 +185,7 @@ int y = get_global_id(1);
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE            |
                               CLK_FILTER_NEAREST;
+
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE    |
                               CLK_FILTER_LINEAR;

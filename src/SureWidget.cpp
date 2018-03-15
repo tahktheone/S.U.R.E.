@@ -593,13 +593,13 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.lz = 5.0; // высота
             EngineData->TemplateObject.lp = 10.0;
             EngineData->TemplateObject.drawable.radiance = 0;
-            sprintf(EngineData->TemplateObject.ModelName,"cube");
-            EngineData->TemplateObject.ModelID = EngineData->GetModel(EngineData->TemplateObject.ModelName);
+            sprintf(EngineData->TemplateObject.ModelName_drawable,"cube");
+            EngineData->TemplateObject.ModelID_drawable = EngineData->GetModel(EngineData->TemplateObject.ModelName_drawable);
+            sprintf(EngineData->TemplateObject.ModelName_collider,"cube");
+            EngineData->TemplateObject.ModelID_collider = EngineData->GetModel(EngineData->TemplateObject.ModelName_collider);
             EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
             EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
-            EngineData->TemplateObject.drawable.mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_start;
-            EngineData->TemplateObject.drawable.mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID].mesh_count;
             EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("colstones");
             EngineData->TemplateObject.drawable.advmap_id = -1;
             EngineData->TemplateObject.drawable.dist_type = SURE_D_EQUAL;
