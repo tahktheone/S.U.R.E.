@@ -15,6 +15,8 @@
 #define SURE_FAA 1
 #define SURE_SCALE 4
 #define SURE_SMOOTH 1
+#define SURE_L_WGRPSIZE 16
+#define SURE_WGRPSIZE 128
 
 #define SURE_MAXRES_X 1920
 #define SURE_MAXRES_Y 1080

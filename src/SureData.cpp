@@ -98,7 +98,11 @@ void SureData::SaveState(const char *name)
 {
     char fname[100];
     char LogLine[200];
-    sprintf(fname,"./%s.state",name);
+    #ifdef _WIN32
+        sprintf(fname,"./%s.win.state",name);
+    #else
+        sprintf(fname,"./%s.nix.state",name);
+    #endif // __WIN32
     FILE *f = NULL;
     f = fopen(fname,"w");
     if(f==NULL){
@@ -106,6 +110,8 @@ void SureData::SaveState(const char *name)
         Log->AddLine(LogLine);
         return;
     };
+    fprintf(f,"r_drawdebug=%i\n",r_drawdebug);
+    fprintf(f,"r_type=%i\n",r_type);
     fprintf(f,"r_iters=%i\n",r_iters);
     fprintf(f,"r_rechecks=%i\n",r_rechecks);
     fprintf(f,"r_backlight=%.3f\n",r_backlight);
@@ -117,6 +123,43 @@ void SureData::SaveState(const char *name)
     fprintf(f,"CameraInfo.xy_h=%.4f\n",CameraInfo.xy_h);
     fprintf(f,"CameraInfo.subp_rnd=%i\n",CameraInfo.subp_rnd);
 
+    fprintf(f,"Objects=%i\n",m_objects);
+    for(int o = 0;o<m_objects;++o)
+    {
+    /*
+    uint external_id;
+    my_double3 X;  //Координаты центра
+    my_double3 ox; //Локальная ось x
+    my_double3 oy; //Локальная ось y
+    my_double3 oz; //Нормаль (Локальная ось z)
+    double lx; // длина
+    double ly; // ширина
+    double lz; // высота
+    double lp = 4.0; // величина иннерциального тетраэдра
+    double rig = 0.7; // жесткость
+    int type; // тип
+    bool movable; // может двигаться
+    bool collidable;
+    bool mesh_changed;
+    my_double3 p1;
+    my_double3 p2;
+    my_double3 p3;
+    my_double3 p4;
+    my_double3 p1o;
+    my_double3 p2o;
+    my_double3 p3o;
+    my_double3 p4o;
+    my_double3 v1;
+    my_double3 v2;
+    my_double3 v3;
+    my_double3 v4;
+    cl_uint ModelID;
+    char ModelName[20];
+    SureDrawable drawable;
+    */
+
+    };
+
     fclose(f);
     sprintf(LogLine,"Успешно сохранено состояние %s",name);
     Log->AddLine(LogLine);
@@ -126,7 +169,11 @@ void SureData::LoadState(const char *name)
 {
     char fname[100];
     char LogLine[200];
-    sprintf(fname,"./%s.state",name);
+    #ifdef _WIN32
+        sprintf(fname,"./%s.win.state",name);
+    #else
+        sprintf(fname,"./%s.nix.state",name);
+    #endif // __WIN32
     FILE *f = NULL;
     f = fopen(fname,"r");
     if(f==NULL){
@@ -136,6 +183,8 @@ void SureData::LoadState(const char *name)
     };
     sprintf(LogLine,"Загружается состояние %s...",name);
     Log->AddLine(LogLine);
+    if(fscanf(f,"r_drawdebug=%d\n",&r_drawdebug)<1) Log->AddLine("Ошибка чтения r_drawdebug");
+    if(fscanf(f,"r_type=%d\n",&r_type)<1) Log->AddLine("Ошибка чтения r_type");
     if(fscanf(f,"r_iters=%hhu\n",&r_iters)<1) Log->AddLine("Ошибка чтения 1");
     if(fscanf(f,"r_rechecks=%hhu\n",&r_rechecks)<1) Log->AddLine("Ошибка чтения 2");
     if(fscanf(f,"r_backlight=%f\n",&r_backlight)<1) Log->AddLine("Ошибка чтения 3");

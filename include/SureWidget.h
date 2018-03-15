@@ -25,7 +25,6 @@ class SureWidget : public QWidget
         float posttime = 0;
         struct timespec framestart; // время начала текущего фрейма
         struct timespec frametime; // время отсечения
-        int drawdebug = 99;
 
     protected:
         void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;

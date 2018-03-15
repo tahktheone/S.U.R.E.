@@ -255,7 +255,7 @@ void SureThread::oclInit()
     OCL_GET_("clCreateKernel",OCLData->kernel_d,clCreateKernel(program_d,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_n,clCreateKernel(program_n,"Trace",NULL));
     OCLData->kernel = &OCLData->kernel_d;
-    OCLData->rtype = SURE_RT_D;
+    EngineData->r_type = SURE_RT_D;
     OCL_RUN_("clSetKernelArg 0t",clSetKernelArg(OCLData->kernel_t, 0, sizeof(cl_mem), (void*)&OCLData->cmRGBmatrix));
     OCL_RUN_("clSetKernelArg 1t",clSetKernelArg(OCLData->kernel_t, 1, sizeof(cl_mem), (void*)&OCLData->cmRandom));
     OCL_RUN_("clSetKernelArg 2t",clSetKernelArg(OCLData->kernel_t, 2, sizeof(cl_mem), (void*)&OCLData->cmGPUData));
@@ -352,13 +352,13 @@ void SureThread::run()
 
         if(OCLData->OpenCL)
         {
-            if(OCLData->rtype==SURE_RT_D)
+            if(EngineData->r_type==SURE_RT_D)
                 OCLData->kernel = &OCLData->kernel_d;
-            if(OCLData->rtype==SURE_RT_T)
+            if(EngineData->r_type==SURE_RT_T)
                 OCLData->kernel = &OCLData->kernel_t;
-            if(OCLData->rtype==SURE_RT_F)
+            if(EngineData->r_type==SURE_RT_F)
                 OCLData->kernel = &OCLData->kernel_f;
-            if(OCLData->rtype==SURE_RT_N)
+            if(EngineData->r_type==SURE_RT_N)
                 OCLData->kernel = &OCLData->kernel_n;
             OCLData->sizes[0] = GPUData->CameraInfo.m_amx; //widget->rect().right()*SURE_FAA/SURE_SCALE;
             OCLData->sizes[1] = GPUData->CameraInfo.m_amy;//widget->rect().bottom()*SURE_FAA/SURE_SCALE;
@@ -508,7 +508,7 @@ void SureThread::run()
             l_lws[0] = OCLData->g_workgroup_size;
             l_lws[1] = OCLData->g_workgroup_size;
             l_lws[2] = 1;
-            int h_gr = 32; //OCLData->g_workgroup_size*16;
+            int h_gr = SURE_WGRPSIZE; //OCLData->g_workgroup_size*16;
             size_t l_start[2];
             size_t l_gws[2];
             l_gws[0] = h_gr;

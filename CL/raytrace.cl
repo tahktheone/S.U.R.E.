@@ -165,7 +165,7 @@ DrawableCollided.dist_sigma = advmap.y/100.0;
 
 __kernel
 __attribute__(( vec_type_hint(__VTYPE3)))
-__attribute__((work_group_size_hint(8, 8, 1)))
+__attribute__((work_group_size_hint(SURE_L_WGRPSIZE, SURE_L_WGRPSIZE, 1)))
 void Trace(        __global float* rgbmatrix, // картинка, в которую рисуем
                    __SURE_DECLARE_RANDOM float* Randomf, // массив случайных чисел
                    __constant struct SureGPUData* GPUData, // структура с общими настройками рендера
@@ -180,6 +180,7 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
 // координаты обрабатываемой точки
 int x = get_global_id(0);
 int y = get_global_id(1);
+
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                               CLK_ADDRESS_NONE            |

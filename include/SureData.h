@@ -33,8 +33,10 @@ struct SureObject
     my_double3 v2;
     my_double3 v3;
     my_double3 v4;
-    SureDrawable drawable;
     cl_uint ModelID;
+    char ModelName[20];
+    SureDrawable drawable;
+
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -239,6 +241,8 @@ class SureData
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
         cl_float r_backlight = 0.5;
+        int r_drawdebug = 99;
+        int r_type = SURE_RT_D;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
@@ -267,6 +271,7 @@ class SureData
 
         SureObject TemplateObject; // шаблонный объект
         uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
+        void DeleteObject(uint);
         SureObject *ObjByID(uint i_id); // Объект по внешнему айдишнику
 
         SureObject objects[SURE_OBJ_MAX];
@@ -303,7 +308,7 @@ class SureData
 
 struct SureOCLData{
     bool OpenCL = true;
-    int rtype = SURE_RT_D;
+    //int rtype = SURE_RT_D;
     cl_kernel* kernel;
 
     cl_kernel kernel_t;
@@ -312,7 +317,7 @@ struct SureOCLData{
     cl_kernel kernel_n;
 
     size_t sizes[2] = {1920,1080};
-    int g_workgroup_size = 8;
+    int g_workgroup_size = SURE_L_WGRPSIZE;
     // OpenCL штуки
     cl_command_queue cqCommandQue;
     cl_mem cmRGBmatrix;

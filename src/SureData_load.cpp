@@ -430,6 +430,12 @@ void SureData::ObjCoordsToDrawable(int i)
     objects[i].drawable.lz = objects[i].lz;
 };
 
+void SureData::DeleteObject(uint i_object)
+{
+    m_objects--;
+    objects[i_object] = objects[m_objects];
+}
+
 uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
 {
     int i = m_objects;
@@ -469,6 +475,7 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
         objects[i].drawable.map_id = TemplateObject.drawable.map_id;
         objects[i].drawable.advmap_id = TemplateObject.drawable.advmap_id;
         objects[i].ModelID = TemplateObject.ModelID;
+        sprintf(objects[i].ModelName,"%s",TemplateObject.ModelName);
 
     if(TemplateObject.type==SURE_OBJ_MESH)
     {

@@ -1,0 +1,11 @@
+r_drawdebug=69
+r_type=2
+r_iters=10
+r_rechecks=10
+r_backlight=0.500
+paused=1
+CameraInfo.cam_x=(-31.4217;-14.2508;24.8556)
+CameraInfo.cam_vec=(0.8960;0.4111;-0.1676)
+CameraInfo.cam_upvec=(0.1551;0.0638;0.9858)
+CameraInfo.xy_h=2.2539
+CameraInfo.subp_rnd=0

@@ -141,7 +141,8 @@ __VTYPE3 X;
     TemplateObject.collidable = true;
     TemplateObject.drawable.type = SURE_DR_MESH; // форма
     TemplateObject.drawable.radiance = 0.0; // свечение
-    TemplateObject.ModelID = GetModel("tetr");
+    sprintf(TemplateObject.ModelName,"tetr");
+    TemplateObject.ModelID = GetModel(TemplateObject.ModelName);
         TemplateObject.drawable.mesh_start = ModelsInfo[TemplateObject.ModelID].mesh_start;
         TemplateObject.drawable.mesh_count = ModelsInfo[TemplateObject.ModelID].mesh_count;
 
@@ -191,7 +192,8 @@ __VTYPE3 X;
     TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
     TemplateObject.oz.x = 1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
-    TemplateObject.ModelID = GetModel("golem");
+    sprintf(TemplateObject.ModelName,"golem");
+    TemplateObject.ModelID = GetModel(TemplateObject.ModelName);
     TemplateObject.drawable.mesh_start = ModelsInfo[TemplateObject.ModelID].mesh_start;
     TemplateObject.drawable.mesh_count = ModelsInfo[TemplateObject.ModelID].mesh_count;
     TemplateObject.drawable.map_id =  GetTexture("golem");

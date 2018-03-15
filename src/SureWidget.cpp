@@ -145,7 +145,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     painter.drawImage(0,0,*image);
     QPoint p;
     char s[100];
-    if(drawdebug>=40)
+    if(EngineData->r_drawdebug>=40)
     {
     p.setX(5);
     p.setY(15);
@@ -159,13 +159,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
     if(OCLData->OpenCL)
     {
         sprintf(s,"GPU(OpenCL)");
-        if(OCLData->rtype==SURE_RT_D)
+        if(EngineData->r_type==SURE_RT_D)
             sprintf(s,"GPU(OpenCL-1)");
-        if(OCLData->rtype==SURE_RT_T)
+        if(EngineData->r_type==SURE_RT_T)
             sprintf(s,"GPU(OpenCL-2)");
-        if(OCLData->rtype==SURE_RT_F)
+        if(EngineData->r_type==SURE_RT_F)
             sprintf(s,"GPU(OpenCL-3)");
-        if(OCLData->rtype==SURE_RT_N)
+        if(EngineData->r_type==SURE_RT_N)
             sprintf(s,"GPU(OpenCL-4)");
     }else{
         sprintf(s,"CPU(OpenMP)");
@@ -197,7 +197,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.setPen(Qt::yellow);
         painter.drawEllipse(QWidget::mapFromGlobal(QCursor::pos()),5,5);
         painter.setPen(Qt::blue);
-        if(drawdebug>=50)
+        if(EngineData->r_drawdebug>=50)
         {
             p.setY(rect().bottom()-25);
             p.setX(5);
@@ -217,7 +217,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
             painter.drawText(p,s);
         };
     };
-    if(drawdebug>=70)
+    if(EngineData->r_drawdebug>=70)
     {
     for(int i = 0;i<EngineData->m_objects;++i)
     {
@@ -395,8 +395,8 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
         EngineData->reset = true;
     };
     if(event->key()==Qt::Key_0){
-        drawdebug-=30;
-        if(drawdebug<30)drawdebug=99;
+        EngineData->r_drawdebug-=30;
+        if(EngineData->r_drawdebug<30)EngineData->r_drawdebug=99;
     };
     if(event->key()==Qt::Key_O){
         QString Fname = "./screenshots/";
@@ -427,41 +427,44 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
     if(event->key()==Qt::Key_F9){
         EngineData->LoadState("initial");
     };
+    if(event->key()==Qt::Key_Backspace){
+        EngineData->DeleteObject(EngineData->m_objects);
+    };
     if(event->key()==Qt::Key_L){
         EngineData->reset = true;
-        switch(OCLData->rtype)
+        switch(EngineData->r_type)
         {
             case SURE_RT_NOCL:
             {
-                OCLData->rtype = SURE_RT_D;
+                EngineData->r_type = SURE_RT_D;
                 OCLData->OpenCL = true;
                 EngineData->Log->AddLine("Переключились на GPU-рендер вариант 1");
                 break;
             };
             case SURE_RT_D:
             {
-                OCLData->rtype = SURE_RT_T;
+                EngineData->r_type = SURE_RT_T;
                 OCLData->OpenCL = true;
                 EngineData->Log->AddLine("Переключились на GPU-рендер вариант 2");
                 break;
             };
             case SURE_RT_T:
             {
-                OCLData->rtype = SURE_RT_F;
+                EngineData->r_type = SURE_RT_F;
                 OCLData->OpenCL = true;
                 EngineData->Log->AddLine("Переключились на GPU-рендер вариант 3");
                 break;
             };
             case SURE_RT_F:
             {
-                OCLData->rtype = SURE_RT_N;
+                EngineData->r_type = SURE_RT_N;
                 OCLData->OpenCL = true;
                 EngineData->Log->AddLine("Переключились на GPU-рендер вариант 4");
                 break;
             };
             case SURE_RT_N:
             {
-                OCLData->rtype = SURE_RT_NOCL;
+                EngineData->r_type = SURE_RT_NOCL;
                 OCLData->OpenCL = false;
                 EngineData->Log->AddLine("Переключились на СPU-рендер");
                 break;
@@ -590,7 +593,8 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.lz = 5.0; // высота
             EngineData->TemplateObject.lp = 10.0;
             EngineData->TemplateObject.drawable.radiance = 0;
-            EngineData->TemplateObject.ModelID = EngineData->GetModel("cube");
+            sprintf(EngineData->TemplateObject.ModelName,"cube");
+            EngineData->TemplateObject.ModelID = EngineData->GetModel(EngineData->TemplateObject.ModelName);
             EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
             EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
