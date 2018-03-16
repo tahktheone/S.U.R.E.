@@ -96,7 +96,8 @@ __VTYPE3 X;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
-    TemplateObject.drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    TemplateObject.drawable.map_id = GetTexture("colstones");
+    TemplateObject.drawable.advmap_id = -1;
     TemplateObject.drawable.radiance = 0.0; // свечение
     TemplateObject.drawable.rgb.s[0] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
     TemplateObject.drawable.rgb.s[1] = 255.0*(float)rand()/(float)RAND_MAX; // цвет
@@ -112,12 +113,139 @@ __VTYPE3 X;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
     TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
     TemplateObject.drawable.radiance = 1.0; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250; // цвет
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
 
     CreateObjectFromTemplate(&X);   // свет
+
+};
+
+void SureData::Scene_mirrors() // Пол и зеркала
+{
+__VTYPE3 X;
+
+    TemplateObject.type = SURE_OBJ_SPHERE;
+    TemplateObject.lx = 20.0;
+    TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
+    X.x = 0; X.y = 0; X.z = 0;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.rgb.s[0] = 250; // цвет
+    TemplateObject.drawable.rgb.s[1] = 250; // цвет
+    TemplateObject.drawable.rgb.s[2] = 230; // цвет
+
+    CreateObjectFromTemplate(&X);   // свет
+
+    // пол
+    TemplateObject.type = SURE_OBJ_PLANE;
+    TemplateObject.lx = 30.0;
+    TemplateObject.ly = 30.0;
+    TemplateObject.lz = 1.0;
+    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
+    X.x = 0; X.y = 0; X.z = -60;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.drawable.map_id = GetTexture("colstones");
+    TemplateObject.drawable.advmap_id = GetTexture("test_adv");
+    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.3;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.rgb.s[0] = 255.0; // цвет
+    TemplateObject.drawable.rgb.s[1] = 255.0; // цвет
+    TemplateObject.drawable.rgb.s[2] = 255.0; // цвет
+
+    //CreateObjectFromTemplate(&X); // пол
+
+    X.x = 0; X.y = 0; X.z = 60;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    //CreateObjectFromTemplate(&X);
+
+    for(float VerticalAngle = 0.5;VerticalAngle<M_PI;VerticalAngle+=0.5)
+    for(float HorisontalAngle = 0;HorisontalAngle<(2*M_PI);HorisontalAngle+=0.5){
+        X.x = 160.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 160.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 160.0 * cos(VerticalAngle);// * cos(VerticalAngle);
+        __VTYPE3 vec = -X;
+        TemplateObject.oz = __NORMALIZE(vec);
+        TemplateObject.ox = PenVec(TemplateObject.oz);
+        TemplateObject.ox = __NORMALIZE(TemplateObject.ox);
+        TemplateObject.oy = cross(TemplateObject.oz,TemplateObject.ox);
+        CreateObjectFromTemplate(&X);
+    };
+
+};
+
+void SureData::Scene_ManyTetrs()
+{
+__VTYPE3 X;
+
+    TemplateObject.type = SURE_OBJ_SPHERE;
+    TemplateObject.lx = 20.0;
+    TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
+    X.x = 0; X.y = 0; X.z = 0;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.rgb.s[0] = 250; // цвет
+    TemplateObject.drawable.rgb.s[1] = 250; // цвет
+    TemplateObject.drawable.rgb.s[2] = 230; // цвет
+
+    CreateObjectFromTemplate(&X);   // свет
+
+    // пол
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.lx = 30.0;
+    TemplateObject.ly = 30.0;
+    TemplateObject.lz = 30.0;
+    TemplateObject.drawable.type = SURE_DR_MESH; // форма
+    sprintf(TemplateObject.ModelName_collider,"tetr");
+    TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
+    sprintf(TemplateObject.ModelName_drawable,"tetr");
+    TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
+    X.x = 0; X.y = 0; X.z = -60;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.drawable.map_id = GetTexture("colstones");
+    TemplateObject.drawable.advmap_id = GetTexture("test_adv");
+    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.3;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.rgb.s[0] = 255.0; // цвет
+    TemplateObject.drawable.rgb.s[1] = 255.0; // цвет
+    TemplateObject.drawable.rgb.s[2] = 255.0; // цвет
+
+    //CreateObjectFromTemplate(&X); // пол
+
+    X.x = 0; X.y = 0; X.z = 60;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    //CreateObjectFromTemplate(&X);
+
+    for(float VerticalAngle = 0.5;VerticalAngle<M_PI;VerticalAngle+=0.5)
+    for(float HorisontalAngle = 0;HorisontalAngle<(2*M_PI);HorisontalAngle+=0.5){
+        X.x = 130.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 130.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 130.0 * cos(VerticalAngle);// * cos(VerticalAngle);
+        __VTYPE3 vec = -X;
+        TemplateObject.oz = __NORMALIZE(vec);
+        TemplateObject.ox = PenVec(TemplateObject.oz);
+        TemplateObject.ox = __NORMALIZE(TemplateObject.ox);
+        TemplateObject.oy = cross(TemplateObject.oz,TemplateObject.ox);
+        CreateObjectFromTemplate(&X);
+    };
 
 };
 

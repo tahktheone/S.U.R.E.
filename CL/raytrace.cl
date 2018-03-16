@@ -1,6 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #include <SureDefines.h>
 
+#define __SURE_BARRIER barrier(CLK_LOCAL_MEM_FENCE)
 #define __SURE_GLOBAL __global
 #define __SURE_STRUCT struct
 #define __SURE_LOCAL __local
@@ -36,6 +37,17 @@ float3 c_d_f(double3 d)
     return result;
 };
 
+#define __GET_NORMALS_INDEX(MESH_ID) \
+coords.y = MESH_ID>>CLSIZE_VERTEX_SHF; \
+coords.x = (MESH_ID - (coords.y<<CLSIZE_VERTEX_SHF))<<2;
+
+#define __GET_NORMALS_BYINDEX(P1,P2,P3) \
+P1.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz); \
+coords.x += 1; \
+P2.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz); \
+coords.x += 1; \
+P3.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
+
 #define __GET_NORMAL1(P,VID) \
 coords.y = VID>>CLSIZE_VERTEX_SHF; \
 coords.x = (VID - (coords.y<<CLSIZE_VERTEX_SHF))<<2; \
@@ -54,7 +66,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
 #define __GET_VERTEX(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
         coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
-        P.xyz = __DCONV3(read_imagef(VrtxCLImg,smpVertex,coords).xyz);
+        P.xyz = read_imagef(VrtxCLImg,smpVertex,coords).xyz;
 
 #define __GET_MESH(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
@@ -65,8 +77,8 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-        DrawableCollided.transp = 1.01 - (col_rgba.w/255.0); \
+        col_rgba = read_imageui(Textures,smpTex,map_uv); \
+        DrawableCollided.transp = 1.01 - (col_rgba.w / 255.0); \
         DrawableCollided.rgb.x = col_rgba.x; \
         DrawableCollided.rgb.y = col_rgba.y; \
         DrawableCollided.rgb.z = col_rgba.z; \
@@ -76,7 +88,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+        advmap = read_imageui(Textures,smpTex,map_uv); \
         DrawableCollided.radiance = advmap.x; \
         DrawableCollided.dist_sigma = advmap.y/20.0;
 
@@ -93,7 +105,7 @@ v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+col_rgba = read_imageui(Textures,smpTex,map_uv); \
 DrawableCollided.transp = 1.01 - (col_rgba.w / 255.0); \
 DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
@@ -143,16 +155,20 @@ int y = get_global_id(1);
 
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
-                              CLK_ADDRESS_NONE            |
-                              CLK_FILTER_NEAREST;
-
+                            CLK_ADDRESS_NONE            |
+                            CLK_FILTER_NEAREST;
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
-                              CLK_ADDRESS_NONE    |
-                              CLK_FILTER_LINEAR;
-int2 coords;
+                         CLK_ADDRESS_NONE            |
+                         CLK_FILTER_LINEAR;
+int2   coords;
 __VTYPE2 map_uv;
+
+uint4 col_rgba;
+
 uint4 advmap;
+
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
- #include <trace_common_d.c>
+#include <trace_common.c>
+
 }

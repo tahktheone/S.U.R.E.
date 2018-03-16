@@ -1,5 +1,5 @@
 
-#define SURE_RLEVEL 10
+#define SURE_RLEVEL 100
 // 90 и ниже -- отключает рассеивание.
 // 60 и ниже -- без рандомизации и без теней
 // 20 и ниже -- без отражений и преломлений
@@ -16,6 +16,7 @@
 #define __SURE_CONSTANT
 #define __SURE_PRIVATE
 #define __SURE_STRUCT
+#define __SURE_BARRIER
 #define __SURE_DECLARE_RANDOM
 #define __SURE_UCHAR3 my_uchar3
 #define __SURE_UCHAR4 my_uchar4
@@ -69,6 +70,14 @@
         P.x = __NORMAL3_X(VID); \
         P.y = __NORMAL3_Y(VID); \
         P.z = __NORMAL3_Z(VID);
+
+#define __GET_NORMALS_INDEX(MESH_ID) \
+int NormalIndex = MESH_ID;
+
+#define __GET_NORMALS_BYINDEX(P1,P2,P3) \
+__GET_NORMAL1(P1,NormalIndex); \
+__GET_NORMAL2(P2,NormalIndex); \
+__GET_NORMAL3(P3,NormalIndex); \
 
 #define __GET_VERTEX(P,VID) \
         P.x = __VERTEX_X(VID); \
@@ -124,6 +133,8 @@ __GET_ADVMAP(map_px,map_py,id); \
 #include <math.h>
 #include <cwchar>
 
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS // для clCreateCommandQueue
+#define CL_USE_DEPRECATED_OPENCL_1_1_APIS // для clCreateImage2D
 #include <CL/cl.h>
 
 #include <SureLog.h>
@@ -134,7 +145,9 @@ __GET_ADVMAP(map_px,map_py,id); \
    double x, y, z;
    my_double3(double x_=0, double y_=0, double z_=0){ x=x_; y=y_; z=z_; }
    inline my_double3 (cl_double3 b) {x=b.s[0]; y=b.s[1]; z=b.s[2];};
+   inline my_double3 (cl_float3 b) {x=b.s[0]; y=b.s[1]; z=b.s[2];};
    inline operator cl_double3() const { cl_double3 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; return d;};
+   inline operator cl_float3() const { cl_float3 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; return d;};
    inline my_double3 operator+(const my_double3 &b) const { return my_double3(x+b.x,y+b.y,z+b.z); }
    inline my_double3 operator-(const my_double3 &b) const { return my_double3(x-b.x,y-b.y,z-b.z); }
    inline my_double3 operator-() const{return my_double3(-x,-y,-z);}
@@ -172,6 +185,7 @@ __GET_ADVMAP(map_px,map_py,id); \
 const my_double3 operator*(my_double3 a, double b);
 const my_double3 operator*(double b, my_double3 a);
 const my_double3 operator*(double b, my_uchar3 a);
+const cl_float3 operator-(cl_float3 a);
 my_double3& operator+=(my_double3 &a,const my_double3 &b);
 my_double3& operator-=(my_double3 &a,const my_double3 &b);
 

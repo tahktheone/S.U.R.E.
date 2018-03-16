@@ -63,6 +63,10 @@ my_double3& operator+=(my_double3 &a,const my_double3 &b)
 my_double3& operator-=(my_double3 &a,const my_double3 &b)
 { a.x-=b.x;a.y-=b.y;a.z-=b.z; return a; }
 
+const cl_float3 operator-(cl_float3 a){
+return cl_float3{-a.s[0],-a.s[1],-a.s[2]};
+};
+
 void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl)
 {
     if(pl<SURE_R_DELTA)return;

@@ -30,6 +30,7 @@ SureData::SureData()
         LoadTexture("golem");
         LoadTexture("golem_adv");
         LoadTexture("earth");
+        LoadTexture("test_adv");
 
         LoadModel("golem");
         GenModel("cube",0);
@@ -76,6 +77,8 @@ SureData::SureData()
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
   Scene_box();
   //Scene_floor();
+  //Scene_mirrors();
+  //Scene_ManyTetrs();
 
   //Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
@@ -220,10 +223,10 @@ void SureData::LoadState(const char *name)
     if(fscanf(f,"r_backlight=%f\n",&r_backlight)<1) Log->AddLine("Ошибка чтения 3");
     if(fscanf(f,"paused=%hhu\n",(uchar *)&paused)<1) Log->AddLine("Ошибка чтения 5");
 
-    if(fscanf(f,"CameraInfo.cam_x=(%lf;%lf;%lf)\n",&CameraInfo.cam_x.s[0],&CameraInfo.cam_x.s[1],&CameraInfo.cam_x.s[2])<3) Log->AddLine("Ошибка чтения 6");
-    if(fscanf(f,"CameraInfo.cam_vec=(%lf;%lf;%lf)\n",&CameraInfo.cam_vec.s[0],&CameraInfo.cam_vec.s[1],&CameraInfo.cam_vec.s[2])<3) Log->AddLine("Ошибка чтения 7");
-    if(fscanf(f,"CameraInfo.cam_upvec=(%lf;%lf;%lf)\n",&CameraInfo.cam_upvec.s[0],&CameraInfo.cam_upvec.s[1],&CameraInfo.cam_upvec.s[2])<3) Log->AddLine("Ошибка чтения 8");
-    if(fscanf(f,"CameraInfo.xy_h=%lf\n",&CameraInfo.xy_h)<1) Log->AddLine("Ошибка чтения 9");
+    if(fscanf(f,"CameraInfo.cam_x=(%f;%f;%f)\n",&CameraInfo.cam_x.s[0],&CameraInfo.cam_x.s[1],&CameraInfo.cam_x.s[2])<3) Log->AddLine("Ошибка чтения 6");
+    if(fscanf(f,"CameraInfo.cam_vec=(%f;%f;%f)\n",&CameraInfo.cam_vec.s[0],&CameraInfo.cam_vec.s[1],&CameraInfo.cam_vec.s[2])<3) Log->AddLine("Ошибка чтения 7");
+    if(fscanf(f,"CameraInfo.cam_upvec=(%f;%f;%f)\n",&CameraInfo.cam_upvec.s[0],&CameraInfo.cam_upvec.s[1],&CameraInfo.cam_upvec.s[2])<3) Log->AddLine("Ошибка чтения 8");
+    if(fscanf(f,"CameraInfo.xy_h=%f\n",&CameraInfo.xy_h)<1) Log->AddLine("Ошибка чтения 9");
     if(fscanf(f,"CameraInfo.subp_rnd=%u\n",&CameraInfo.subp_rnd)<1) Log->AddLine("Ошибка чтения 10");
 
     int lv_objects = 0;

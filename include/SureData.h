@@ -300,8 +300,10 @@ class SureData
 
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
+        void Scene_mirrors(); // Пол и зеркала
         void Scene_tetrs(); // Пол и светильник -- тетраэдры
         void Scene_golem();
+        void Scene_ManyTetrs();
         //void Scene_metaball(double x, double y, double z, double sz,int nt);
         //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
         //void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);

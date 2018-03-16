@@ -1,6 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #include <SureDefines.h>
 
+#define __SURE_BARRIER barrier(CLK_LOCAL_MEM_FENCE)
 #define __SURE_GLOBAL __global
 #define __SURE_STRUCT struct
 #define __SURE_LOCAL __local
@@ -16,8 +17,6 @@
 #define __XX x
 #define __YY y
 #define __ZZ z
-
-#ifdef SURE_GPU_FLOAT
 
 #define __VTYPE float
 #define __VTYPE2 float2
@@ -38,43 +37,16 @@ float3 c_d_f(double3 d)
     return result;
 };
 
-#else // !SURE_GPU_FLOAT
+#define __GET_NORMALS_INDEX(MESH_ID) \
+coords.y = MESH_ID>>CLSIZE_VERTEX_SHF; \
+coords.x = (MESH_ID - (coords.y<<CLSIZE_VERTEX_SHF))<<2;
 
-#define __VTYPE double
-#define __VTYPE2 double2
-#define __VTYPE3 double3
-#define __FCONV3(A) A
-#define __DCONV2(A) c_d_f2(A)
-#define __DFCONV2(A) c_f_d2(A)
-#define __DCONV3(A) c_f_d(A)
-#define __FCONV(A) A
-#define __NORMALIZE(A) normalize(A)
-#define __LENGTH(A) length(A)
-
-double3 c_f_d(float3 d)
-{
-    double3 result;
-    result.x = d.x;
-    result.y = d.y;
-    result.z = d.z;
-    return result;
-};
-float2 c_d_f2(double2 d)
-{
-    float2 result;
-    result.x = d.x;
-    result.y = d.y;
-    return result;
-};
-double2 c_f_d2(float2 d)
-{
-    double2 result;
-    result.x = d.x;
-    result.y = d.y;
-    return result;
-};
-
-#endif
+#define __GET_NORMALS_BYINDEX(P1,P2,P3) \
+P1.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz); \
+coords.x += 1; \
+P2.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz); \
+coords.x += 1; \
+P3.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
 
 #define __GET_NORMAL1(P,VID) \
 coords.y = VID>>CLSIZE_VERTEX_SHF; \
@@ -94,7 +66,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
 #define __GET_VERTEX(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
         coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
-        P.xyz = __DCONV3(read_imagef(VrtxCLImg,smpVertex,coords).xyz);
+        P.xyz = read_imagef(VrtxCLImg,smpVertex,coords).xyz;
 
 #define __GET_MESH(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
@@ -105,8 +77,8 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
-        DrawableCollided.transp = 1.01 - (col_rgba.w/255.0); \
+        col_rgba = read_imageui(Textures,smpTex,map_uv); \
+        DrawableCollided.transp = 1.01 - (col_rgba.w / 255.0); \
         DrawableCollided.rgb.x = col_rgba.x; \
         DrawableCollided.rgb.y = col_rgba.y; \
         DrawableCollided.rgb.z = col_rgba.z; \
@@ -116,7 +88,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-        advmap = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+        advmap = read_imageui(Textures,smpTex,map_uv); \
         DrawableCollided.radiance = advmap.x; \
         DrawableCollided.dist_sigma = advmap.y/20.0;
 
@@ -133,13 +105,12 @@ v2.xy = __DFCONV2(read_imagef(UVMap,smpVertex,coords).xy); \
 map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
-uint4 col_rgba = read_imageui(Textures,smpTex,__DCONV2(map_uv)); \
+col_rgba = read_imageui(Textures,smpTex,map_uv); \
 DrawableCollided.transp = 1.01 - (col_rgba.w / 255.0); \
 DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
-
 
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -179,20 +150,25 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
 {
 // координаты обрабатываемой точки
 int x = get_global_id(0);
+
 int y = get_global_id(1);
 
 // для чтения изображений:
+
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
-                              CLK_ADDRESS_NONE            |
-                              CLK_FILTER_NEAREST;
+
+                            CLK_ADDRESS_NONE            |
+                            CLK_FILTER_NEAREST;
 
 const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
-                              CLK_ADDRESS_NONE    |
-                              CLK_FILTER_LINEAR;
+                         CLK_ADDRESS_NONE            |
+                         CLK_FILTER_LINEAR;
 int2 coords;
-__VTYPE2 map_uv;
+__VTYPE2   map_uv;
+uint4 col_rgba;
+
 uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
- #include <trace_common_d.c>
+#include <trace_common_d.c>
 }

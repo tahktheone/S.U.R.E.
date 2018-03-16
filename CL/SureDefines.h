@@ -36,9 +36,9 @@
 #define SURE_DR_SQUARE  2
 #define SURE_DR_MESH    3
 
-#define SURE_R_DELTA       (1.0/1000.0)
-#define SURE_R_MAXDISTANCE 1000
-#define SURE_R_FADELIMIT   (6.0/100.0)
+#define SURE_R_DELTA       (1.0f/1000.0f)
+#define SURE_R_MAXDISTANCE 1000.0f
+#define SURE_R_FADELIMIT   (6.0f/100.0f)
 #define SURE_R_RNDSIZE     12288
 
 #define CLSIZE_VERTEX_DIM  4
@@ -71,11 +71,11 @@
 #define SURE_D_NORM 2
 #define SURE_D_NONE 3
 
-#define SURE_PI 3.1415926536
-#define SURE_PI2 1.570796327
-#define SURE_P4_X 0.577350269
-#define SURE_P4_Y 0.288675135
-#define SURE_P4_Z 0.816496581
+#define SURE_PI 3.1415926536f
+#define SURE_PI2 1.570796327f
+#define SURE_P4_X 0.577350269f
+#define SURE_P4_Y 0.288675135f
+#define SURE_P4_Z 0.816496581f
 
 #define SURE_R_DELAY 20 // время между кадрами -- рендер
 #define SURE_P_DELAY 8  // время между кадрами -- физика
