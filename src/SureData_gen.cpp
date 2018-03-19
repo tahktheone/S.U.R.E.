@@ -86,9 +86,9 @@ void SureData::Mesh_GenerateCube(int i_model,int norm_type)
 {
     ModelsInfo[i_model].mesh_start = cur_meshes;
     ModelsInfo[i_model].vertex_start = cur_vertexes;
-    double x = 1.0;
-    double y = 1.0;
-    double z = 1.0;
+    double x = 1.0f;
+    double y = 1.0f;
+    double z = 1.0f;
     int cv = AddVertex(-x,-y,-z); // cv
     AddVertex(-x, y,-z); // cv+1
     AddVertex( x, y,-z); // cv+2

@@ -57,15 +57,24 @@ const my_double3 operator*(double b, my_double3 a)
 const my_double3 operator*(double b, my_uchar3 a)
 { return my_double3(a.x*b,a.y*b,a.z*b); };
 
+const my_double3 operator-(my_double3 a, cl_float3 b)
+{ return my_double3(a.x-b.s[0],a.y-b.s[1],a.z-b.s[2]); };
+
 my_double3& operator+=(my_double3 &a,const my_double3 &b)
 { a.x+=b.x;a.y+=b.y;a.z+=b.z; return a; }
 
 my_double3& operator-=(my_double3 &a,const my_double3 &b)
 { a.x-=b.x;a.y-=b.y;a.z-=b.z; return a; }
 
+
+
 const cl_float3 operator-(cl_float3 a){
 return cl_float3{-a.s[0],-a.s[1],-a.s[2]};
 };
+
+//const cl_float3 operator-(cl_float3 a,my_double3 b){
+//return cl_float3{a.s[0]-b.x,a.s[1]-b.y,a.s[2]-b.z};
+//};
 
 void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl)
 {

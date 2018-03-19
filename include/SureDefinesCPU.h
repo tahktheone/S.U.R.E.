@@ -1,15 +1,24 @@
 
 #define SURE_RLEVEL 100
-// 90 и ниже -- отключает рассеивание.
-// 60 и ниже -- без рандомизации и без теней
-// 20 и ниже -- без отражений и преломлений
+/*
+Отключается рассеивание средой <= 90
+Максимум отражений - 2   < 70
+Если не зеркало - освещение на 100% камерой < 60
+(к предыдущему - яркость источников света*255) < 60
+(режим 2)
+Отключается рандомизация < 50
+(режим 3)
+Все материалы двухсторонние < 30
+Полностью отключаются отражения <= 20
+(режим 4)
+*/
 
 // define'ы ниже не вошли в SureDefines.h, так как они свои у GPU-кода
 #define __VTYPE double
 #define __VTYPE2 my_double2
 #define __VTYPE3 my_double3
 #define __FCONV3(A) (my_double3)(A)
-#define __FCONV(A) A
+#define __FCONV(A) (A)
 #define __NORMALIZE(A) normalize(A)
 #define __SURE_GLOBAL
 #define __SURE_LOCAL
@@ -25,10 +34,20 @@
 #define __SURE_MIN(A,B) (A<B?A:B)
 #define __SURE_MAX(A,B) (A>B?A:B)
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
-#define __MAD(A,B,C) (A*B+C)
+#define __DIVIDE(A,B) ((A)/(B))
+#define __MAD(A,B,C) ((A)*(B)+(C))
 #define __XX s[0]
 #define __YY s[1]
 #define __ZZ s[2]
+
+//TracePoint = collision_point;
+#define SET_TRACE_POINT_MINUS \
+intersect_dist-=SURE_R_DELTA; \
+TracePoint = TracePoint + intersect_dist * TraceVector;
+
+#define SET_TRACE_POINT_PLUS \
+intersect_dist+=SURE_R_DELTA; \
+TracePoint = TracePoint + intersect_dist * TraceVector;
 
 #define __VERTEX_X(A) VrtxCLImg[A*4]
 #define __VERTEX_Y(A) VrtxCLImg[A*4+1]
@@ -185,6 +204,7 @@ __GET_ADVMAP(map_px,map_py,id); \
 const my_double3 operator*(my_double3 a, double b);
 const my_double3 operator*(double b, my_double3 a);
 const my_double3 operator*(double b, my_uchar3 a);
+const my_double3 operator-(my_double3 a, cl_float3 b);
 const cl_float3 operator-(cl_float3 a);
 my_double3& operator+=(my_double3 &a,const my_double3 &b);
 my_double3& operator-=(my_double3 &a,const my_double3 &b);

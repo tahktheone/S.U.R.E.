@@ -23,31 +23,31 @@ bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in
     };
 }
 
-__VTYPE3 PenVec(__VTYPE3 V1)
+__VTYPE3 PenVec(__VTYPE3 qqq)
 {
     __VTYPE3 V2;
-    __VTYPE x = fabs(V1.x);
-    __VTYPE y = fabs(V1.y);
-    __VTYPE z = fabs(V1.z);
+    __VTYPE x = fabs(qqq.x);
+    __VTYPE y = fabs(qqq.y);
+    __VTYPE z = fabs(qqq.z);
     int typ = x < y ? x < z ?   0   :   2   : y < z ? 1 : 2 ;
 //                          * -x<z- * -x>z- *
 //                  * ----------x<y-------- * -- x>y -------*
     if(typ==0)
     {
         V2.x = 0;
-        V2.y = V1.z;
-        V2.z = -V1.y;
+        V2.y = qqq.z;
+        V2.z = -qqq.y;
     };
     if(typ==1)
     {
-        V2.x = V1.z;
+        V2.x = qqq.z;
         V2.y = 0;
-        V2.z = -V1.x;
+        V2.z = -qqq.x;
     };
     if(typ==2)
     {
-        V2.x = V1.y;
-        V2.y = -V1.x;
+        V2.x = qqq.y;
+        V2.y = -qqq.x;
         V2.z = 0;
     };
     return V2;
@@ -68,7 +68,7 @@ __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *Camer
     __VTYPE kx = CameraInfo->xy_h*((__VTYPE)x+rx-(__VTYPE)mx/2.0)/(__VTYPE)mx;
     __VTYPE ky = CameraInfo->xy_h*((__VTYPE)y+ry-(__VTYPE)my/2.0)/(__VTYPE)mx;
     *rr = r;
-    return dZ+kx*dX+ky*dY;
+    return __NORMALIZE(dZ+kx*dX+ky*dY);
 };
 
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo)
@@ -76,11 +76,11 @@ __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraIn
     __VTYPE3 dZ = CameraInfo->cam_vec;
     __VTYPE3 dY = -CameraInfo->cam_upvec;
     __VTYPE3 dX = cross(dZ,dY);
-    size_t mx = CameraInfo->m_amx;
-    size_t my = CameraInfo->m_amy;
-    __VTYPE kx = CameraInfo->xy_h*((__VTYPE)x-(__VTYPE)mx/2.0)/(__VTYPE)mx;
-    __VTYPE ky = CameraInfo->xy_h*((__VTYPE)y-(__VTYPE)my/2.0)/(__VTYPE)mx;
-    return dZ+kx*dX+ky*dY;
+    float mx = (float)CameraInfo->m_amx;
+    float my = (float)CameraInfo->m_amy;
+    __VTYPE kx = CameraInfo->xy_h*((__VTYPE)x-mx/2.0f)/mx;
+    __VTYPE ky = CameraInfo->xy_h*((__VTYPE)y-my/2.0f)/mx;
+    return __NORMALIZE(dZ+kx*dX+ky*dY);
 };
 
 __VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_DECLARE_RANDOM float* Randomf)
@@ -141,24 +141,6 @@ uint InitRandom(int *x,int *y){
     return r;
 };
 
-bool SetCollision(const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_cur,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_col,__SURE_STRUCT SureDrawable *e_result){
-    e_result->refr = i_cur->refr / i_col->refr;
-    if(i_cur->refr > i_col->refr){
-        e_result->rgb = i_cur->rgb;
-        e_result->transp = i_cur->transp;
-        e_result->dist_type = i_cur->dist_type;
-        e_result->dist_sigma = i_cur->dist_sigma;
-        e_result->dist_m = i_cur->dist_m;
-    }else{
-        e_result->rgb = i_col->rgb;
-        e_result->transp = i_col->transp;
-        e_result->dist_type = i_col->dist_type;
-        e_result->dist_sigma = i_col->dist_sigma;
-        e_result->dist_m = i_col->dist_m;
-    };
-    return true;
-};
-
 __VTYPE3 VectorInBasis(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTYPE3 oz){
     __VTYPE3 result;
     result.x = dot(ox,i_vector);               // Локальные координаты
@@ -178,17 +160,17 @@ __VTYPE3 VectorInBasisNormalized(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTY
 
 __VTYPE3 VectorInDrawableBasis(const __VTYPE3 i_vector,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_dr){
     __VTYPE3 result;
-    result.x = dot(__FCONV3(i_dr->ox),i_vector);               // Локальные координаты
-    result.y = dot(__FCONV3(i_dr->oy),i_vector);               // Локальные координаты
-    result.z = dot(__FCONV3(i_dr->oz),i_vector);               // Локальные координаты
+    result.x = dot(i_dr->ox,i_vector);               // Локальные координаты
+    result.y = dot(i_dr->oy,i_vector);               // Локальные координаты
+    result.z = dot(i_dr->oz,i_vector);               // Локальные координаты
     return result;
 };
 
 __VTYPE3 VectorInDrawableBasisNormalized(const __VTYPE3 i_vector,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_dr){
     __VTYPE3 result;
-    result.x = dot(__FCONV3(i_dr->ox),i_vector);               // Локальные координаты
-    result.y = dot(__FCONV3(i_dr->oy),i_vector);               // Локальные координаты
-    result.z = dot(__FCONV3(i_dr->oz),i_vector);               // Локальные координаты
+    result.x = dot(i_dr->ox,i_vector);               // Локальные координаты
+    result.y = dot(i_dr->oy,i_vector);               // Локальные координаты
+    result.z = dot(i_dr->oz,i_vector);               // Локальные координаты
     result = __NORMALIZE(result);
     return result;
 };

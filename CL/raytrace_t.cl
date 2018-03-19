@@ -12,7 +12,9 @@
 #define __SURE_UINT4 uint4
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
-#define __MAD(A,B,C) mad(A,B,C)
+#define __DIVIDE(A,B) native_divide((A),(B))
+#define __MAD(A,B,C) fma(A,B,C)
+//#define __MAD(A,B,C) (A*B+C)
 #define __SURE_DECLARE_RANDOM __global
 #define __XX x
 #define __YY y
@@ -26,6 +28,8 @@
 #define __DFCONV2(A) A
 #define __DCONV3(A) A
 #define __FCONV(A) (float)A
+//#define __NORMALIZE(A) normalize(A)
+//#define __LENGTH(A) length(A)
 #define __NORMALIZE(A) fast_normalize(A)
 #define __LENGTH(A) fast_length(A)
 float3 c_d_f(double3 d)
@@ -66,7 +70,7 @@ P.xyz = __DCONV3(read_imagef(Normals,smpVertex,coords).xyz);
 #define __GET_VERTEX(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
         coords.x = VID-(coords.y<<CLSIZE_VERTEX_SHF); \
-        P.xyz = __DCONV3(read_imagef(VrtxCLImg,smpVertex,coords).xyz);
+        P.xyz = read_imagef(VrtxCLImg,smpVertex,coords).xyz;
 
 #define __GET_MESH(P,VID) \
         coords.y = VID>>CLSIZE_VERTEX_SHF; \
@@ -112,7 +116,6 @@ DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
 
-
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
 int tid = cm; \
@@ -136,8 +139,7 @@ DrawableCollided.dist_sigma = advmap.y/100.0;
 #include <func_common.c>
 
 __kernel
-__attribute__(( vec_type_hint(__VTYPE3)))
-__attribute__((work_group_size_hint(SURE_L_WGRPSIZE, SURE_L_WGRPSIZE, 1)))
+__attribute__((vec_type_hint(float3),work_group_size_hint(16,16,1)))
 void Trace(        __global float* rgbmatrix, // картинка, в которую рисуем
                    __SURE_DECLARE_RANDOM float* Randomf, // массив случайных чисел
                    __constant struct SureGPUData* GPUData, // структура с общими настройками рендера
@@ -152,7 +154,6 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
 // координаты обрабатываемой точки
 int x = get_global_id(0);
 int y = get_global_id(1);
-
 // для чтения изображений:
 const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
                             CLK_ADDRESS_NONE            |
@@ -163,11 +164,17 @@ const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
 int2 coords;
 __VTYPE2 map_uv;
 uint4 col_rgba;
-
 uint4 advmap;
-
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
-#include <trace_common.c>
 
+#define SET_TRACE_POINT_MINUS \
+intersect_dist-=SURE_R_DELTA_GPU_FIX; \
+TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+
+#define SET_TRACE_POINT_PLUS \
+intersect_dist+=SURE_R_DELTA_GPU_FIX; \
+TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+
+#include <trace_common_t.c>
 }

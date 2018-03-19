@@ -36,8 +36,9 @@
 #define SURE_DR_SQUARE  2
 #define SURE_DR_MESH    3
 
-#define SURE_R_DELTA       (1.0f/1000.0f)
-#define SURE_R_MAXDISTANCE 1000.0f
+#define SURE_R_DELTA       (0.0001f)
+#define SURE_R_DELTA_GPU_FIX (0.0005f)
+#define SURE_R_MAXDISTANCE (10000.0f)
 #define SURE_R_FADELIMIT   (6.0f/100.0f)
 #define SURE_R_RNDSIZE     12288
 

@@ -73,6 +73,8 @@ int main(int argc, char* argv[]) {
     GPUData.Drawables = Drawables;
     widget.EngineData = &EngineData;
     widget.OCLData = &OCLData;
+    widget.GPUData = &GPUData;
+    widget.Randomf = Randomf;
     Render.Randomf = Randomf;
     Render.EngineData = &EngineData;
     Render.GPUData = &GPUData;
@@ -91,8 +93,6 @@ int main(int argc, char* argv[]) {
     Physics.wait();
 
     EngineData.SureClear(); // чистим память
-
-    std::cin.get(); // оставляем консоль
 
     return 0;
 }

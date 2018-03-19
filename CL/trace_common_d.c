@@ -24,7 +24,6 @@
     }else{
         TraceVector = DetermineTraceVector(x,y,&CameraInfo);
     };
-    TraceVector = __NORMALIZE(TraceVector);
 
     cur = &Drawables[0];
     uint MaximumIterrations = GPUData->r_maxiters;
@@ -56,7 +55,7 @@
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
-                    if(RayAndSphereCollided(TracePoint,TraceVector,__FCONV3(lv_dr->X),__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
+                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
                     {
                        if(lv_dr->sided||!InSphere)
                        {
@@ -88,9 +87,9 @@
                         }; // if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0))
                         if(InSphere)
                         {
-                            collision_normal = __FCONV3(lv_dr->X) - collision_point;
+                            collision_normal = lv_dr->X - collision_point;
                         }else{
-                            collision_normal = collision_point - __FCONV3(lv_dr->X);
+                            collision_normal = collision_point - lv_dr->X;
                         };
                         collision_normal = __NORMALIZE(collision_normal);
                     }; // if(RayAndSphereCollided)
@@ -100,15 +99,15 @@
                 case SURE_DR_SQUARE:
                 {
                     // Расстояние от точки старта луча до плоскости
-                    __VTYPE3 VectorToDrawableCenter = TracePoint-__FCONV3(lv_dr->X);
-                    __VTYPE DistanceToPlane = dot(__FCONV3(lv_dr->oz),VectorToDrawableCenter);
+                    __VTYPE3 VectorToDrawableCenter = TracePoint-lv_dr->X;
+                    __VTYPE DistanceToPlane = dot(lv_dr->oz,VectorToDrawableCenter);
                     // Если точка старта луча вплотную к плоскости -- игнорируем ее
                     // (чтобы отраженый от плоскости луч из-за округлений не сталкивался с той же плоскостью):
                     if(DistanceToPlane<SURE_R_DELTA&&DistanceToPlane>-SURE_R_DELTA)break;
                     // Проекция вектора трассировки на нормаль
-                    __VTYPE TraceVecByNormal = dot(__FCONV3(lv_dr->oz),TraceVector);
+                    __VTYPE TraceVecByNormal = dot(lv_dr->oz,TraceVector);
                     // Расстояние до точки пересечения луча с плоскостью
-                    __VTYPE TraceDistance = - DistanceToPlane/TraceVecByNormal;
+                    __VTYPE TraceDistance = - __DIVIDE(DistanceToPlane,TraceVecByNormal);
                     // Если дальше чем уже найденное пересечение -- выходим
                     if(TraceDistance>intersect_dist)break;
                     // Если плоскость сзади, за стартом луча -- выходим.
@@ -116,10 +115,10 @@
                     // Точка пересечения луча с плоскостью
                     __VTYPE3 CollisionPointCandidate = TracePoint+TraceDistance*TraceVector;
                     // Вектор От чентра объекта (внутренние координаты 0 0) к точке пересечения
-                    __VTYPE3 LocalVectorToTracePoint = __FCONV3(lv_dr->X) - CollisionPointCandidate;
+                    __VTYPE3 LocalVectorToTracePoint = lv_dr->X - CollisionPointCandidate;
                     // Локальные координаты точки пересечения
-                    __VTYPE2 LocalCoordinates = {dot(__FCONV3(lv_dr->ox),LocalVectorToTracePoint),
-                                                 dot(__FCONV3(lv_dr->oy),LocalVectorToTracePoint)};
+                    __VTYPE2 LocalCoordinates = {dot(lv_dr->ox,LocalVectorToTracePoint),
+                                                 dot(lv_dr->oy,LocalVectorToTracePoint)};
                     // Нет попадания в квадрат -- игнорируем
                     if(LocalCoordinates.x >  lv_dr->lx||
                        LocalCoordinates.x < -lv_dr->lx||
@@ -143,14 +142,14 @@
                         };
                         SET_COLLISION;
                         GET_TEXTURE_SQUARE;
-                        collision_normal = -__FCONV3(lv_dr->oz);
+                        collision_normal = -lv_dr->oz;
                     }else{ // с внешней стороны
                         col = lv_dr;
                         cur = lv_cur;
                         DrawableCollided.radiance = lv_dr->radiance;
                         SET_COLLISION;
                         GET_TEXTURE_SQUARE;
-                        collision_normal = __FCONV3(lv_dr->oz);
+                        collision_normal = lv_dr->oz;
                     };
                     break;
                 }; // Квадрат
@@ -158,15 +157,15 @@
                 {
 
                     __VTYPE3 LocalTraceVector;
-                    LocalTraceVector.x = dot(TraceVector,__FCONV3(lv_dr->ox));
-                    LocalTraceVector.y = dot(TraceVector,__FCONV3(lv_dr->oy));
-                    LocalTraceVector.z = dot(TraceVector,__FCONV3(lv_dr->oz));
+                    LocalTraceVector.x = dot(TraceVector,lv_dr->ox);
+                    LocalTraceVector.y = dot(TraceVector,lv_dr->oy);
+                    LocalTraceVector.z = dot(TraceVector,lv_dr->oz);
 
                     __VTYPE3 LocalTracePoint;
-                    __VTYPE3 VectorToTracePoint = TracePoint-__FCONV3(lv_dr->X);
-                    LocalTracePoint.x = dot(VectorToTracePoint,__FCONV3(lv_dr->ox));
-                    LocalTracePoint.y = dot(VectorToTracePoint,__FCONV3(lv_dr->oy));
-                    LocalTracePoint.z = dot(VectorToTracePoint,__FCONV3(lv_dr->oz));
+                    __VTYPE3 VectorToTracePoint = TracePoint-lv_dr->X;
+                    LocalTracePoint.x = dot(VectorToTracePoint,lv_dr->ox);
+                    LocalTracePoint.y = dot(VectorToTracePoint,lv_dr->oy);
+                    LocalTracePoint.z = dot(VectorToTracePoint,lv_dr->oz);
 
                     // Проверка на пересечение луча с AABB (в локальных координатах)
                     // AABB - Axis Aligned Bounding Box
@@ -184,28 +183,31 @@
                     // Приводим размеры вектора трассировки к размерам объекта
                     // Потому что все координаты Vertex'ов в mesh'ах - от -1.0 до 1.0
                     // И мы не хотим переводить их все в глобальные координаты
-                    LocalTraceVector.x/=lv_dr->lx;
-                    LocalTraceVector.y/=lv_dr->ly;
-                    LocalTraceVector.z/=lv_dr->lz;
-                    LocalTracePoint.x/=lv_dr->lx;
-                    LocalTracePoint.y/=lv_dr->ly;
-                    LocalTracePoint.z/=lv_dr->lz;
+                    __VTYPE3 LocalSizeMultiplier = {__DIVIDE(1.0f,lv_dr->lx),
+                                                    __DIVIDE(1.0f,lv_dr->ly),
+                                                    __DIVIDE(1.0f,lv_dr->lz)};
+                    LocalTraceVector.x*=LocalSizeMultiplier.x;
+                    LocalTraceVector.y*=LocalSizeMultiplier.y;
+                    LocalTraceVector.z*=LocalSizeMultiplier.z;
+                    LocalTracePoint.x*=LocalSizeMultiplier.x;
+                    LocalTracePoint.y*=LocalSizeMultiplier.y;
+                    LocalTracePoint.z*=LocalSizeMultiplier.z;
 
                     // Коэффициент показывающий отношение размера объекта к размерам мира
                     // Нужен для пересчета длины вектора трассировки
-                    __VTYPE ResizingKoeff = __LENGTH(TraceVector)/__LENGTH(LocalTraceVector);
+                    __VTYPE ResizingKoeff = __DIVIDE(__LENGTH(TraceVector),__LENGTH(LocalTraceVector));
                     LocalTraceVector = __NORMALIZE(LocalTraceVector);
 
                     // SURE_R_DELTA тоже должна подгоняться под локальные размеры
                     // чтобы избежать искажений в мелких деталях
-                    __VTYPE LocalRenderDelta = SURE_R_DELTA / ResizingKoeff;
+                    __VTYPE LocalRenderDelta = __DIVIDE(SURE_R_DELTA,ResizingKoeff);
 
                     for(uint MeshIndex = 0;MeshIndex<lv_dr->mesh_count;++MeshIndex)
                     { // Для каждой meshины
 
-                    // переменные для алгоритма поиска пересечения луча и треугольника
-                    __VTYPE3 pvec; __VTYPE3 tvec; __VTYPE det; __VTYPE inv_det;
-                    __VTYPE u; __VTYPE v; __VTYPE3 qvec; __VTYPE TraceDistance;
+                        // переменные для алгоритма поиска пересечения луча и треугольника
+                        __VTYPE3 pvec; __VTYPE3 tvec; __VTYPE det; __VTYPE inv_det;
+                        __VTYPE u; __VTYPE v; __VTYPE3 qvec; __VTYPE TraceDistance;
 
                         uint CurrentMesh = lv_dr->mesh_start + MeshIndex;
                         __SURE_VINT4 MeshData;
@@ -244,11 +246,12 @@
                         // Нормаль в точке -- усредненная по нормалям на vertex'ах
                         // с учетом uv-координат (которые вернул алгоритм поиска пересечения)
                         __VTYPE3 LocalNormal = n1*(1.0f-u-v)+n2*u+n3*v;
+                        LocalNormal = __NORMALIZE(LocalNormal);
 
                         // переводим нормаль в глобальные координаты
-                        collision_normal = LocalNormal.x*__FCONV3(lv_dr->ox)+
-                                           LocalNormal.y*__FCONV3(lv_dr->oy)+
-                                           LocalNormal.z*__FCONV3(lv_dr->oz);
+                        collision_normal = LocalNormal.x*lv_dr->ox*LocalSizeMultiplier.x+
+                                           LocalNormal.y*lv_dr->oy*LocalSizeMultiplier.y+
+                                           LocalNormal.z*lv_dr->oz*LocalSizeMultiplier.z;
 
                         collision_normal  = __NORMALIZE(collision_normal);
                         if(dot(LocalTraceVector,cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1))>0.0f)
@@ -270,18 +273,12 @@
                                 #endif
                             };
                             collision_normal = -collision_normal;
+                            SET_COLLISION_MESH;
                         }else{ // с внешней стороны
                             col = lv_dr;
                             cur = lv_cur;
                             DrawableCollided.radiance = lv_dr->radiance;
-                        };
-                        intersect_dist = TraceDistance;
-                        SET_COLLISION;
-                        if(lv_dr->map_id>=0){
-                            __GET_TEXTURE_UV(CurrentMesh,lv_dr->map_id);
-                        };
-                        if(lv_dr->advmap_id>=0){
-                            __GET_ADVMAP_UV(CurrentMesh,lv_dr->advmap_id);
+                            SET_COLLISION_MESH;
                         };
                     }; // Для каждой meshины
                     break;
@@ -292,6 +289,12 @@
         };// Цикл по Drawables
 
         // Тут мы прошлись по всем Drawables и нашли (или нет) с чем пересекается луч.
+
+        #ifdef __LOGGING
+        if(collision_found){
+
+        };
+        #endif // __LOGGING
 
         #if SURE_RLEVEL>90
         // Добавлем рассеивание средой
@@ -312,7 +315,7 @@
          // луч улетел в никуда -- выходим из цикла
         if(!collision_found)break;
 
-        if(DrawableCollided.radiance>0)
+        if(DrawableCollided.radiance>0.0f)
         {
             #if SURE_RLEVEL>60
             TraceColor.x += TraceFade.x*DrawableCollided.rgb.__XX;
@@ -326,66 +329,68 @@
             break;
         };
 
-        bool recheck = true;
-        uint c = 0;
+        bool NeedToRecheck = true;
+        uint RecheckCounter = 0;
 
         #if SURE_RLEVEL>20
-        while(recheck&&++c<MaximumRechecks)
-        {
+        while( NeedToRecheck && ((++RecheckCounter)<MaximumRechecks) ){
             #if SURE_RLEVEL>90
             if(!collision_inner)
             { // Не рассеивание -- отражение/преломление
             #endif // SURE_RLEVEL
                 #if SURE_RLEVEL<60
-                __VTYPE rr = 0.9;
+                __VTYPE TransparenceRandomizer = 0.9f;
                 #else
                 if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-                __VTYPE rr = Randomf[r];
+                __VTYPE TransparenceRandomizer = Randomf[r];
                 #endif
-                recheck = false;
-                if(rr<DrawableCollided.transp)
+                NeedToRecheck = false;
+                if(TransparenceRandomizer<DrawableCollided.transp)
                 { // сработала прозрачность -- считаем преломление
-                    __VTYPE3 cnr;
-                    SURE_RANDOMIZE(cnr);
-                    __VTYPE l = dot(TraceVector,cnr);
-                    if(l>0){recheck = true;}else{ //Только если модифицированная нормаль не коллинеарна вектору трассировки
-                        __VTYPE3 rv;
-                        __VTYPE sTh = 0;
-                        if(DrawableCollided.transp>1.0)
+                    __VTYPE3 CollisionNormalRandomized;
+                    SURE_RANDOMIZE(CollisionNormalRandomized);
+                    __VTYPE TraceVecProjection = dot(TraceVector,CollisionNormalRandomized);
+                    if( TraceVecProjection > 0.0f){
+                            NeedToRecheck = true;
+                    }else{ //Только если модифицированная нормаль не коллинеарна вектору трассировки
+                        __VTYPE3 ReflectedVector;
+                        __VTYPE RefractionAngleSinus = 0.0f;
+                        if(DrawableCollided.transp>1.0f)
                         {
-                            rv = TraceVector;
+                            ReflectedVector = TraceVector;
                         }else{
-                            __VTYPE3 A = __FCONV(DrawableCollided.refr)*(TraceVector-l*cnr);
-                            sTh = __LENGTH(A);  // Синус угла преломления
-                            __VTYPE cTh = sqrt(1-sTh*sTh); // Косинус угла преломления
-                            rv = A-cTh*cnr;
+                            __VTYPE3 A = DrawableCollided.refr*(TraceVector-TraceVecProjection*CollisionNormalRandomized);
+                            RefractionAngleSinus = __LENGTH(A);  // Синус угла преломления
+                            ReflectedVector = A-sqrt(1-RefractionAngleSinus*RefractionAngleSinus)*CollisionNormalRandomized;
                         };
-                        if((dot(rv,collision_normal)>=0||sTh>(__VTYPE)(1.0))&&DrawableCollided.transp<1.0)
+                        if((dot(ReflectedVector,collision_normal)>=0.0f||RefractionAngleSinus>1.0f)&&DrawableCollided.transp<1.0f)
                         {   // Oтражение (в т ч внутреннее)
-                            l = -2*dot(TraceVector,cnr);
-                            if(l<0){recheck = true;}else{ //Только если модифицированная нормаль не коллинеарна вектору трассировки
-                                __VTYPE3 rv = l*cnr+TraceVector;
-                                if(dot(rv,collision_normal)<0){recheck=true;}else{ // результат отражение направлен от плоскости
-                                    TracePoint = collision_point;
-                                    TraceVector = __NORMALIZE(rv);
-                                    TraceLength += intersect_dist;
-                                    TraceFade.x *= DrawableCollided.rgb.__XX/255.0;
-                                    TraceFade.y *= DrawableCollided.rgb.__YY/255.0;
-                                    TraceFade.z *= DrawableCollided.rgb.__ZZ/255.0;
-                                };// // результат отражение направлен от плоскости
-                            }; //Только если модифицированная нормаль не коллинеарна вектору трассировки
+                            // 2 длины проекции вектора трассировки на нормаль
+                            // Помимо проверки на коллинеарность используется дальше
+                            // как часть вычислений отраженного вектора
+                            ReflectedVector = -2.0f*TraceVecProjection*CollisionNormalRandomized+TraceVector;
+                            if(dot(ReflectedVector,collision_normal)<0.0f){
+                                    NeedToRecheck=true;
+                            }else{ // результат отражение направлен от плоскости
+                                SET_TRACE_POINT_MINUS;
+                                TraceVector = __NORMALIZE(ReflectedVector);
+                                TraceLength += intersect_dist;
+                                TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
+                                TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
+                                TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
+                            };// // результат отражение направлен от плоскости
                         }else{ // преломление
-                            TracePoint = collision_point;
-                            TraceVector = __NORMALIZE(rv);
+                            SET_TRACE_POINT_PLUS;
+                            TraceVector = __NORMALIZE(ReflectedVector);
                             collision_normal = -collision_normal;
                             TraceLength += intersect_dist;
                             #if SURE_RLEVEL>90
-                            if(DrawableCollided.transp<1.0)
+                            if(DrawableCollided.transp<1.0f)
                             {
                             #endif // SURE_RLEVEL>90
-                                TraceFade.x *= DrawableCollided.rgb.__XX/255.0;
-                                TraceFade.y *= DrawableCollided.rgb.__YY/255.0;
-                                TraceFade.z *= DrawableCollided.rgb.__ZZ/255.0;
+                                TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
+                                TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
+                                TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
                             #if SURE_RLEVEL>90
                             };
                             #endif // SURE_RLEVEL>90
@@ -394,63 +399,61 @@
                     };// if(l>0) модифицированная нормаль не коллинеарна вектору трассировки
                 }else{ // не сработала прозрачность -- считаем отражение
                     #if SURE_RLEVEL<60
-                    if((DrawableCollided.dist_type==SURE_D_EQUAL)||(DrawableCollided.dist_type==SURE_D_NORM&&DrawableCollided.dist_sigma>0.1))
+                    if((DrawableCollided.dist_type==SURE_D_EQUAL)||(DrawableCollided.dist_type==SURE_D_NORM&&DrawableCollided.dist_sigma>0.1f))
                     { // рассеивающая поверхность
-                        __VTYPE shade = 255.0*dot(collision_normal,TraceVector);
-                        if(shade<0.0)shade=-shade;
+                        __VTYPE shade = 255.0f*dot(collision_normal,TraceVector);
+                        if(shade<0.0f)shade=-shade;
                         TraceColor.x = TraceFade.x*shade*DrawableCollided.rgb.__XX;
                         TraceColor.y = TraceFade.y*shade*DrawableCollided.rgb.__YY;
                         TraceColor.z = TraceFade.z*shade*DrawableCollided.rgb.__ZZ;
                         break;
                     };
                     #endif // SURE_RLEVEL<60
-                    //__VTYPE3 cnr = randomize(collision_normal,DrawableCollided.dist_type,DrawableCollided.dist_sigma,DrawableCollided.dist_m,&r,Randomf);
-                    __VTYPE3 cnr;
-                    SURE_RANDOMIZE(cnr);
-                    __VTYPE l = -2*dot(TraceVector,cnr);
-                    __VTYPE3 rv = __MAD(l,cnr,TraceVector);
-                    if(dot(rv,collision_normal)>=0)
+                    //__VTYPE3 CollisionNormalRandomized = randomize(collision_normal,DrawableCollided.dist_type,DrawableCollided.dist_sigma,DrawableCollided.dist_m,&r,Randomf);
+                    __VTYPE3 CollisionNormalRandomized;
+                    SURE_RANDOMIZE(CollisionNormalRandomized);
+                    __VTYPE l = -2.0f*dot(TraceVector,CollisionNormalRandomized);
+                    __VTYPE3 ReflectedVector = __MAD(l,CollisionNormalRandomized,TraceVector);
+                    if(dot(ReflectedVector,collision_normal)>=0.0f)
                     { // Результат отражения направлен от объекта
-                        TracePoint = collision_point;
-                        rv = __NORMALIZE(rv);
-                        TraceVector = rv;
-                        TraceLength+=intersect_dist;
-                        TraceFade.x *= DrawableCollided.rgb.__XX/255.0;
-                        TraceFade.y *= DrawableCollided.rgb.__YY/255.0;
-                        TraceFade.z *= DrawableCollided.rgb.__ZZ/255.0;
+                        SET_TRACE_POINT_MINUS;
+                        TraceVector = __NORMALIZE(ReflectedVector);
+                        TraceLength += intersect_dist;
+                        TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
+                        TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
+                        TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
                     }else{ // результат отражения направлен внутрь объекта
-                        recheck = true;
+                        NeedToRecheck = true;
                     };
                 }; // отражение/преломление
             #if SURE_RLEVEL>90
             }else{ // Рассеивание
-                recheck = false;
-                //__VTYPE3 cnr = randomize(collision_normal,SURE_D_EQUAL,1.0,0.0,&r,Randomf);
+                NeedToRecheck = false;
+                //__VTYPE3 CollisionNormalRandomized = randomize(collision_normal,SURE_D_EQUAL,1.0,0.0,&r,Randomf);
                 DrawableCollided.dist_type = SURE_D_EQUAL;
                 DrawableCollided.dist_sigma = 1.0f;
                 DrawableCollided.dist_m = 0.0f;
-                __VTYPE3 cnr;
-                SURE_RANDOMIZE(cnr);
-                __VTYPE l = -2.0*dot(TraceVector,cnr);
-                __VTYPE3 rv;
-                if(l>=0)
+                __VTYPE3 CollisionNormalRandomized;
+                SURE_RANDOMIZE(CollisionNormalRandomized);
+                __VTYPE l = -2.0f*dot(TraceVector,CollisionNormalRandomized);
+                if(l>=0.0f)
                 {
-                    rv = TraceVector+l*cnr;
-                    TracePoint = collision_point;
-                    TraceVector = __NORMALIZE(rv);
-                    TraceLength+=intersect_dist;
-                    TraceFade.x *= DrawableCollided.rgb.__XX/255.0;
-                    TraceFade.y *= DrawableCollided.rgb.__YY/255.0;
-                    TraceFade.z *= DrawableCollided.rgb.__ZZ/255.0;
+                    __VTYPE3 ReflectedVector = TraceVector+l*CollisionNormalRandomized;
+                    SET_TRACE_POINT_MINUS;
+                    TraceVector = __NORMALIZE(ReflectedVector);
+                    TraceLength += intersect_dist;
+                    TraceFade.x *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__XX,255.0);
+                    TraceFade.y *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__YY,255.0);
+                    TraceFade.z *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__ZZ,255.0);
                 }else{
-                    recheck = true;
+                    NeedToRecheck = true;
                 };
             }; // Рассеивание / отражение / преломление
             #endif // SURE_RLEVEL>90
-        }; // while recheck
+        }; // while NeedToRecheck
         #else // RLEVEL<20
-        __VTYPE shade = 255.0*dot(collision_normal,TraceVector);
-        if(shade<0.0)shade=-shade;
+        __VTYPE shade = -255.0f*dot(collision_normal,TraceVector);
+        if(shade<0.0f)shade=0.0f;//-shade;
         TraceColor.x = shade*DrawableCollided.rgb.__XX;
         TraceColor.y = shade*DrawableCollided.rgb.__YY;
         TraceColor.z = shade*DrawableCollided.rgb.__ZZ;
@@ -458,15 +461,15 @@
         #endif // SURE_RLEVEL><20
     }; //WHILE Трассировка
 
-    // если точка черная -- освещаем ее "глобальным" холодным светом -- это дает подсветку теней
 
+    #ifndef __LOGGING
+    // если точка черная -- освещаем ее "глобальным" холодным светом -- это дает подсветку теней
     if((TraceColor.x+TraceColor.y+TraceColor.z)==0)
     {
         TraceColor.x += TraceFade.x*GPUData->r_backlight;
         TraceColor.y += TraceFade.y*GPUData->r_backlight;
         TraceColor.z += TraceFade.z*GPUData->r_backlight;
     };
-
 
     uint k = y*SURE_MAXRES_X*3*SURE_FAA*SURE_SCALE+x*3*SURE_SCALE;
     for(int sx=0;sx<SURE_SCALE;++sx)
@@ -484,3 +487,4 @@
             rgbmatrix[d++] += TraceColor.z;
         };
     };
+    #endif // ifndef __LOGGING

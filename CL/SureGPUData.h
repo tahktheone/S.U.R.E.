@@ -4,10 +4,10 @@
 struct SureDrawable {
 
 #ifdef GPU
-    double3 X; //Координаты центра
-    double3 ox; //Локальная ось x
-    double3 oy; //Локальная ось y
-    double3 oz; //Нормаль (Локальная ось z)
+    float3 X; //Координаты центра
+    float3 ox; //Локальная ось x
+    float3 oy; //Локальная ось y
+    float3 oz; //Нормаль (Локальная ось z)
     double lx; // длина
     double ly; // ширина
     double lz; // высота
@@ -15,7 +15,7 @@ struct SureDrawable {
     int radiance; // свечение
     double transp; // прозрачность
     double transp_i; // прозрачность внутренняя
-    double refr; // Коэффициент преломления
+    float refr; // Коэффициент преломления
     int dist_type; // тип рандомизации
     double dist_sigma;
     double dist_m;
@@ -26,10 +26,10 @@ struct SureDrawable {
     int map_id;
     int advmap_id;
 #else
-    cl_double3 X = cl_double3{0,0,0}; //Координаты центра
-    cl_double3 ox = cl_double3{1,0,0}; //Локальная ось x
-    cl_double3 oy = cl_double3{0,1,0}; //Локальная ось y
-    cl_double3 oz = cl_double3{0,0,1}; //Нормаль (Локальная ось z)
+    cl_float3 X = cl_float3{0,0,0}; //Координаты центра
+    cl_float3 ox = cl_float3{1,0,0}; //Локальная ось x
+    cl_float3 oy = cl_float3{0,1,0}; //Локальная ось y
+    cl_float3 oz = cl_float3{0,0,1}; //Нормаль (Локальная ось z)
     cl_double lx = 1.0; // длина
     cl_double ly = 1.0; // ширина
     cl_double lz = 1.0; // высота
@@ -37,7 +37,7 @@ struct SureDrawable {
     cl_int radiance = 255; // свечение
     cl_double transp = 0.0; // прозрачность
     cl_double transp_i = 0.0; // прозрачность внутренняя
-    cl_double refr = 99.0; // Коэффициент преломления
+    cl_float refr = 99.0; // Коэффициент преломления
     cl_int dist_type = SURE_D_EQUAL; // тип рандомизации
     cl_double dist_sigma = 1.0; // sigma рандомизации
     cl_double dist_m = SURE_PI2; // матожидание рандомизации
@@ -93,13 +93,12 @@ struct SureGPUData {
 #endif // GPU
 };
 
-__VTYPE3 PenVec(__VTYPE3 V1);
+__VTYPE3 PenVec(__VTYPE3 qqq);
 bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
 __VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_DECLARE_RANDOM float* Randomf);
 __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 uint InitRandom(int *x,int *y);
-bool SetCollision(const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_cur,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_col,__SURE_STRUCT SureDrawable *e_result);
 __VTYPE3 VectorInBasis(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTYPE3 oz);
 __VTYPE3 VectorInBasisNormalized(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTYPE3 oz);
 __VTYPE3 VectorInDrawableBasis(const __VTYPE3 i_vector,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_dr);
@@ -108,7 +107,7 @@ __VTYPE3 GetUVCoordinatesByLocalCoordinates(__VTYPE3 LocalCoordinates);
 
 #define SET_COLLISION \
     collision_found = true; \
-    DrawableCollided.refr = cur->refr / col->refr; \
+    DrawableCollided.refr = __DIVIDE(cur->refr,col->refr); \
     if(cur->refr > col->refr){ \
         DrawableCollided.rgb = cur->rgb; \
         DrawableCollided.transp = cur->transp; \
@@ -123,13 +122,22 @@ __VTYPE3 GetUVCoordinatesByLocalCoordinates(__VTYPE3 LocalCoordinates);
         DrawableCollided.dist_m = col->dist_m; \
     };
 
+#define SET_COLLISION_MESH \
+SET_COLLISION; \
+intersect_dist = TraceDistance; \
+if(lv_dr->map_id>=0){ \
+    __GET_TEXTURE_UV(CurrentMesh,lv_dr->map_id); \
+}; \
+if(lv_dr->advmap_id>=0){ \
+    __GET_ADVMAP_UV(CurrentMesh,lv_dr->advmap_id); \
+};
 
 #define GET_SPHERICAL_UV_COORDINATES(COORDS) \
-    __VTYPE3 VectorToCollision = collision_point - __FCONV3(lv_dr->X); \
+    __VTYPE3 VectorToCollision = collision_point - lv_dr->X; \
     __VTYPE3 LocalCoordinates; \
-    LocalCoordinates.x = dot(__FCONV3(lv_dr->ox),VectorToCollision); \
-    LocalCoordinates.y = dot(__FCONV3(lv_dr->oy),VectorToCollision); \
-    LocalCoordinates.z = dot(__FCONV3(lv_dr->oz),VectorToCollision); \
+    LocalCoordinates.x = dot(lv_dr->ox,VectorToCollision); \
+    LocalCoordinates.y = dot(lv_dr->oy,VectorToCollision); \
+    LocalCoordinates.z = dot(lv_dr->oz,VectorToCollision); \
     LocalCoordinates = __NORMALIZE(LocalCoordinates); \
     COORDS.y = 0.5*(LocalCoordinates.z+1.0); \
     if(LocalCoordinates.x>0){ \
@@ -170,6 +178,9 @@ if(LocalTraceVector.__A<0.0f){ \
 }else{ \
     if(DistanceToSide>AABB_FarestIn) AABB_FarestIn = DistanceToSide; \
 };
+
+// __VTYPE3 CollisionNormalOy = __NORMALIZE(PenVec(collision_normal));
+// __VTYPE3 CollisionNormalOy = cross(collision_normal,TraceVector);
 
 #if SURE_RLEVEL<60
 #define SURE_RANDOMIZE(CNR) CNR = collision_normal;
@@ -212,7 +223,7 @@ if(LocalTraceVector.__A<0.0f){ \
 #define SURE_MOLLER_TRUMBOR \
 pvec = cross(LocalTraceVector,LocalVertex3-LocalVertex1); \
 det = dot(LocalVertex2-LocalVertex1,pvec); \
-if(fabs(det)<LocalRenderDelta) continue; \
+if(fabs(det)<0.0f) continue; \
 inv_det = 1.0f / det; \
 tvec = LocalTracePoint - LocalVertex1; \
 u = dot(tvec, pvec) * inv_det; \

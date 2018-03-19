@@ -215,6 +215,16 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p.setX(5);
             sprintf(s,"TP = (%.3f;%.3f;%.3f)",tp.x,tp.y,tp.z);
             painter.drawText(p,s);
+            #define __LOGGING
+                //float* rgbmatrix = widget->rgbmatrix;
+                SureDrawable* Drawables = GPUData->Drawables;
+                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
+                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
+                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+            #include <trace_common.c>
+            #undef __LOGGING
         };
     };
     if(EngineData->r_drawdebug>=70)
@@ -578,6 +588,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
             EngineData->TemplateObject.lx = 1.0+10.0*(float)rand()/(float)RAND_MAX; // длина
             EngineData->TemplateObject.lp = EngineData->TemplateObject.lx*1.7;
+            EngineData->TemplateObject.drawable.transp = 0;
             EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
             EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("earth");
             EngineData->TemplateObject.drawable.advmap_id = EngineData->GetTexture("earth_adv");
@@ -587,12 +598,15 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
 
         };
         if (event->button() == Qt::RightButton) {
+            EngineData->TemplateObject.drawable.rgb.s[0] = 40.0; // цвет
+            EngineData->TemplateObject.drawable.rgb.s[1] = 250.0;// цвет
+            EngineData->TemplateObject.drawable.rgb.s[2] = 60.0; // цвет
             EngineData->TemplateObject.type = SURE_OBJ_MESH;
-            EngineData->TemplateObject.lx = 6.0; // длина
-            EngineData->TemplateObject.ly = 8.0; // ширина
-            EngineData->TemplateObject.lz = 5.0; // высота
-            EngineData->TemplateObject.lp = 10.0;
-            EngineData->TemplateObject.drawable.radiance = 0;
+            EngineData->TemplateObject.lx = 50.0; // длина
+            EngineData->TemplateObject.ly = 50.0; // ширина
+            EngineData->TemplateObject.lz = 2.0; // высота
+            EngineData->TemplateObject.lp = 40.0;
+            EngineData->TemplateObject.drawable.radiance = 0.0f;
             sprintf(EngineData->TemplateObject.ModelName_drawable,"cube");
             EngineData->TemplateObject.ModelID_drawable = EngineData->GetModel(EngineData->TemplateObject.ModelName_drawable);
             sprintf(EngineData->TemplateObject.ModelName_collider,"cube");
@@ -600,9 +614,12 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
             EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
-            EngineData->TemplateObject.drawable.map_id = EngineData->GetTexture("colstones");
+            EngineData->TemplateObject.drawable.map_id = -1;// EngineData->GetTexture("colstones");
             EngineData->TemplateObject.drawable.advmap_id = -1;
-            EngineData->TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+            EngineData->TemplateObject.drawable.transp = 0.97;
+            EngineData->TemplateObject.drawable.refr = 1.4;
+            EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
+            EngineData->TemplateObject.drawable.dist_sigma = 0.02f;
             EngineData->TemplateObject.drawable.type = SURE_DR_MESH;
             __VTYPE3 X = EngineData->CameraInfo.cam_x;
             uint o = EngineData->CreateObjectFromTemplate(&X);

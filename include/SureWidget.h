@@ -10,10 +10,12 @@ class SureWidget : public QWidget
         virtual ~SureWidget();
         // Данные об изображении
         cl_float *rgbmatrix;
+        cl_float *Randomf;
 
         // Данные движка
          SureData* EngineData;
          SureOCLData* OCLData;
+         SureGPUData* GPUData;
 
         //
         bool mousemove = false;
