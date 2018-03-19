@@ -28,7 +28,7 @@
     cur = &Drawables[0];
     uint MaximumIterrations = GPUData->r_maxiters;
     uint MaximumRechecks = GPUData->r_rechecks;
-    #if SURE_RLEVEL < 50
+    #if SURE_RLEVEL<70
         MaximumIterrations = 2;
     #endif // SURE_RLEVEL
 
@@ -55,7 +55,7 @@
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
-                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
+                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,lv_dr->lx,&InSphere,&intersect_dist))
                     {
                        if(lv_dr->sided||!InSphere)
                        {
@@ -317,15 +317,15 @@
 
         if(DrawableCollided.radiance>0.0f)
         {
-            #if SURE_RLEVEL>60
-            TraceColor.x += TraceFade.x*DrawableCollided.rgb.__XX;
-            TraceColor.y += TraceFade.y*DrawableCollided.rgb.__YY;
-            TraceColor.z += TraceFade.z*DrawableCollided.rgb.__ZZ;
+            #if SURE_RLEVEL<60
+                TraceColor.x += 255.0f*TraceFade.x*DrawableCollided.rgb.__XX;
+                TraceColor.y += 255.0f*TraceFade.y*DrawableCollided.rgb.__YY;
+                TraceColor.z += 255.0f*TraceFade.z*DrawableCollided.rgb.__ZZ;
             #else
-            TraceColor.x += 255.0*TraceFade.x*DrawableCollided.rgb.__XX;
-            TraceColor.y += 255.0*TraceFade.y*DrawableCollided.rgb.__YY;
-            TraceColor.z += 255.0*TraceFade.z*DrawableCollided.rgb.__ZZ;
-            #endif // SURE_RLEVEL>60
+                TraceColor.x += TraceFade.x*DrawableCollided.rgb.__XX;
+                TraceColor.y += TraceFade.y*DrawableCollided.rgb.__YY;
+                TraceColor.z += TraceFade.z*DrawableCollided.rgb.__ZZ;
+            #endif // SURE_RLEVEL<60
             break;
         };
 
@@ -338,7 +338,7 @@
             if(!collision_inner)
             { // Не рассеивание -- отражение/преломление
             #endif // SURE_RLEVEL
-                #if SURE_RLEVEL<60
+                #if SURE_RLEVEL<50
                 __VTYPE TransparenceRandomizer = 0.9f;
                 #else
                 if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;

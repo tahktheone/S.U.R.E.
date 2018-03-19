@@ -17,8 +17,6 @@
 #define __VTYPE double
 #define __VTYPE2 my_double2
 #define __VTYPE3 my_double3
-#define __FCONV3(A) (my_double3)(A)
-#define __FCONV(A) (A)
 #define __NORMALIZE(A) normalize(A)
 #define __SURE_GLOBAL
 #define __SURE_LOCAL

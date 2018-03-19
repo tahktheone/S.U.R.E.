@@ -55,7 +55,7 @@
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
-                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,__FCONV(lv_dr->lx),&InSphere,&intersect_dist))
+                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,lv_dr->lx,&InSphere,&intersect_dist))
                     {
                        if(lv_dr->sided||!InSphere)
                        {

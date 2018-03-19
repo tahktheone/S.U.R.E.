@@ -206,7 +206,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
             int l_x = QWidget::mapFromGlobal(QCursor::pos()).x();
             int l_y = QWidget::mapFromGlobal(QCursor::pos()).y();
             __VTYPE3 tv = DetermineTraceVector(l_x,l_y,&EngineData->CameraInfo);
-            __VTYPE3 tp = __FCONV3(EngineData->CameraInfo.cam_x);
+            __VTYPE3 tp = EngineData->CameraInfo.cam_x;
             p.setY(rect().bottom()-15);
             p.setX(5);
             sprintf(s,"TV = (%.3f;%.3f;%.3f)",tv.x,tv.y,tv.z);

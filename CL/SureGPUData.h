@@ -8,17 +8,17 @@ struct SureDrawable {
     float3 ox; //Локальная ось x
     float3 oy; //Локальная ось y
     float3 oz; //Нормаль (Локальная ось z)
-    double lx; // длина
-    double ly; // ширина
-    double lz; // высота
+    float lx; // длина
+    float ly; // ширина
+    float lz; // высота
     int type; // форма
     int radiance; // свечение
-    double transp; // прозрачность
-    double transp_i; // прозрачность внутренняя
+    float transp; // прозрачность
+    float transp_i; // прозрачность внутренняя
     float refr; // Коэффициент преломления
     int dist_type; // тип рандомизации
-    double dist_sigma;
-    double dist_m;
+    float dist_sigma;
+    float dist_m;
     uchar3 rgb;
     bool sided;
     uint mesh_start;
@@ -30,17 +30,17 @@ struct SureDrawable {
     cl_float3 ox = cl_float3{1,0,0}; //Локальная ось x
     cl_float3 oy = cl_float3{0,1,0}; //Локальная ось y
     cl_float3 oz = cl_float3{0,0,1}; //Нормаль (Локальная ось z)
-    cl_double lx = 1.0; // длина
-    cl_double ly = 1.0; // ширина
-    cl_double lz = 1.0; // высота
+    cl_float lx = 1.0; // длина
+    cl_float ly = 1.0; // ширина
+    cl_float lz = 1.0; // высота
     cl_int type = SURE_DR_SPHERE; // форма
     cl_int radiance = 255; // свечение
-    cl_double transp = 0.0; // прозрачность
-    cl_double transp_i = 0.0; // прозрачность внутренняя
+    cl_float transp = 0.0; // прозрачность
+    cl_float transp_i = 0.0; // прозрачность внутренняя
     cl_float refr = 99.0; // Коэффициент преломления
     cl_int dist_type = SURE_D_EQUAL; // тип рандомизации
-    cl_double dist_sigma = 1.0; // sigma рандомизации
-    cl_double dist_m = SURE_PI2; // матожидание рандомизации
+    cl_float dist_sigma = 1.0; // sigma рандомизации
+    cl_float dist_m = SURE_PI2; // матожидание рандомизации
     cl_uchar3 rgb = cl_uchar3{255,255,255}; // цвет
     cl_bool sided = false; // "Внутренняя" и "Наружная" стороны отличаются
     cl_uint mesh_start;
@@ -95,15 +95,9 @@ struct SureGPUData {
 
 __VTYPE3 PenVec(__VTYPE3 qqq);
 bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
-__VTYPE3 randomize(__VTYPE3 cn,int col_dt,__VTYPE col_ds,__VTYPE col_dm,uint* rr,__SURE_DECLARE_RANDOM float* Randomf);
 __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 uint InitRandom(int *x,int *y);
-__VTYPE3 VectorInBasis(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTYPE3 oz);
-__VTYPE3 VectorInBasisNormalized(__VTYPE3 i_vector,__VTYPE3 ox,__VTYPE3 oy,__VTYPE3 oz);
-__VTYPE3 VectorInDrawableBasis(const __VTYPE3 i_vector,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_dr);
-__VTYPE3 VectorInDrawableBasisNormalized(const __VTYPE3 i_vector,const __SURE_GLOBAL __SURE_STRUCT SureDrawable *i_dr);
-__VTYPE3 GetUVCoordinatesByLocalCoordinates(__VTYPE3 LocalCoordinates);
 
 #define SET_COLLISION \
     collision_found = true; \

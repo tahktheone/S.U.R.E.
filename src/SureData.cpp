@@ -284,11 +284,11 @@ void SureData::LoadState(const char *name)
         READ_FLOAT_VECTOR_DRAWABLE(oy);
         READ_FLOAT_VECTOR_DRAWABLE(oz);
 
-        if(fscanf(f,"dr_Lxyz=(%lf;%lf;%lf)\n",&objects[m_objects].drawable.lx,&objects[m_objects].drawable.ly,&objects[m_objects].drawable.lz)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_Lxyz=(%f;%f;%f)\n",&objects[m_objects].drawable.lx,&objects[m_objects].drawable.ly,&objects[m_objects].drawable.lz)<3)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_type=%u\n",&objects[m_objects].drawable.type)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_radiance=%i\n",&objects[m_objects].drawable.radiance)<1)Log->AddLine("Ошибка чтения");
-        if(fscanf(f,"dr_ttr=(%lf;%lf;%f)\n",&objects[m_objects].drawable.transp,&objects[m_objects].drawable.transp_i,&objects[m_objects].drawable.refr)<3)Log->AddLine("Ошибка чтения");
-        if(fscanf(f,"dr_dist=(%i;%lf,%lf)\n",&objects[m_objects].drawable.dist_type,&objects[m_objects].drawable.dist_sigma,&objects[m_objects].drawable.dist_m)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_ttr=(%f;%f;%f)\n",&objects[m_objects].drawable.transp,&objects[m_objects].drawable.transp_i,&objects[m_objects].drawable.refr)<3)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_dist=(%i;%f,%f)\n",&objects[m_objects].drawable.dist_type,&objects[m_objects].drawable.dist_sigma,&objects[m_objects].drawable.dist_m)<3)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_rgb=(%hhu;%hhu;%hhu)\n",&objects[m_objects].drawable.rgb.s[0],&objects[m_objects].drawable.rgb.s[1],&objects[m_objects].drawable.rgb.s[2])<3)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_sided=%hhu\n",(uchar *)&objects[m_objects].drawable.sided)<1)Log->AddLine("Ошибка чтения");
 
