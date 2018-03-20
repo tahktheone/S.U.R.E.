@@ -31,20 +31,25 @@
 #define __SURE_VINT4 my_int4
 #define __SURE_MIN(A,B) (A<B?A:B)
 #define __SURE_MAX(A,B) (A>B?A:B)
+#define __SQRT(A) sqrt(A)
+#define M_1_PI_F 0.318309886183790671538f
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
 #define __DIVIDE(A,B) ((A)/(B))
+#define __INV(A) (1.0f/(A))
 #define __MAD(A,B,C) ((A)*(B)+(C))
 #define __XX s[0]
 #define __YY s[1]
 #define __ZZ s[2]
 
-//TracePoint = collision_point;
+#define SURE_PI 3.1415926536f
+#define SURE_PI2 1.570796327f
+
 #define SET_TRACE_POINT_MINUS \
-intersect_dist-=SURE_R_DELTA; \
+intersect_dist-=SURE_R_DELTA_GPU_FIX; \
 TracePoint = TracePoint + intersect_dist * TraceVector;
 
 #define SET_TRACE_POINT_PLUS \
-intersect_dist+=SURE_R_DELTA; \
+intersect_dist+=SURE_R_DELTA_GPU_FIX; \
 TracePoint = TracePoint + intersect_dist * TraceVector;
 
 #define __VERTEX_X(A) VrtxCLImg[A*4]
@@ -120,8 +125,9 @@ __GET_NORMAL3(P3,NormalIndex); \
         uint iix = ix; \
         uint iiy = iy+SURE_R_TEXRES*id; \
         uchar *tex = &Textures[SURE_R_TEXRES*4*iiy+4*iix]; \
-        DrawableCollided.radiance = *tex; tex++; \
-        DrawableCollided.dist_sigma = *tex/20.0;
+        tex++; \
+        DrawableCollided.dist_sigma = *tex/20.0; tex++; \
+        DrawableCollided.radiance = *tex;
 
 
 #define __GET_TEXTURE_UV(cm,id) \
@@ -136,7 +142,45 @@ __VTYPE map_px = __MESH_UV1_U(cm)+(__MESH_UV2_U(cm)-__MESH_UV1_U(cm))*u + \
                                   (__MESH_UV3_U(cm)-__MESH_UV1_U(cm))*v; \
 __VTYPE map_py = __MESH_UV1_V(cm)+(__MESH_UV2_V(cm)-__MESH_UV1_V(cm))*u + \
                                   (__MESH_UV3_V(cm)-__MESH_UV1_V(cm))*v; \
-__GET_ADVMAP(map_px,map_py,id); \
+__GET_ADVMAP(map_px,map_py,id);
+
+#if SURE_RLEVEL<60
+#define SURE_RANDOMIZE(CNR) CNR = collision_normal;
+#else
+#define SURE_RANDOMIZE(CNR) \
+    if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
+        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        __VTYPE3 RandomNormal; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+            RandomNormal.x = Randomf[r]*2.0f-1.0f; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+            RandomNormal.y = Randomf[r]*2.0f-1.0f; \
+        while((RandomNormal.x*RandomNormal.x+RandomNormal.y*RandomNormal.y)>1.0f){ \
+            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+                RandomNormal.x = Randomf[r]*2.0f-1.0f; \
+            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+                RandomNormal.y = Randomf[r]*2.0f-1.0f; \
+        }; \
+        RandomNormal.z = sqrt(1-RandomNormal.x*RandomNormal.x-RandomNormal.y*RandomNormal.y); \
+        CNR = collision_normal*RandomNormal.z+CollisionNormalOx*RandomNormal.x+CollisionNormalOy*RandomNormal.y; \
+        CNR = __NORMALIZE(CNR); \
+    }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
+        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        __VTYPE RotationAngle = Randomf[r]*2.0*SURE_PI; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        __VTYPE RandomEqualX = Randomf[r]; \
+        __VTYPE LeanAngle = erfc(RandomEqualX)*DrawableCollided.dist_sigma+DrawableCollided.dist_m; \
+        CNR = collision_normal*cos(LeanAngle)+ \
+              CollisionNormalOx*cos(RotationAngle)*sin(LeanAngle)+ \
+              CollisionNormalOy*sin(RotationAngle)*sin(LeanAngle); \
+        CNR = __NORMALIZE(CNR); \
+    }else{ \
+        CNR = collision_normal; \
+    };
+#endif
 
 #include <QtCore/QtCore>
 #include <QtCore/QThread>
@@ -202,7 +246,8 @@ __GET_ADVMAP(map_px,map_py,id); \
 const my_double3 operator*(my_double3 a, double b);
 const my_double3 operator*(double b, my_double3 a);
 const my_double3 operator*(double b, my_uchar3 a);
-const my_double3 operator-(my_double3 a, cl_float3 b);
+const my_double3 operator-(my_double3 b, cl_float3 a);
+const my_double3 operator+(cl_float3 a, my_double3 b);
 const cl_float3 operator-(cl_float3 a);
 my_double3& operator+=(my_double3 &a,const my_double3 &b);
 my_double3& operator-=(my_double3 &a,const my_double3 &b);

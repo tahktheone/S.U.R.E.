@@ -93,7 +93,6 @@ struct SureGPUData {
 #endif // GPU
 };
 
-__VTYPE3 PenVec(__VTYPE3 qqq);
 bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
 __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
@@ -133,18 +132,19 @@ if(lv_dr->advmap_id>=0){ \
     LocalCoordinates.y = dot(lv_dr->oy,VectorToCollision); \
     LocalCoordinates.z = dot(lv_dr->oz,VectorToCollision); \
     LocalCoordinates = __NORMALIZE(LocalCoordinates); \
-    COORDS.y = 0.5*(LocalCoordinates.z+1.0); \
-    if(LocalCoordinates.x>0){ \
-        COORDS.x = atan(LocalCoordinates.y/LocalCoordinates.x)/M_PI+0.5; \
+    COORDS.y = __MAD(0.5f,LocalCoordinates.z,0.5f); \
+    if(LocalCoordinates.x>0.0f){ \
+        COORDS.x = __MAD(atan2(LocalCoordinates.y,LocalCoordinates.x),M_1_PI_F,0.5f); \
     }else{ \
-        COORDS.x = atan(LocalCoordinates.y/LocalCoordinates.x)/M_PI+1.5; \
+        LocalCoordinates = -LocalCoordinates; \
+        COORDS.x = __MAD(atan2(LocalCoordinates.y,LocalCoordinates.x),M_1_PI_F,1.5f); \
     }; \
-    COORDS.x*=0.5;
+    COORDS.x*=0.5f;
 
 #define GET_TEXTURE_SQUARE \
 if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0)){ \
-    __VTYPE2 TextureCoordinates = {(__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.x+lv_dr->lx)/lv_dr->lx, \
-                                   (__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.y+lv_dr->ly)/lv_dr->ly}; \
+    __VTYPE2 TextureCoordinates = {__DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.x+lv_dr->lx),lv_dr->lx), \
+                                   __DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.y+lv_dr->ly),lv_dr->ly)}; \
     if(lv_dr->map_id>=0) \
     { \
         __GET_TEXTURE(TextureCoordinates.x, \
@@ -160,65 +160,25 @@ if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0)){ \
 };
 
 #define AABB_CHECK_AXIS(__A,__LA) \
-DistanceToSide = (lv_dr->__LA-LocalTracePoint.__A)/LocalTraceVector.__A; \
+DistanceToSide = __DIVIDE((lv_dr->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
 if((LocalTraceVector.__A)>0.0f){ \
     if(DistanceToSide<AABB_NearestOut) AABB_NearestOut = DistanceToSide; \
 }else{ \
     if(DistanceToSide>AABB_FarestIn) AABB_FarestIn = DistanceToSide; \
 }; \
-DistanceToSide = -(LocalTracePoint.__A+lv_dr->__LA)/LocalTraceVector.__A; \
+DistanceToSide = __DIVIDE((-lv_dr->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
 if(LocalTraceVector.__A<0.0f){ \
     if(DistanceToSide<AABB_NearestOut) AABB_NearestOut = DistanceToSide; \
 }else{ \
     if(DistanceToSide>AABB_FarestIn) AABB_FarestIn = DistanceToSide; \
 };
 
-// __VTYPE3 CollisionNormalOy = __NORMALIZE(PenVec(collision_normal));
-// __VTYPE3 CollisionNormalOy = cross(collision_normal,TraceVector);
-
-#if SURE_RLEVEL<60
-#define SURE_RANDOMIZE(CNR) CNR = collision_normal;
-#else
-#define SURE_RANDOMIZE(CNR) \
-    if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
-        __VTYPE3 CollisionNormalOy = __NORMALIZE(PenVec(collision_normal)); \
-        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
-        __VTYPE3 RandomNormal; \
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.x = Randomf[r]*2.0f-1.0f; \
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.y = Randomf[r]*2.0f-1.0f; \
-        while((RandomNormal.x*RandomNormal.x+RandomNormal.y*RandomNormal.y)>1.0f){ \
-            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-                RandomNormal.x = Randomf[r]*2.0f-1.0f; \
-            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-                RandomNormal.y = Randomf[r]*2.0f-1.0f; \
-        }; \
-        RandomNormal.z = sqrt(1-RandomNormal.x*RandomNormal.x-RandomNormal.y*RandomNormal.y); \
-        CNR = collision_normal*RandomNormal.z+CollisionNormalOx*RandomNormal.x+CollisionNormalOy*RandomNormal.y; \
-        CNR = __NORMALIZE(CNR); \
-    }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
-        __VTYPE3 CollisionNormalOy = __NORMALIZE(PenVec(collision_normal)); \
-        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-        __VTYPE RotationAngle = Randomf[r]*2.0*SURE_PI; \
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-        __VTYPE RandomEqualX = Randomf[r]; \
-        __VTYPE LeanAngle = erfc(RandomEqualX)*DrawableCollided.dist_sigma+DrawableCollided.dist_m; \
-        CNR = collision_normal*cos(LeanAngle)+ \
-              CollisionNormalOx*cos(RotationAngle)*sin(LeanAngle)+ \
-              CollisionNormalOy*sin(RotationAngle)*sin(LeanAngle); \
-        CNR = __NORMALIZE(CNR); \
-    }else{ \
-        CNR = collision_normal; \
-    };
-#endif
 
 #define SURE_MOLLER_TRUMBOR \
 pvec = cross(LocalTraceVector,LocalVertex3-LocalVertex1); \
 det = dot(LocalVertex2-LocalVertex1,pvec); \
 if(fabs(det)<0.0f) continue; \
-inv_det = 1.0f / det; \
+inv_det = __INV(det); \
 tvec = LocalTracePoint - LocalVertex1; \
 u = dot(tvec, pvec) * inv_det; \
 if (u < 0.0f || u > 1.0f ) continue; \

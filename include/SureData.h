@@ -38,6 +38,8 @@ struct SureObject
     char ModelName_drawable[20];
     SureDrawable drawable;
 
+    int DrawableGPUID = -1;
+
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -227,6 +229,20 @@ struct SureModelData
     char name[20];
 };
 
+struct SureTraceLogItem{
+    my_double3 TraceVector;
+    my_double3 TracePoint;
+    my_double3 CollisionNomal;
+    my_double3 IntersectDistance;
+    my_double3 Fade;
+    my_uchar3 Color;
+};
+
+struct SureTraceLog{
+    SureTraceLogItem Items[10];
+    uint ItemsCount = 0;
+};
+
 class SureData
 {
     public:
@@ -242,7 +258,6 @@ class SureData
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
         cl_float r_backlight = 0.5;
-        int r_drawdebug = 99;
         int r_type = SURE_RT_D;
 
         bool reset = true; // сброс кадра
@@ -290,6 +305,12 @@ class SureData
 
         // Для отладки
         float frametime = 0;
+        int r_drawdebug = 99;
+        SureTraceLog TraceLogs[10];
+        uint TraceLogsCount = 0;
+        int SelectedObject = -1;
+
+
     protected:
     private:
         void SetDefaultRotationBasis(int);

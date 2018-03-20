@@ -35,6 +35,7 @@ SureData::SureData()
         LoadModel("golem");
         GenModel("cube",0);
         GenModel("tetr",1);
+
 // Шаблонный объект
         TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
         TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
@@ -75,19 +76,19 @@ SureData::SureData()
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  Scene_box();
+  //Scene_box();
   //Scene_floor();
   //Scene_mirrors();
   //Scene_ManyTetrs();
 
-  //Scene_tetrs();
+  Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
   //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
 
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
   //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
-  Scene_golem();
+  //Scene_golem();
   //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
   //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }

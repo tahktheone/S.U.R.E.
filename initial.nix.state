@@ -1,12 +1,12 @@
-r_drawdebug=99
+r_drawdebug=69
 r_type=2
 r_iters=10
 r_rechecks=10
-r_backlight=0,500
+r_backlight=0,000
 paused=1
-CameraInfo.cam_x=(-119,1473;-8,3046;40,6137)
-CameraInfo.cam_vec=(0,9270;0,0025;-0,3751)
-CameraInfo.cam_upvec=(0,3700;-0,0083;0,9290)
+CameraInfo.cam_x=(-5,7859;112,8568;47,4009)
+CameraInfo.cam_vec=(0,0257;-0,9198;-0,3915)
+CameraInfo.cam_upvec=(-0,0308;-0,3921;0,9194)
 CameraInfo.xy_h=3,0000
 CameraInfo.subp_rnd=0
 Objects=316

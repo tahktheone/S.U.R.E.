@@ -17,13 +17,45 @@ void SureWidget::paintEvent(QPaintEvent * event)
     uchar* lv_pixel;
     delete image;
     image = new QImage(x,y,QImage::Format_ARGB32);
-    int my = image->rect().bottom();
-    int mx = image->rect().right();
     EngineData->CameraInfo.m_amx = rect().right()*SURE_FAA/SURE_SCALE;
     EngineData->CameraInfo.m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
     clock_gettime(CLOCK_MONOTONIC,&framestart);
     double lv_max = 0;
     double lv_med = 0;
+
+
+                //float* rgbmatrix = widget->rgbmatrix;
+                SureDrawable* Drawables = GPUData->Drawables;
+                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
+                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
+                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+
+
+            my_double3 CameraDX;
+            my_double3 CameraDY;
+            my_double3 CameraDZ;
+            my_double3 VectorFromPoint;
+            float DistanceToPoint;
+            my_double3 LocalPoint;
+            int my = image->rect().bottom();
+            int mx = image->rect().right();
+
+            #define CONVERT_TO_CAMERA_XY(I_GLOBAL_POINT,E_LOCAL_POINT,I_VISIBLE) \
+            CameraDY = -EngineData->CameraInfo.cam_upvec; \
+            CameraDZ = EngineData->CameraInfo.cam_vec; \
+            CameraDX = cross(CameraDZ,CameraDY); \
+            VectorFromPoint = EngineData->CameraInfo.cam_x-I_GLOBAL_POINT; \
+            DistanceToPoint = dot(CameraDZ,VectorFromPoint); \
+            if(DistanceToPoint<0.0f){ \
+                I_VISIBLE = true; \
+                E_LOCAL_POINT.x = mx/2 + mx*__DIVIDE(__DIVIDE(dot(CameraDX,VectorFromPoint),DistanceToPoint),EngineData->CameraInfo.xy_h); \
+                E_LOCAL_POINT.y = my/2 + mx*__DIVIDE(__DIVIDE(dot(CameraDY,VectorFromPoint),DistanceToPoint),EngineData->CameraInfo.xy_h); \
+            }else{ \
+                I_VISIBLE = false; \
+            };
+
     for(y=0;y<my;++y)for(x=0;x<mx;++x)
     {
         double l_m = lv_max;
@@ -203,30 +235,95 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p.setX(5);
             sprintf(s,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
             painter.drawText(p,s);
-            int l_x = QWidget::mapFromGlobal(QCursor::pos()).x();
-            int l_y = QWidget::mapFromGlobal(QCursor::pos()).y();
-            __VTYPE3 tv = DetermineTraceVector(l_x,l_y,&EngineData->CameraInfo);
-            __VTYPE3 tp = EngineData->CameraInfo.cam_x;
+            x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
+            y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            __VTYPE3 tv = DetermineTraceVector(x,y,&EngineData->CameraInfo);
+            //__VTYPE3 tp = EngineData->CameraInfo.cam_x;
             p.setY(rect().bottom()-15);
             p.setX(5);
             sprintf(s,"TV = (%.3f;%.3f;%.3f)",tv.x,tv.y,tv.z);
             painter.drawText(p,s);
+
+            EngineData->SelectedObject = -1;
+
+            #define __SELECT_OBJECT
+            #include <trace_common.c>
+            #undef __SELECT_OBJECT
+
             p.setY(rect().bottom()-5);
             p.setX(5);
-            sprintf(s,"TP = (%.3f;%.3f;%.3f)",tp.x,tp.y,tp.z);
+            sprintf(s,"SelectedObject = %i",EngineData->SelectedObject);
             painter.drawText(p,s);
-            #define __LOGGING
-                //float* rgbmatrix = widget->rgbmatrix;
-                SureDrawable* Drawables = GPUData->Drawables;
-                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
-                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
-                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
-                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
-            #include <trace_common.c>
-            #undef __LOGGING
+
         };
     };
+    if((EngineData->r_drawdebug>=50)&&EngineData->SelectedObject>=0)
+    {
+        QPoint DrawPoint1;
+        QPoint DrawPoint2;
+        QPoint DrawPoint3;
+        painter.setPen(Qt::white);
+        switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
+            case SURE_DR_MESH:
+                if(EngineData->objects[EngineData->SelectedObject].drawable.mesh_count>50){
+                    // рисуем OABB
+
+                }else{
+                    // рисуем все mesh'ы
+                    for(uint cm = 0;cm<EngineData->objects[EngineData->SelectedObject].drawable.mesh_count;++cm){
+                        uint MeshID = EngineData->objects[EngineData->SelectedObject].drawable.mesh_start + cm;
+                        __SURE_VINT4 MeshData;
+                        __VTYPE3 LocalVertex1;
+                        __VTYPE3 LocalVertex2;
+                        __VTYPE3 LocalVertex3;
+                        bool DrawPoint1Visible = false;
+                        bool DrawPoint2Visible = false;
+                        bool DrawPoint3Visible = false;
+                        __GET_MESH(MeshData,MeshID);
+                        __GET_VERTEX(LocalVertex1,MeshData.x);
+                        __GET_VERTEX(LocalVertex2,MeshData.y);
+                        __GET_VERTEX(LocalVertex3,MeshData.z);
+                        __VTYPE3 GlobalVertex1 = EngineData->objects[EngineData->SelectedObject].drawable.X
+                                                 + LocalVertex1.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
+                                                 + LocalVertex1.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
+                                                 + LocalVertex1.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
+                        __VTYPE3 GlobalVertex2 = EngineData->objects[EngineData->SelectedObject].drawable.X
+                                                 + LocalVertex2.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
+                                                 + LocalVertex2.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
+                                                 + LocalVertex2.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
+                        __VTYPE3 GlobalVertex3 = EngineData->objects[EngineData->SelectedObject].drawable.X
+                                                 + LocalVertex3.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
+                                                 + LocalVertex3.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
+                                                 + LocalVertex3.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
+                        CONVERT_TO_CAMERA_XY(GlobalVertex1,LocalPoint,DrawPoint1Visible);
+                        if(DrawPoint1Visible){
+                            DrawPoint1.setX(LocalPoint.x);
+                            DrawPoint1.setY(LocalPoint.y);
+                        };
+                        CONVERT_TO_CAMERA_XY(GlobalVertex2,LocalPoint,DrawPoint2Visible);
+                        if(DrawPoint2Visible){
+                            DrawPoint2.setX(LocalPoint.x);
+                            DrawPoint2.setY(LocalPoint.y);
+                        };
+                        CONVERT_TO_CAMERA_XY(GlobalVertex3,LocalPoint,DrawPoint3Visible);
+                        if(DrawPoint3Visible){
+                            DrawPoint3.setX(LocalPoint.x);
+                            DrawPoint3.setY(LocalPoint.y);
+                        };
+                        if(DrawPoint1Visible&&DrawPoint2Visible)
+                            painter.drawLine(DrawPoint1,DrawPoint2);
+                        if(DrawPoint2Visible&&DrawPoint3Visible)
+                            painter.drawLine(DrawPoint2,DrawPoint3);
+                        if(DrawPoint1Visible&&DrawPoint3Visible)
+                            painter.drawLine(DrawPoint3,DrawPoint1);
+                    };
+                };
+            break;
+            default:
+            break;
+        }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
+        painter.setPen(Qt::blue);
+    }; // if((EngineData->r_drawdebug>=50)&&EngineData->SelectedObject>=0)
     if(EngineData->r_drawdebug>=70)
     {
     for(int i = 0;i<EngineData->m_objects;++i)
@@ -237,97 +334,40 @@ void SureWidget::paintEvent(QPaintEvent * event)
         double dz = dot(dZ,vtc);
         if(dz<0)
         {
-            my_double3 dY = -(__VTYPE3)EngineData->CameraInfo.cam_upvec;
-            my_double3 dX = cross(dZ,dY);
-            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p1;
-            dz = dot(dZ,vtc);               // Локальные координаты
-            double lx = dot(dX,vtc)/dz;               // Локальные координаты
-            double ly = dot(dY,vtc)/dz;               // Локальные координаты
-            //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->CameraInfo.xy_h;
-            ly /= EngineData->CameraInfo.xy_h;
-            lx*=mx;
-            ly*=mx;
-            lx+=mx/2.0;
-            ly+=my/2.0;
+            bool P1Visible;
+            bool P2Visible;
+            bool P3Visible;
+            bool P4Visible;
             QPoint p1;
-            p1.setX(lx);
-            p1.setY(ly);
+            CONVERT_TO_CAMERA_XY(lv_o->p1,LocalPoint,P1Visible);
+            p1.setX(LocalPoint.x);
+            p1.setY(LocalPoint.y);
 
-            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p2;
-            dz = dot(dZ,vtc);               // Локальные координаты
-            lx = dot(dX,vtc)/dz;               // Локальные координаты
-            ly = dot(dY,vtc)/dz;               // Локальные координаты
-            //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->CameraInfo.xy_h;
-            ly /= EngineData->CameraInfo.xy_h;
-            lx*=mx;
-            ly*=mx;
-            lx+=mx/2.0;
-            ly+=my/2.0;
             QPoint p2;
-            p2.setX(lx);
-            p2.setY(ly);
-            if ((p1.x()>0&&p1.x()<mx)&&
-                (p2.x()>0&&p2.x()<mx)&&
-                (p1.y()>0&&p1.y()<my)&&
-                (p2.y()>0&&p2.y()<my))
+            CONVERT_TO_CAMERA_XY(lv_o->p2,LocalPoint,P2Visible);
+            p2.setX(LocalPoint.x);
+            p2.setY(LocalPoint.y);
+            if (P1Visible&&P2Visible)
                 painter.drawLine(p1,p2);
 
-            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p3;
-            dz = dot(dZ,vtc);               // Локальные координаты
-            lx = dot(dX,vtc)/dz;               // Локальные координаты
-            ly = dot(dY,vtc)/dz;               // Локальные координаты
-            //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->CameraInfo.xy_h;
-            ly /= EngineData->CameraInfo.xy_h;
-            lx*=mx;
-            ly*=mx;
-            lx+=mx/2.0;
-            ly+=my/2.0;
             QPoint p3;
-            p3.setX(lx);
-            p3.setY(ly);
-            if ((p1.x()>0&&p1.x()<mx)&&
-                (p3.x()>0&&p3.x()<mx)&&
-                (p1.y()>0&&p1.y()<my)&&
-                (p3.y()>0&&p3.y()<my))
+            CONVERT_TO_CAMERA_XY(lv_o->p3,LocalPoint,P3Visible);
+            p3.setX(LocalPoint.x);
+            p3.setY(LocalPoint.y);
+            if (P1Visible&&P3Visible)
                 painter.drawLine(p1,p3);
 
-            vtc = (__VTYPE3)EngineData->CameraInfo.cam_x-lv_o->p4;
-            dz = dot(dZ,vtc);               // Локальные координаты
-            lx = dot(dX,vtc)/dz;               // Локальные координаты
-            ly = dot(dY,vtc)/dz;               // Локальные координаты
-            //kx = GPUData->xy_h*(x+rx-mx/2.0)/mx;
-            lx /= EngineData->CameraInfo.xy_h;
-            ly /= EngineData->CameraInfo.xy_h;
-            lx*=mx;
-            ly*=mx;
-            lx+=mx/2.0;
-            ly+=my/2.0;
             QPoint p4;
-            p4.setX(lx);
-            p4.setY(ly);
-            if ((p1.x()>0&&p1.x()<mx)&&
-                (p4.x()>0&&p4.x()<mx)&&
-                (p1.y()>0&&p1.y()<my)&&
-                (p4.y()>0&&p4.y()<my))
+            CONVERT_TO_CAMERA_XY(lv_o->p4,LocalPoint,P4Visible);
+            p4.setX(LocalPoint.x);
+            p4.setY(LocalPoint.y);
+            if (P1Visible&&P4Visible)
                 painter.drawLine(p1,p4);
-
-            if ((p2.x()>0&&p2.x()<mx)&&
-                (p3.x()>0&&p3.x()<mx)&&
-                (p2.y()>0&&p2.y()<my)&&
-                (p3.y()>0&&p3.y()<my))
+            if (P2Visible&&P4Visible)
                 painter.drawLine(p2,p3);
-            if ((p2.x()>0&&p2.x()<mx)&&
-                (p4.x()>0&&p4.x()<mx)&&
-                (p2.y()>0&&p2.y()<my)&&
-                (p4.y()>0&&p4.y()<my))
+            if (P2Visible&&P4Visible)
                 painter.drawLine(p2,p4);
-            if ((p3.x()>0&&p3.x()<mx)&&
-                (p4.x()>0&&p4.x()<mx)&&
-                (p3.y()>0&&p3.y()<my)&&
-                (p4.y()>0&&p4.y()<my))
+            if (P3Visible&&P4Visible)
                 painter.drawLine(p3,p4);
         };// dz>0
     };
@@ -625,5 +665,25 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             uint o = EngineData->CreateObjectFromTemplate(&X);
             EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
         };
-    }; // if mousemove
-};
+    }else{ // if mousemove
+        if (event->button() == Qt::LeftButton) {
+
+            int x = rect().right();
+            int y = rect().bottom();
+
+            #define __LOGGING
+                //float* rgbmatrix = widget->rgbmatrix;
+                SureDrawable* Drawables = GPUData->Drawables;
+                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
+                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
+                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+            #include <trace_common.c>
+            #undef __LOGGING
+
+            if(++EngineData->TraceLogsCount>=10)
+                EngineData->TraceLogsCount=0;
+        }; // (event->button() == Qt::LeftButton)
+    }; // if !mousemove
+}; // mousePressEvent

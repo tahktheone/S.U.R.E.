@@ -11,6 +11,9 @@
 #define __SURE_UINT4 uint4
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
+#define __SQRT(A) native_sqrt(A)
+#define SURE_PI M_PI_F
+#define SURE_PI2 M_PI_2_F
 #define __DIVIDE(A,B) native_divide((A),(B))
 #define __MAD(A,B,C) fma(A,B,C)
 //#define __MAD(A,B,C) (A*B+C)
@@ -76,11 +79,11 @@ coords.x++; \
 v1.xy = read_imagef(UVMap,smpVertex,coords).xy; \
 coords.x++; \
 v2.xy = read_imagef(UVMap,smpVertex,coords).xy; \
-map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
+map_uv = fma((v2-v0),v,fma((v1-v0),u,v0)); \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 col_rgba = read_imageui(Textures,smpTex,map_uv); \
-DrawableCollided.transp = 1.01 - native_divide(col_rgba.w,255.0f); \
+DrawableCollided.transp = 1.01f - native_divide(col_rgba.w,255.0f); \
 DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
@@ -96,7 +99,7 @@ coords.x++; \
 v1.xy = read_imagef(UVMap,smpVertex,coords).xy; \
 coords.x++; \
 v2.xy = read_imagef(UVMap,smpVertex,coords).xy; \
-map_uv = v0+(v1-v0)*u+(v2-v0)*v; \
+map_uv = fma((v2-v0),v,fma((v1-v0),u,v0)); \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 advmap = read_imageui(Textures,smpTex,map_uv); \
@@ -107,6 +110,46 @@ DrawableCollided.dist_sigma = native_divide(advmap.y,100.0f);
 
 #include <SureGPUData.h>
 #include <func_common.c>
+
+#if SURE_RLEVEL<60
+#define SURE_RANDOMIZE(CNR) CNR = collision_normal;
+#else
+#define SURE_RANDOMIZE(CNR) \
+    if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
+        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        __VTYPE3 RandomNormal; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+            RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+            RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
+        while(fma(RandomNormal.x,RandomNormal.x,RandomNormal.y*RandomNormal.y)>1.0f){ \
+            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+                RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
+            if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+                RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
+        }; \
+        RandomNormal.z = native_sqrt(fma(-RandomNormal.y,RandomNormal.y,fma(-RandomNormal.x,RandomNormal.x,1))); \
+        CNR = fma(collision_normal,RandomNormal.z,fma(CollisionNormalOx,RandomNormal.x,CollisionNormalOy*RandomNormal.y)); \
+        CNR = __NORMALIZE(CNR); \
+    }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
+        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        __VTYPE RotationAngle = Randomf[r]*2.0f*SURE_PI; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        __VTYPE RandomEqualX = Randomf[r]; \
+        __VTYPE LeanAngle = fma(erfc(RandomEqualX),DrawableCollided.dist_sigma,DrawableCollided.dist_m); \
+        CNR = fma(collision_normal,native_cos(LeanAngle), \
+              fma(CollisionNormalOx,native_cos(RotationAngle)*native_sin(LeanAngle), \
+              CollisionNormalOy*native_sin(RotationAngle)*native_sin(LeanAngle))); \
+        CNR = __NORMALIZE(CNR); \
+    }else{ \
+        CNR = collision_normal; \
+    };
+#endif
 
 __kernel
 __attribute__((vec_type_hint(float3),work_group_size_hint(16,16,1)))

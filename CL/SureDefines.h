@@ -72,8 +72,6 @@
 #define SURE_D_NORM 2
 #define SURE_D_NONE 3
 
-#define SURE_PI 3.1415926536f
-#define SURE_PI2 1.570796327f
 #define SURE_P4_X 0.577350269f
 #define SURE_P4_Y 0.288675135f
 #define SURE_P4_Z 0.816496581f

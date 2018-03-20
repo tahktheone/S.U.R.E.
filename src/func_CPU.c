@@ -60,6 +60,9 @@ const my_double3 operator*(double b, my_uchar3 a)
 const my_double3 operator-(my_double3 a, cl_float3 b)
 { return my_double3(a.x-b.s[0],a.y-b.s[1],a.z-b.s[2]); };
 
+const my_double3 operator+(cl_float3 b, my_double3 a)
+{ return my_double3(a.x+b.s[0],a.y+b.s[1],a.z+b.s[2]); };
+
 my_double3& operator+=(my_double3 &a,const my_double3 &b)
 { a.x+=b.x;a.y+=b.y;a.z+=b.z; return a; }
 

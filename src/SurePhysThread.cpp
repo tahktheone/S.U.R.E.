@@ -1389,6 +1389,8 @@ delete l_image;
         {
             my_double3 dx1;
             my_double3 dz1;
+            my_double3 dy1;
+
             cl_double c0 = cos(EngineData->cam_dw.x);
             cl_double s0 = sin(EngineData->cam_dw.x);
             cl_double c1 = cos(EngineData->cam_dw.y);
@@ -1397,9 +1399,12 @@ delete l_image;
             cl_double s2 = sin(EngineData->cam_dw.z);
             dx1 = dx*c2+dy*s2+dz*s1;
             dz1 = dz*c1-dx*(s1*c0)+dy*(c2*s0)-dx*(s2*s0);
+            dy1 = __NORMALIZE(cross(dz1,dx1));
 
-            EngineData->CameraInfo.cam_upvec = __NORMALIZE(dz1);
-            EngineData->CameraInfo.cam_vec = __NORMALIZE(dx1);
+            dx1 = __NORMALIZE(dx1);
+            dz1 = __NORMALIZE(cross(dx1,dy1));
+            EngineData->CameraInfo.cam_upvec = dz1;
+            EngineData->CameraInfo.cam_vec = dx1;
 
             EngineData->reset = true;
         };
@@ -1462,7 +1467,6 @@ void SurePhysThread::drawscene()
     GPUData->Drawables[i].sided = true;
     GPUData->m_drawables++;
 
-
     for(int d = 0;d<EngineData->m_objects;++d)
     {
         EngineData->objects[d].drawable.X = EngineData->objects[d].X;
@@ -1473,21 +1477,25 @@ void SurePhysThread::drawscene()
         EngineData->objects[d].drawable.oy = EngineData->objects[d].oy;
         EngineData->objects[d].drawable.oz = EngineData->objects[d].oz;
 
+        EngineData->objects[d].DrawableGPUID = -1;
+
         switch(EngineData->objects[d].type){
             case SURE_OBJ_SPHERE:
             {
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;
                 GPUData->Drawables[i].lx = 0.95*EngineData->objects[d].lx;
                 GPUData->m_drawables++;
+                EngineData->objects[d].DrawableGPUID = i;
                 break;
             };
             default:
             {
-                GPUData->Drawables[++i] = EngineData->objects[d].drawable;
-                if(GPUData->Drawables[i].type==SURE_DR_MESH){
-                    GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_start;
-                    GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_count;
+                if(EngineData->objects[d].drawable.type==SURE_DR_MESH){
+                    EngineData->objects[d].drawable.mesh_start = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_start;
+                    EngineData->objects[d].drawable.mesh_count = EngineData->ModelsInfo[EngineData->objects[d].ModelID_drawable].mesh_count;
                 };
+                GPUData->Drawables[++i] = EngineData->objects[d].drawable;
+                EngineData->objects[d].DrawableGPUID = i;
                 GPUData->m_drawables++;
                 break;
             };

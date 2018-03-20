@@ -176,8 +176,8 @@ __VTYPE3 X;
         X.x = 160.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 160.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 160.0 * cos(VerticalAngle);// * cos(VerticalAngle);
         __VTYPE3 vec = -X;
         TemplateObject.oz = __NORMALIZE(vec);
-        TemplateObject.ox = PenVec(TemplateObject.oz);
-        TemplateObject.ox = __NORMALIZE(TemplateObject.ox);
+        __VTYPE3 Oy = {-TemplateObject.oz.z,0.0f,-TemplateObject.oz.x};
+        TemplateObject.ox = __NORMALIZE(Oy);
         TemplateObject.oy = cross(TemplateObject.oz,TemplateObject.ox);
         CreateObjectFromTemplate(&X);
     };
@@ -241,8 +241,8 @@ __VTYPE3 X;
         X.x = 130.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 130.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 130.0 * cos(VerticalAngle);// * cos(VerticalAngle);
         __VTYPE3 vec = -X;
         TemplateObject.oz = __NORMALIZE(vec);
-        TemplateObject.ox = PenVec(TemplateObject.oz);
-        TemplateObject.ox = __NORMALIZE(TemplateObject.ox);
+        __VTYPE3 Oy = {-TemplateObject.oz.z,0.0f,-TemplateObject.oz.x};
+        TemplateObject.ox = __NORMALIZE(Oy);
         TemplateObject.oy = cross(TemplateObject.oz,TemplateObject.ox);
         CreateObjectFromTemplate(&X);
     };
@@ -285,7 +285,7 @@ __VTYPE3 X;
     TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
 
     TemplateObject.drawable.refr = 1.01; // Коэффициент преломления
-    //TemplateObject.drawable.dist_type = SURE_D_NORM; // тип рандомизации
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
     TemplateObject.drawable.dist_sigma = 3.0; // sigma рандомизации
 
 
