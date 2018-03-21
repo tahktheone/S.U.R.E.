@@ -28,11 +28,17 @@ SureData::SureData()
         LoadTexture("earth_adv");
         LoadTexture("colstones");
         LoadTexture("golem");
+        LoadTexture("ghost_dark");
         LoadTexture("golem_adv");
         LoadTexture("earth");
         LoadTexture("test_adv");
 
+        LoadModel("test");
+
         LoadModel("golem");
+        LoadModel("teapot");
+        LoadModel("monkey");
+        LoadModel("ghost_dark");
         GenModel("cube",0);
         GenModel("tetr",1);
 
@@ -80,6 +86,8 @@ SureData::SureData()
   //Scene_floor();
   //Scene_mirrors();
   //Scene_ManyTetrs();
+
+  //Scene_ManySpheres();
 
   Scene_tetrs();
   //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);

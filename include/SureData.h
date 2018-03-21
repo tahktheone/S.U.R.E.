@@ -233,13 +233,16 @@ struct SureTraceLogItem{
     my_double3 TraceVector;
     my_double3 TracePoint;
     my_double3 CollisionNomal;
-    my_double3 IntersectDistance;
+    float IntersectDistance;
     my_double3 Fade;
     my_uchar3 Color;
+    my_double3 NormalRandomized;
+    int iter;
+    int rechecks;
 };
 
 struct SureTraceLog{
-    SureTraceLogItem Items[10];
+    SureTraceLogItem Items[20];
     uint ItemsCount = 0;
 };
 
@@ -306,7 +309,7 @@ class SureData
         // Для отладки
         float frametime = 0;
         int r_drawdebug = 99;
-        SureTraceLog TraceLogs[10];
+        SureTraceLog TraceLogs[50];
         uint TraceLogsCount = 0;
         int SelectedObject = -1;
 
@@ -325,6 +328,7 @@ class SureData
         void Scene_tetrs(); // Пол и светильник -- тетраэдры
         void Scene_golem();
         void Scene_ManyTetrs();
+        void Scene_ManySpheres();
         //void Scene_metaball(double x, double y, double z, double sz,int nt);
         //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
         //void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);

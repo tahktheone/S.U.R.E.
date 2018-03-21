@@ -36,7 +36,6 @@ void SureData::LoadModel(const char* name)
         mincoords.z = SURE_R_MAXDISTANCE;
 
         wchar_t curr_c;
-        curr_c = fgetwc(fl);
         wchar_t curr_type;
         curr_type = *L" ";
 
@@ -53,13 +52,14 @@ void SureData::LoadModel(const char* name)
         int l_sig;
 
         bool l_fract_on;
-        //bool l_flush;
+        bool number_found;
 
         l_fract = 0;
         l_int = 0;
         l_fract_div = 1;
         //l_int_mul = 1;
         l_fract_on = false;
+        number_found = false;
         l_num = 0;
         l_sig = 1;
 
@@ -75,6 +75,7 @@ void SureData::LoadModel(const char* name)
                 //l_int_mul = 1;
                 l_sig = 1;
                 l_fract_on = false;
+                number_found = false;
             };
             if((curr_type==*L"v")&&(curr_c==*L"t")){
                 curr_type=*L"t";
@@ -119,7 +120,7 @@ void SureData::LoadModel(const char* name)
                         vt[tcoords].z = ((double) l_int + (double) l_fract / (double)l_fract_div)*(double)l_sig;
                     };
                 };
-                if(l_int>0||l_fract>0)
+                if(number_found)
                     ++l_group_index;
                 if((l_group_index==3)&&(curr_type==*L"f")&&(curr_c==*L" ")){
                     faces++;
@@ -141,6 +142,7 @@ void SureData::LoadModel(const char* name)
                 //l_int_mul = 1;
                 l_vector_index = 0;
                 l_fract_on = false;
+                number_found = false;
             };
             if(curr_c==*L"\n"){
                 if(curr_type==*L"v"){
@@ -171,6 +173,7 @@ void SureData::LoadModel(const char* name)
                 l_fract_div = 1;
                 //l_int_mul = 1;
                 l_fract_on = false;
+                number_found = false;
                 l_sig = 1;
             };
             if(curr_c==*L"/"){
@@ -180,6 +183,7 @@ void SureData::LoadModel(const char* name)
                 l_fract = 0;
                 l_int = 0;
                 l_fract_div = 1;
+                number_found = false;
                 //l_int_mul = 1;
                 l_sig = 1;
                 ++l_vector_index;
@@ -194,6 +198,7 @@ void SureData::LoadModel(const char* name)
             if((curr_c==*L"1")||(curr_c==*L"2")||(curr_c==*L"3")||(curr_c==*L"4")||
                (curr_c==*L"5")||(curr_c==*L"6")||(curr_c==*L"7")||(curr_c==*L"8")||
                (curr_c==*L"9")||(curr_c==*L"0")){
+               number_found = true;
                 if(curr_c==*L"1")l_num=1;
                 if(curr_c==*L"2")l_num=2;
                 if(curr_c==*L"3")l_num=3;
@@ -223,7 +228,7 @@ void SureData::LoadModel(const char* name)
         for(int i = 1;i<vertexes;++i)
         {
             v[i] -= (maxcoords+mincoords)*0.5; // сдвигаем в центр
-            my_double3 absdist = (maxcoords-mincoords)*0.5;
+            my_double3 absdist = (maxcoords-mincoords)*0.5f;
             double maxdist = __SURE_MAX(__SURE_MAX(absdist.x,absdist.y),absdist.z);
             v[i].x = v[i].x/maxdist;
             v[i].y = v[i].y/maxdist;
@@ -236,20 +241,20 @@ void SureData::LoadModel(const char* name)
                 int m = AddMesh(vstart+f[i][0][0],vstart+f[i][1][0],vstart+f[i][2][0]);
                 if(f[i][0][1]>=0)
                 {
-                    __MESH_UV1_U(m) = vt[f[i][0][1]].x*SURE_R_TEXRES;
-                    __MESH_UV1_V(m) = vt[f[i][0][1]].y*SURE_R_TEXRES;
+                    __MESH_UV1_U(m) = vt[f[i][0][1]].x*(float)SURE_R_TEXRES;
+                    __MESH_UV1_V(m) = vt[f[i][0][1]].y*(float)SURE_R_TEXRES;
                 };
                 if(f[i][1][1]>=0)
                 {
-                    __MESH_UV2_U(m) = vt[f[i][1][1]].x*SURE_R_TEXRES;
-                    __MESH_UV2_V(m) = vt[f[i][1][1]].y*SURE_R_TEXRES;
+                    __MESH_UV2_U(m) = vt[f[i][1][1]].x*(float)SURE_R_TEXRES;
+                    __MESH_UV2_V(m) = vt[f[i][1][1]].y*(float)SURE_R_TEXRES;
                 };
                 if(f[i][2][1]>=0)
                 {
-                    __MESH_UV3_U(m) = vt[f[i][2][1]].x*SURE_R_TEXRES;
-                    __MESH_UV3_V(m) = vt[f[i][2][1]].y*SURE_R_TEXRES;
+                    __MESH_UV3_U(m) = vt[f[i][2][1]].x*(float)SURE_R_TEXRES;
+                    __MESH_UV3_V(m) = vt[f[i][2][1]].y*(float)SURE_R_TEXRES;
                 };
-                if(f[i][0][2]>=0) // Нормали заданы
+                if((f[i][0][2]+f[i][1][2]+f[i][2][2])>0) // Нормали заданы
                 {
                     __NORMAL1_X(m) = vn[f[i][0][2]].x;
                     __NORMAL1_Y(m) = vn[f[i][0][2]].y;
@@ -505,9 +510,9 @@ SureObject *SureData::ObjByID(uint i_id)
 
 int SureData::AddVertex(double x, double y, double z)
 {
-    __VERTEX_X(cur_vertexes) = x;
-    __VERTEX_Y(cur_vertexes) = y;
-    __VERTEX_Z(cur_vertexes) = z;
+    __VERTEX_X(cur_vertexes) = (float) x;
+    __VERTEX_Y(cur_vertexes) = (float) y;
+    __VERTEX_Z(cur_vertexes) = (float) z;
     ++cur_vertexes;
     return cur_vertexes-1;
 };

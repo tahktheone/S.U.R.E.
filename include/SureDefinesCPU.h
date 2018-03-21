@@ -2,7 +2,7 @@
 #define SURE_RLEVEL 100
 /*
 Отключается рассеивание средой <= 90
-Максимум отражений - 2   < 70
+Максимум отражений - 4   < 70
 Если не зеркало - освещение на 100% камерой < 60
 (к предыдущему - яркость источников света*255) < 60
 (режим 2)
@@ -45,38 +45,42 @@
 #define SURE_PI2 1.570796327f
 
 #define SET_TRACE_POINT_MINUS \
-intersect_dist-=SURE_R_DELTA_GPU_FIX; \
-TracePoint = TracePoint + intersect_dist * TraceVector;
+TracePoint = collision_point;
+
+//intersect_dist-=SURE_R_DELTA_GPU_FIX;
+//TracePoint = TracePoint + intersect_dist * TraceVector;
 
 #define SET_TRACE_POINT_PLUS \
-intersect_dist+=SURE_R_DELTA_GPU_FIX; \
-TracePoint = TracePoint + intersect_dist * TraceVector;
+TracePoint = collision_point;
 
-#define __VERTEX_X(A) VrtxCLImg[A*4]
-#define __VERTEX_Y(A) VrtxCLImg[A*4+1]
-#define __VERTEX_Z(A) VrtxCLImg[A*4+2]
+//intersect_dist+=SURE_R_DELTA_GPU_FIX;
+//TracePoint = TracePoint + intersect_dist * TraceVector;
+
+#define __VERTEX_X(A) VrtxCLImg[(A)*4]
+#define __VERTEX_Y(A) VrtxCLImg[(A)*4+1]
+#define __VERTEX_Z(A) VrtxCLImg[(A)*4+2]
 #define __VERTEX_SET(A,B) __VERTEX_X(A) = B.x; __VERTEX_Y(A) = B.y;  __VERTEX_Z(A) = B.z;
-#define __MESH_V1(i) MeshCLImg[i*CLSIZE_VERTEX_DIM  ]
-#define __MESH_V2(i) MeshCLImg[i*CLSIZE_VERTEX_DIM+1]
-#define __MESH_V3(i) MeshCLImg[i*CLSIZE_VERTEX_DIM+2]
+#define __MESH_V1(i) MeshCLImg[(i)*CLSIZE_VERTEX_DIM  ]
+#define __MESH_V2(i) MeshCLImg[(i)*CLSIZE_VERTEX_DIM+1]
+#define __MESH_V3(i) MeshCLImg[(i)*CLSIZE_VERTEX_DIM+2]
 
-#define __MESH_UV1_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
-#define __MESH_UV2_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
-#define __MESH_UV3_U(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
+#define __MESH_UV1_U(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
+#define __MESH_UV2_U(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
+#define __MESH_UV3_U(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
 
-#define __MESH_UV1_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
-#define __MESH_UV2_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
-#define __MESH_UV3_V(i) UVMap[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
+#define __MESH_UV1_V(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
+#define __MESH_UV2_V(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
+#define __MESH_UV3_V(i) UVMap[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
 
-#define __NORMAL1_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
-#define __NORMAL2_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
-#define __NORMAL3_X(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
-#define __NORMAL1_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
-#define __NORMAL2_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
-#define __NORMAL3_Y(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
-#define __NORMAL1_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 2]
-#define __NORMAL2_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 2]
-#define __NORMAL3_Z(i) Normals[i*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 2]
+#define __NORMAL1_X(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                    ]
+#define __NORMAL2_X(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM]
+#define __NORMAL3_X(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM]
+#define __NORMAL1_Y(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 1]
+#define __NORMAL2_Y(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 1]
+#define __NORMAL3_Y(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 1]
+#define __NORMAL1_Z(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM                     + 2]
+#define __NORMAL2_Z(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 1*CLSIZE_MESH_DIM + 2]
+#define __NORMAL3_Z(i) Normals[(i)*CLSIZE_VERTEX_DIM*CLSIZE_MESH_DIM + 2*CLSIZE_MESH_DIM + 2]
 
 #define __GET_NORMAL1(P,VID) \
         P.x = __NORMAL1_X(VID); \
@@ -149,7 +153,15 @@ __GET_ADVMAP(map_px,map_py,id);
 #else
 #define SURE_RANDOMIZE(CNR) \
     if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = __NORMALIZE(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         __VTYPE3 RandomNormal; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
@@ -166,13 +178,21 @@ __GET_ADVMAP(map_px,map_py,id);
         CNR = collision_normal*RandomNormal.z+CollisionNormalOx*RandomNormal.x+CollisionNormalOy*RandomNormal.y; \
         CNR = __NORMALIZE(CNR); \
     }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = __NORMALIZE(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RotationAngle = Randomf[r]*2.0*SURE_PI; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RandomEqualX = Randomf[r]; \
-        __VTYPE LeanAngle = erfc(RandomEqualX)*DrawableCollided.dist_sigma+DrawableCollided.dist_m; \
+        __VTYPE LeanAngle = erf(RandomEqualX)*DrawableCollided.dist_sigma+DrawableCollided.dist_m; \
         CNR = collision_normal*cos(LeanAngle)+ \
               CollisionNormalOx*cos(RotationAngle)*sin(LeanAngle)+ \
               CollisionNormalOy*sin(RotationAngle)*sin(LeanAngle); \

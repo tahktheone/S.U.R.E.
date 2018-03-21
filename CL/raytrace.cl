@@ -117,14 +117,21 @@ DrawableCollided.dist_sigma = native_divide(advmap.y,100.0f);
 #else
 #define SURE_RANDOMIZE(CNR) \
     if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
-        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = fast_normalize(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         __VTYPE3 RandomNormal; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
+        RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
+        RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
         while(fma(RandomNormal.x,RandomNormal.x,RandomNormal.y*RandomNormal.y)>1.0f){ \
             if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
                 RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
@@ -135,14 +142,21 @@ DrawableCollided.dist_sigma = native_divide(advmap.y,100.0f);
         CNR = fma(collision_normal,RandomNormal.z,fma(CollisionNormalOx,RandomNormal.x,CollisionNormalOy*RandomNormal.y)); \
         CNR = __NORMALIZE(CNR); \
     }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
-        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = fast_normalize(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RotationAngle = Randomf[r]*2.0f*SURE_PI; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RandomEqualX = Randomf[r]; \
-        __VTYPE LeanAngle = fma(erfc(RandomEqualX),DrawableCollided.dist_sigma,DrawableCollided.dist_m); \
+        __VTYPE LeanAngle = fma(erf(RandomEqualX),DrawableCollided.dist_sigma,DrawableCollided.dist_m); \
         CNR = fma(collision_normal,native_cos(LeanAngle), \
               fma(CollisionNormalOx,native_cos(RotationAngle)*native_sin(LeanAngle), \
               CollisionNormalOy*native_sin(RotationAngle)*native_sin(LeanAngle))); \
@@ -182,6 +196,7 @@ uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
+//TracePoint = collision_point;
 #define SET_TRACE_POINT_MINUS \
 intersect_dist-=SURE_R_DELTA_GPU_FIX; \
 TracePoint = fma(intersect_dist,TraceVector,TracePoint);

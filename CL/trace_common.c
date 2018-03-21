@@ -29,8 +29,13 @@
     uint MaximumIterrations = GPUData->r_maxiters;
     uint MaximumRechecks = GPUData->r_rechecks;
     #if SURE_RLEVEL<70
-        MaximumIterrations = 2;
+        MaximumIterrations = 4;
     #endif // SURE_RLEVEL
+
+    #ifdef __LOGGING
+        SureTraceLog *TraceLog = &EngineData->TraceLogs[EngineData->TraceLogsCount];
+        TraceLog->ItemsCount = 0;
+    #endif // __LOGGING
 
     for(uint Iterration = 0;Iterration<MaximumIterrations;Iterration++)
     {
@@ -53,14 +58,39 @@
 
         for(int DrawablesIndex=1;DrawablesIndex<GPUData->m_drawables;++DrawablesIndex)
         {
+            #ifdef __LOGGING
+                TraceLog->Items[TraceLog->ItemsCount].TraceVector = TraceVector;
+                TraceLog->Items[TraceLog->ItemsCount].TracePoint = TracePoint;
+            #endif // __LOGGING
             lv_dr = &Drawables[DrawablesIndex];
             switch(lv_dr->type)
             {
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
-                    if(RayAndSphereCollided(TracePoint,TraceVector,lv_dr->X,lv_dr->lx,&InSphere,&intersect_dist))
-                    {
+
+                    __VTYPE3 VectorToCenter = TracePoint-lv_dr->X;
+                    __VTYPE B = dot(VectorToCenter,TraceVector);
+                    __VTYPE C = __MAD(-lv_dr->lx,lv_dr->lx,dot(VectorToCenter,VectorToCenter));
+                    __VTYPE D = __MAD(B,B,-C);
+                    __VTYPE2 t;
+
+                    if(D<0.0f)break;
+                        __VTYPE kd = __SQRT(D);
+                        __VTYPE t1 = -B+kd;
+                        __VTYPE t2 = -B-kd;
+                        t.x = __SURE_MIN(t1,t2);
+                        t.y = __SURE_MAX(t1,t2);
+                        if(t.x>intersect_dist) break; // отсеиваем случаи когда ближайшая точка сферы дальше чем текущий intersect_dist
+                        if(t.y<SURE_R_DELTA) break; // отсеиваем случаи когда сфера "сзади"
+                        InSphere = t.x<SURE_R_DELTA ? true : false; // определяем мы внутри или снаружи
+                        if(InSphere){
+                            if(t.y<SURE_R_DELTA)break;
+                            if(t.y>intersect_dist)break;
+                            intersect_dist = t.y;//-SURE_R_DELTA_GPU_FIX;
+                        }else{
+                            intersect_dist = t.x;//-SURE_R_DELTA_GPU_FIX;
+                        };
                        if(lv_dr->sided||!InSphere)
                        {
                            col = lv_dr;
@@ -96,12 +126,10 @@
                         }; // if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0))
                         if(InSphere)
                         {
-                            collision_normal = lv_dr->X - collision_point;
+                            collision_normal = __NORMALIZE(lv_dr->X - collision_point);
                         }else{
-                            collision_normal = collision_point - lv_dr->X;
+                            collision_normal = __NORMALIZE(collision_point - lv_dr->X);
                         };
-                        collision_normal = __NORMALIZE(collision_normal);
-                    }; // if(RayAndSphereCollided)
                     break;
                 }; // Сфера
 
@@ -215,7 +243,7 @@
 
                     // SURE_R_DELTA тоже должна подгоняться под локальные размеры
                     // чтобы избежать искажений в мелких деталях
-                    __VTYPE LocalRenderDelta = __DIVIDE(SURE_R_DELTA,ResizingKoeff);
+                    __VTYPE LocalRenderDelta = SURE_R_DELTA*ResizingKoeff;
 
                     for(uint MeshIndex = 0;MeshIndex<lv_dr->mesh_count;++MeshIndex)
                     { // Для каждой meshины
@@ -323,6 +351,12 @@
         };
         #endif // SURE_RLEVEL>90
 
+        #ifdef __LOGGING
+            TraceLog->Items[TraceLog->ItemsCount].CollisionNomal = collision_normal;
+            TraceLog->Items[TraceLog->ItemsCount].IntersectDistance = intersect_dist;
+            TraceLog->Items[TraceLog->ItemsCount].iter = Iterration;
+        #endif // __LOGGING
+
          // луч улетел в никуда -- выходим из цикла
         if(!collision_found)break;
 
@@ -350,6 +384,14 @@
                 TraceColor.y += TraceFade.y*DrawableCollided.rgb.__YY;
                 TraceColor.z += TraceFade.z*DrawableCollided.rgb.__ZZ;
             #endif // SURE_RLEVEL<60
+            #ifdef __LOGGING
+                TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                TraceLog->Items[TraceLog->ItemsCount].Color.x = DrawableCollided.rgb.__XX;
+                TraceLog->Items[TraceLog->ItemsCount].Color.y = DrawableCollided.rgb.__YY;
+                TraceLog->Items[TraceLog->ItemsCount].Color.z = DrawableCollided.rgb.__ZZ;
+                TraceLog->Items[TraceLog->ItemsCount].rechecks = 0;
+                ++TraceLog->ItemsCount;
+            #endif // __LOGGING
             break;
         };
 
@@ -402,6 +444,11 @@
                                 TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
                                 TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
                                 TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
+                                #ifdef __LOGGING
+                                    TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                                    TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
+                                    ++TraceLog->ItemsCount;
+                                #endif // __LOGGING
                             };// // результат отражение направлен от плоскости
                         }else{ // преломление
                             SET_TRACE_POINT_PLUS;
@@ -415,6 +462,12 @@
                                 TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
                                 TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
                                 TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
+                                #ifdef __LOGGING
+                                    TraceLog->Items[TraceLog->ItemsCount].NormalRandomized = CollisionNormalRandomized;
+                                    TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                                    TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
+                                    ++TraceLog->ItemsCount;
+                                #endif // __LOGGING
                             #if SURE_RLEVEL>90
                             };
                             #endif // SURE_RLEVEL>90
@@ -430,6 +483,12 @@
                         TraceColor.x = TraceFade.x*shade*DrawableCollided.rgb.__XX;
                         TraceColor.y = TraceFade.y*shade*DrawableCollided.rgb.__YY;
                         TraceColor.z = TraceFade.z*shade*DrawableCollided.rgb.__ZZ;
+                        #ifdef __LOGGING
+                            TraceLog->Items[TraceLog->ItemsCount].NormalRandomized = collision_normal;
+                            TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                            TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
+                            ++TraceLog->ItemsCount;
+                        #endif // __LOGGING
                         break;
                     };
                     #endif // SURE_RLEVEL<60
@@ -437,7 +496,7 @@
                     SURE_RANDOMIZE(CollisionNormalRandomized);
                     __VTYPE l = -2.0f*dot(TraceVector,CollisionNormalRandomized);
                     __VTYPE3 ReflectedVector = __MAD(l,CollisionNormalRandomized,TraceVector);
-                    if(dot(ReflectedVector,collision_normal)>=0.0f)
+                    if(dot(ReflectedVector,collision_normal)>0.0f)
                     { // Результат отражения направлен от объекта
                         SET_TRACE_POINT_MINUS;
                         TraceVector = __NORMALIZE(ReflectedVector);
@@ -445,6 +504,12 @@
                         TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
                         TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
                         TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
+                        #ifdef __LOGGING
+                            TraceLog->Items[TraceLog->ItemsCount].NormalRandomized = CollisionNormalRandomized;
+                            TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                            TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
+                            ++TraceLog->ItemsCount;
+                        #endif // __LOGGING
                     }else{ // результат отражения направлен внутрь объекта
                         NeedToRecheck = true;
                     };
@@ -467,6 +532,12 @@
                     TraceFade.x *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__XX,255.0f);
                     TraceFade.y *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__YY,255.0f);
                     TraceFade.z *= __DIVIDE((__VTYPE)DrawableCollided.rgb.__ZZ,255.0f);
+                    #ifdef __LOGGING
+                        TraceLog->Items[TraceLog->ItemsCount].NormalRandomized = CollisionNormalRandomized;
+                        TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
+                        TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
+                        ++TraceLog->ItemsCount;
+                    #endif // __LOGGING
                 }else{
                     NeedToRecheck = true;
                 };

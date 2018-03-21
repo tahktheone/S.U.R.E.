@@ -23,6 +23,20 @@ void SureWidget::paintEvent(QPaintEvent * event)
     double lv_max = 0;
     double lv_med = 0;
 
+                    QPoint P1;
+                    QPoint P2;
+                    bool VisibleIndicator1;
+                    bool VisibleIndicator2;
+                    #define DRAW_LINE(I_GP1,I_GP2) \
+                        CONVERT_TO_CAMERA_XY(I_GP1,LocalPoint1,VisibleIndicator1); \
+                        CONVERT_TO_CAMERA_XY(I_GP2,LocalPoint2,VisibleIndicator2); \
+                        if(VisibleIndicator1&&VisibleIndicator2){ \
+                            P1.setX(LocalPoint1.x); \
+                            P1.setY(LocalPoint1.y); \
+                            P2.setX(LocalPoint2.x); \
+                            P2.setY(LocalPoint2.y); \
+                            painter.drawLine(P1,P2);\
+                        };
 
                 //float* rgbmatrix = widget->rgbmatrix;
                 SureDrawable* Drawables = GPUData->Drawables;
@@ -39,6 +53,10 @@ void SureWidget::paintEvent(QPaintEvent * event)
             my_double3 VectorFromPoint;
             float DistanceToPoint;
             my_double3 LocalPoint;
+            my_double3 LocalPoint1;
+            my_double3 LocalPoint2;
+            my_double3 LocalPoint3;
+            my_double3 LocalPoint4;
             int my = image->rect().bottom();
             int mx = image->rect().right();
 
@@ -247,6 +265,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
             EngineData->SelectedObject = -1;
 
             #define __SELECT_OBJECT
+            #define SURE_RLEVEL 10
             #include <trace_common.c>
             #undef __SELECT_OBJECT
 
@@ -265,8 +284,69 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.setPen(Qt::white);
         switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
             case SURE_DR_MESH:
+            {
                 if(EngineData->objects[EngineData->SelectedObject].drawable.mesh_count>50){
                     // рисуем OABB
+
+                    SureDrawable *lv_dr = &EngineData->objects[EngineData->SelectedObject].drawable;
+                    __VTYPE3 OABB_1;
+                    __VTYPE3 OABB_2;
+                    __VTYPE3 OABB_3;
+                    __VTYPE3 OABB_4;
+                    __VTYPE3 OABB_5;
+                    __VTYPE3 OABB_6;
+                    __VTYPE3 OABB_7;
+                    __VTYPE3 OABB_8;
+
+                    OABB_1 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_2 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_3 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_4 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+
+                    OABB_5 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             +lv_dr->oz*lv_dr->lz;
+                    OABB_6 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             +lv_dr->oz*lv_dr->lz;
+                    OABB_7 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             +lv_dr->oz*lv_dr->lz;
+                    OABB_8 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             +lv_dr->oz*lv_dr->lz;
+
+
+                    DRAW_LINE(OABB_1,OABB_2);
+                    DRAW_LINE(OABB_2,OABB_3);
+                    DRAW_LINE(OABB_3,OABB_4);
+                    DRAW_LINE(OABB_4,OABB_1);
+
+                    DRAW_LINE(OABB_5,OABB_6);
+                    DRAW_LINE(OABB_6,OABB_7);
+                    DRAW_LINE(OABB_7,OABB_8);
+                    DRAW_LINE(OABB_8,OABB_5);
+
+                    DRAW_LINE(OABB_1,OABB_5);
+                    DRAW_LINE(OABB_2,OABB_6);
+                    DRAW_LINE(OABB_3,OABB_7);
+                    DRAW_LINE(OABB_4,OABB_8);
 
                 }else{
                     // рисуем все mesh'ы
@@ -318,12 +398,124 @@ void SureWidget::paintEvent(QPaintEvent * event)
                             painter.drawLine(DrawPoint3,DrawPoint1);
                     };
                 };
+            };
+            break;
+            case SURE_DR_SQUARE:
+            {
+                    SureDrawable *lv_dr = &EngineData->objects[EngineData->SelectedObject].drawable;
+                    __VTYPE3 OABB_1;
+                    __VTYPE3 OABB_2;
+                    __VTYPE3 OABB_3;
+                    __VTYPE3 OABB_4;
+
+                    OABB_1 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_2 = lv_dr->X
+                             -lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_3 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             +lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+                    OABB_4 = lv_dr->X
+                             +lv_dr->ox*lv_dr->lx
+                             -lv_dr->oy*lv_dr->ly
+                             -lv_dr->oz*lv_dr->lz;
+
+                    DRAW_LINE(OABB_1,OABB_2);
+                    DRAW_LINE(OABB_2,OABB_3);
+                    DRAW_LINE(OABB_3,OABB_4);
+                    DRAW_LINE(OABB_4,OABB_1);
+            };
+            break;
+            case SURE_DR_SPHERE:
+            {
+                QPoint DrawPoint;
+                bool DrawPointVisible;
+                SureDrawable *lv_dr = &EngineData->objects[EngineData->SelectedObject].drawable;
+
+                __VTYPE3 GlobalPoint;
+                for(float Angle=0.0;Angle<2*M_PI;Angle+=0.01){
+                    GlobalPoint = lv_dr->X
+                                 +lv_dr->ox*cos(Angle)*lv_dr->lx
+                                 +lv_dr->oy*sin(Angle)*lv_dr->lx;
+                    CONVERT_TO_CAMERA_XY(GlobalPoint,LocalPoint,DrawPointVisible);
+                        if(DrawPointVisible){
+                            DrawPoint.setX(LocalPoint.x);
+                            DrawPoint.setY(LocalPoint.y);
+                            painter.drawPoint(DrawPoint);
+                        };
+                    GlobalPoint = lv_dr->X
+                                 +lv_dr->ox*cos(Angle)*lv_dr->lx
+                                 +lv_dr->oz*sin(Angle)*lv_dr->lx;
+                    CONVERT_TO_CAMERA_XY(GlobalPoint,LocalPoint,DrawPointVisible);
+                        if(DrawPointVisible){
+                            DrawPoint.setX(LocalPoint.x);
+                            DrawPoint.setY(LocalPoint.y);
+                            painter.drawPoint(DrawPoint);
+                        };
+                    GlobalPoint = lv_dr->X
+                                 +lv_dr->oy*cos(Angle)*lv_dr->lx
+                                 +lv_dr->oz*sin(Angle)*lv_dr->lx;
+                    CONVERT_TO_CAMERA_XY(GlobalPoint,LocalPoint,DrawPointVisible);
+                        if(DrawPointVisible){
+                            DrawPoint.setX(LocalPoint.x);
+                            DrawPoint.setY(LocalPoint.y);
+                            painter.drawPoint(DrawPoint);
+                        };
+                };
+            };
             break;
             default:
             break;
         }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
         painter.setPen(Qt::blue);
     }; // if((EngineData->r_drawdebug>=50)&&EngineData->SelectedObject>=0)
+    if((EngineData->r_drawdebug>=30)&&(EngineData->TraceLogsCount>0)){
+        QPen l_Pen;
+        QColor l_Color;
+        l_Pen.setWidth(1);
+        for(int TraceLogID = 0;TraceLogID<EngineData->TraceLogsCount;TraceLogID++){
+            double l_inicolor_x = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.x;
+            double l_inicolor_y = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.y;
+            double l_inicolor_z = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.z;
+            l_Color.setRed(l_inicolor_x);
+            l_Color.setGreen(l_inicolor_y);
+            l_Color.setBlue(l_inicolor_z);
+            l_Pen.setColor(l_Color);
+            painter.setPen(l_Pen);
+            for(int TraceItemID = 0;TraceItemID<(int)EngineData->TraceLogs[TraceLogID].ItemsCount;TraceItemID++){
+                SureTraceLogItem *l_item = &EngineData->TraceLogs[TraceLogID].Items[TraceItemID];
+                __VTYPE3 CollisionPoint = l_item->TracePoint + l_item->TraceVector*l_item->IntersectDistance;
+                DRAW_LINE(l_item->TracePoint,CollisionPoint);
+                l_Pen.setColor(Qt::green);
+                painter.setPen(l_Pen);
+                __VTYPE3 NormPoint = CollisionPoint+10.0f*l_item->CollisionNomal;
+                DRAW_LINE(NormPoint,CollisionPoint);
+                l_Pen.setColor(Qt::red);
+                painter.setPen(l_Pen);
+                __VTYPE3 NormPointR = CollisionPoint+10.0f*l_item->NormalRandomized;
+                DRAW_LINE(NormPointR,CollisionPoint);
+                char txt[20];
+                sprintf(txt,"%i(%i)",l_item->iter,l_item->rechecks);
+                CONVERT_TO_CAMERA_XY(CollisionPoint,LocalPoint1,VisibleIndicator1);
+                if(VisibleIndicator1){
+                    P1.setX(LocalPoint1.x);
+                    P1.setY(LocalPoint1.y);
+                    painter.drawText(P1,txt);
+                };
+                l_Color.setRed(l_inicolor_x*l_item->Fade.x);
+                l_Color.setGreen(l_inicolor_y*l_item->Fade.y);
+                l_Color.setBlue(l_inicolor_z*l_item->Fade.z);
+                l_Pen.setColor(l_Color);
+                painter.setPen(l_Pen);
+            };
+        };
+        painter.setPen(Qt::blue);
+    };
     if(EngineData->r_drawdebug>=70)
     {
     for(int i = 0;i<EngineData->m_objects;++i)
@@ -478,7 +670,7 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
         EngineData->LoadState("initial");
     };
     if(event->key()==Qt::Key_Backspace){
-        EngineData->DeleteObject(EngineData->m_objects);
+        EngineData->DeleteObject(EngineData->SelectedObject);
     };
     if(event->key()==Qt::Key_L){
         EngineData->reset = true;
@@ -668,8 +860,8 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
     }else{ // if mousemove
         if (event->button() == Qt::LeftButton) {
 
-            int x = rect().right();
-            int y = rect().bottom();
+            int x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
+            int y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
 
             #define __LOGGING
                 //float* rgbmatrix = widget->rgbmatrix;
@@ -679,10 +871,12 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
                 cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
                 cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
                 cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+            #define SURE_RLEVEL 100
             #include <trace_common.c>
             #undef __LOGGING
 
-            if(++EngineData->TraceLogsCount>=10)
+
+            if(++EngineData->TraceLogsCount>45)
                 EngineData->TraceLogsCount=0;
         }; // (event->button() == Qt::LeftButton)
     }; // if !mousemove
