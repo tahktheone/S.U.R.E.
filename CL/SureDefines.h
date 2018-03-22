@@ -14,7 +14,7 @@
 
 #define SURE_FAA 1
 #define SURE_SCALE 4
-#define SURE_SMOOTH 2
+#define SURE_SMOOTH 1
 #define SURE_L_WGRPSIZE 16
 #define SURE_WGRPSIZE 128
 
@@ -37,9 +37,8 @@
 #define SURE_DR_MESH    3
 
 #define SURE_R_DELTA       (0.0001f)
-#define SURE_R_DELTA_GPU_FIX (0.0005f)
 #define SURE_R_MAXDISTANCE (10000.0f)
-#define SURE_R_FADELIMIT   (6.0f/100.0f)
+#define SURE_R_FADELIMIT   (0.06f)
 #define SURE_R_RNDSIZE     12288
 
 #define CLSIZE_VERTEX_DIM  4

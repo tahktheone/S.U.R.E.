@@ -474,14 +474,19 @@ void SureWidget::paintEvent(QPaintEvent * event)
         }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
         painter.setPen(Qt::blue);
     }; // if((EngineData->r_drawdebug>=50)&&EngineData->SelectedObject>=0)
-    if((EngineData->r_drawdebug>=30)&&(EngineData->TraceLogsCount>0)){
+    if((EngineData->r_drawdebug>=90)&&(EngineData->TraceLogsCount>0)){
         QPen l_Pen;
         QColor l_Color;
         l_Pen.setWidth(1);
-        for(int TraceLogID = 0;TraceLogID<EngineData->TraceLogsCount;TraceLogID++){
+        for(int TraceLogID = 0;TraceLogID<(int)EngineData->TraceLogsCount;TraceLogID++){
             double l_inicolor_x = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.x;
             double l_inicolor_y = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.y;
             double l_inicolor_z = 255;//EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.z;
+            if((EngineData->r_drawdebug<70)&&(( EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.x
+                                               +EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.y
+                                               +EngineData->TraceLogs[TraceLogID].Items[EngineData->TraceLogs[TraceLogID].ItemsCount-1].Color.z)<20)){
+                continue;
+            };
             l_Color.setRed(l_inicolor_x);
             l_Color.setGreen(l_inicolor_y);
             l_Color.setBlue(l_inicolor_z);
@@ -834,9 +839,9 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.drawable.rgb.s[1] = 250.0;// цвет
             EngineData->TemplateObject.drawable.rgb.s[2] = 60.0; // цвет
             EngineData->TemplateObject.type = SURE_OBJ_MESH;
-            EngineData->TemplateObject.lx = 50.0; // длина
-            EngineData->TemplateObject.ly = 50.0; // ширина
-            EngineData->TemplateObject.lz = 2.0; // высота
+            EngineData->TemplateObject.lx = 10.0; // длина
+            EngineData->TemplateObject.ly = 10.0; // ширина
+            EngineData->TemplateObject.lz = 1.0; // высота
             EngineData->TemplateObject.lp = 40.0;
             EngineData->TemplateObject.drawable.radiance = 0.0f;
             sprintf(EngineData->TemplateObject.ModelName_drawable,"cube");
@@ -862,6 +867,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
 
             int x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
             int y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            for(int iter=0;iter<50000;++iter){
 
             #define __LOGGING
                 //float* rgbmatrix = widget->rgbmatrix;
@@ -874,10 +880,20 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             #define SURE_RLEVEL 100
             #include <trace_common.c>
             #undef __LOGGING
+            if(EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount>0)
+                if((EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.x+
+                   EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.y+
+                   EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.z) > 50){
+                    iter = 50001;
+                };
+            };
 
-
-            if(++EngineData->TraceLogsCount>45)
-                EngineData->TraceLogsCount=0;
+            if((EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.x+
+                   EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.y+
+                   EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.z) > 50){
+                if(++EngineData->TraceLogsCount>45)
+                    EngineData->TraceLogsCount=0;
+            };
         }; // (event->button() == Qt::LeftButton)
     }; // if !mousemove
 }; // mousePressEvent

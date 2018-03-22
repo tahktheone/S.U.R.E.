@@ -27,7 +27,9 @@
 
     cur = &Drawables[0];
     uint MaximumIterrations = GPUData->r_maxiters;
+    #if SURE_RLEVEL>20
     uint MaximumRechecks = GPUData->r_rechecks;
+    #endif
     #if SURE_RLEVEL<70
         MaximumIterrations = 4;
     #endif // SURE_RLEVEL
@@ -50,7 +52,9 @@
         __VTYPE3 collision_normal;
         __VTYPE intersect_dist = SURE_R_MAXDISTANCE;
         bool collision_found = false;
+        #if SURE_RLEVEL>90
         bool collision_inner = false;
+        #endif
 
         #ifdef __SELECT_OBJECT
             int FoundDrawable = -1;
@@ -106,6 +110,10 @@
                             FoundDrawable = DrawablesIndex;
                         #endif
                         collision_point = __MAD(intersect_dist,TraceVector,TracePoint);
+
+                        // Корректируем точку пересечения -- помещаем ее ровно на шар:
+                        collision_point = __MAD(lv_dr->lx,__NORMALIZE(collision_point-lv_dr->X),lv_dr->X);
+
                         if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0)){
                             __VTYPE3 UVCoordinates;
                             GET_SPHERICAL_UV_COORDINATES(UVCoordinates);
@@ -164,7 +172,12 @@
                     // Луч гарантированно столкнулся с квадратом.
                     // Обрабатываем столкновение
                     intersect_dist = TraceDistance;
-                    collision_point = CollisionPointCandidate;
+
+                    // Корректируем точку пересечения:
+                    // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
+                    // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
+                    collision_point = __MAD(-lv_dr->oz,dot(CollisionPointCandidate-lv_dr->X,lv_dr->oz),CollisionPointCandidate);
+
                     if(TraceVecByNormal>0.0f)
                     {  // с внутренней стороны
                         if(lv_dr->sided)
@@ -292,11 +305,25 @@
                         LocalNormal = __NORMALIZE(LocalNormal);
 
                         // переводим нормаль в глобальные координаты
-                        collision_normal = LocalNormal.x*lv_dr->ox*LocalSizeMultiplier.x+
-                                           LocalNormal.y*lv_dr->oy*LocalSizeMultiplier.y+
-                                           LocalNormal.z*lv_dr->oz*LocalSizeMultiplier.z;
+                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*lv_dr->oz,lv_dr->lz,
+                                                             __MAD(LocalNormal.y*lv_dr->oy,lv_dr->ly,
+                                                                   LocalNormal.x*lv_dr->ox*lv_dr->lx)));
 
-                        collision_normal  = __NORMALIZE(collision_normal);
+                        __VTYPE3 LocalTrueNormal = cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1);
+                        __VTYPE3 GlobalTrueNormal = __NORMALIZE(__MAD(LocalTrueNormal.z*lv_dr->oz,lv_dr->lz,
+                                                                  __MAD(LocalTrueNormal.y*lv_dr->oy,lv_dr->ly,
+                                                                        LocalTrueNormal.x*lv_dr->ox*lv_dr->lx)));
+
+                        // точка на плоскости -- одна из вершин грани, с которой произошло пересечение:
+                        __VTYPE3 CollisionCheckPoint = __MAD(LocalVertex1.z*lv_dr->oz,lv_dr->lz,
+                                                       __MAD(LocalVertex1.y*lv_dr->oy,lv_dr->ly,
+                                                       __MAD(LocalVertex1.x*lv_dr->ox,lv_dr->lx,
+                                                             lv_dr->X)));
+                        // Корректируем точку пересечения:
+                        // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
+                        // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
+                        collision_point = __MAD(-GlobalTrueNormal,dot(collision_point-CollisionCheckPoint,GlobalTrueNormal),collision_point);
+
                         if(dot(LocalTraceVector,cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1))>0.0f)
                         { // с внутренней стороны
                             if(lv_dr->sided)
@@ -395,10 +422,9 @@
             break;
         };
 
+        #if SURE_RLEVEL>20
         bool NeedToRecheck = true;
         uint RecheckCounter = 0;
-
-        #if SURE_RLEVEL>20
         while( NeedToRecheck && ((++RecheckCounter)<MaximumRechecks) ){
             #if SURE_RLEVEL>90
             if(!collision_inner)

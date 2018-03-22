@@ -56,11 +56,11 @@ P3.xyz = read_imagef(Normals,smpVertex,coords).xyz;
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>(float)SURE_R_TEXRES)map_uv.x-=(float)SURE_R_TEXRES; \
         col_rgba = read_imageui(Textures,smpTex,map_uv); \
-        DrawableCollided.transp = 1.01f - native_divide(col_rgba.w,255.0f); \
+        DrawableCollided.transp = 1.0f - native_divide(col_rgba.w,255.0f); \
         DrawableCollided.rgb.x = col_rgba.x; \
         DrawableCollided.rgb.y = col_rgba.y; \
         DrawableCollided.rgb.z = col_rgba.z; \
-        if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
+        if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
 
 #define __GET_ADVMAP(ix,iy,id) \
         map_uv.x = ix; \
@@ -84,11 +84,14 @@ map_uv = fma((v2-v0),v,fma((v1-v0),u,v0)); \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 col_rgba = read_imageui(Textures,smpTex,map_uv); \
-DrawableCollided.transp = 1.01f - native_divide(col_rgba.w,255.0f); \
+DrawableCollided.transp = fma((float)col_rgba.w,-0.00392156862745098f,1.0f); \
 DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
+
+//DrawableCollided.transp = 1.0f - native_divide((float)col_rgba.w,255.0f);
+
 
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -196,14 +199,11 @@ uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
-//TracePoint = collision_point;
 #define SET_TRACE_POINT_MINUS \
-intersect_dist-=SURE_R_DELTA_GPU_FIX; \
-TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+TracePoint = collision_point;
 
 #define SET_TRACE_POINT_PLUS \
-intersect_dist+=SURE_R_DELTA_GPU_FIX; \
-TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+TracePoint = collision_point;
 
 #include <trace_common.c>
 }

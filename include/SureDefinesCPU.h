@@ -122,7 +122,7 @@ __GET_NORMAL3(P3,NormalIndex); \
         DrawableCollided.rgb.s[2] = *tex; tex++; \
         DrawableCollided.rgb.s[1] = *tex; tex++; \
         DrawableCollided.rgb.s[0] = *tex; tex++; \
-        DrawableCollided.transp = 1.01 - ((double)*tex / 255.0); \
+        DrawableCollided.transp = 1.0 - ((double)*tex / 255.0); \
         if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
 
 #define __GET_ADVMAP(ix,iy,id) \

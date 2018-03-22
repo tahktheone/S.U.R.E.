@@ -6,7 +6,6 @@ void SureData::LoadModel(const char* name)
 
     sprintf(filename,"./models/%s.obj",name);
     FILE *fl = fopen(filename,"r");
-    wchar_t* line;
 
     my_double3 v[10000];
     int vertexes = 1;
@@ -22,7 +21,6 @@ void SureData::LoadModel(const char* name)
     {
         sprintf(LogLine,"Загрузка %s...",name);
         Log->AddLine(LogLine);
-        line = (wchar_t*) malloc (512);
         fwide(fl,1);
         ModelsInfo[cur_models].mesh_start = cur_meshes;
         ModelsInfo[cur_models].mesh_count = 0;
@@ -285,7 +283,6 @@ void SureData::LoadModel(const char* name)
                 };
                 ModelsInfo[cur_models].mesh_count++;
         };
-        free (line);
     }else{
         sprintf(LogLine,"Не найдена модель %s",name);
         Log->AddLine(LogLine);

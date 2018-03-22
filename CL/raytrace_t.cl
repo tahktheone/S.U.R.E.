@@ -12,6 +12,7 @@
 #define __SURE_MIN(A,B) min(A,B)
 #define __SURE_MAX(A,B) max(A,B)
 #define __SQRT(A) native_sqrt(A)
+#define __INV(A) native_recip(A)
 #define SURE_PI M_PI_F
 #define SURE_PI2 M_PI_2_F
 #define __DIVIDE(A,B) native_divide((A),(B))
@@ -53,18 +54,18 @@ P3.xyz = read_imagef(Normals,smpVertex,coords).xyz;
 #define __GET_TEXTURE(ix,iy,id) \
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
-        if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
+        if(map_uv.x>(float)SURE_R_TEXRES)map_uv.x-=(float)SURE_R_TEXRES; \
         col_rgba = read_imageui(Textures,smpTex,map_uv); \
-        DrawableCollided.transp = 1.01 - native_divide(col_rgba.w,255.0f); \
+        DrawableCollided.transp = 1.0f - native_divide(col_rgba.w,255.0f); \
         DrawableCollided.rgb.x = col_rgba.x; \
         DrawableCollided.rgb.y = col_rgba.y; \
         DrawableCollided.rgb.z = col_rgba.z; \
-        if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
+        if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
 
 #define __GET_ADVMAP(ix,iy,id) \
         map_uv.x = ix; \
         map_uv.y = iy+id*SURE_R_TEXRES; \
-        if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
+        if(map_uv.x>(float)SURE_R_TEXRES)map_uv.x-=(float)SURE_R_TEXRES; \
         advmap = read_imageui(Textures,smpTex,map_uv); \
         DrawableCollided.radiance = advmap.x; \
         DrawableCollided.dist_sigma = native_divide(advmap.y,20.0f);
@@ -83,11 +84,14 @@ map_uv = fma((v2-v0),v,fma((v1-v0),u,v0)); \
 map_uv.y += id*SURE_R_TEXRES; \
 if(map_uv.x>SURE_R_TEXRES)map_uv.x-=SURE_R_TEXRES; \
 col_rgba = read_imageui(Textures,smpTex,map_uv); \
-DrawableCollided.transp = 1.01f - native_divide(col_rgba.w,255.0f); \
+DrawableCollided.transp = fma((float)col_rgba.w,-0.00392156862745098f,1.0f); \
 DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
-if(DrawableCollided.transp>0.5)DrawableCollided.dist_type=SURE_D_NORM;
+if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
+
+//DrawableCollided.transp = 1.0f - native_divide((float)col_rgba.w,255.0f);
+
 
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -116,32 +120,46 @@ DrawableCollided.dist_sigma = native_divide(advmap.y,100.0f);
 #else
 #define SURE_RANDOMIZE(CNR) \
     if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
-        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = fast_normalize(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         __VTYPE3 RandomNormal; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
+        RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
-            RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
+        RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
         while(fma(RandomNormal.x,RandomNormal.x,RandomNormal.y*RandomNormal.y)>1.0f){ \
             if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
                 RandomNormal.x = fma(Randomf[r],2.0f,-1.0f); \
             if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
                 RandomNormal.y = fma(Randomf[r],2.0f,-1.0f); \
         }; \
-        RandomNormal.z = native_sqrt(fma(-RandomNormal.y,RandomNormal.y,fma(-RandomNormal.x,RandomNormal.x,1))); \
+        RandomNormal.z = native_sqrt(fma(-RandomNormal.y,RandomNormal.y,fma(-RandomNormal.x,RandomNormal.x,1.0f))); \
         CNR = fma(collision_normal,RandomNormal.z,fma(CollisionNormalOx,RandomNormal.x,CollisionNormalOy*RandomNormal.y)); \
         CNR = __NORMALIZE(CNR); \
     }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
-        __VTYPE3 CollisionNormalOy = {-collision_normal.z,0.0f,-collision_normal.x}; \
-        CollisionNormalOy = __NORMALIZE(CollisionNormalOy); \
+        __VTYPE3 RandomVector; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.x = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.y = Randomf[r]; \
+        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
+        RandomVector.z = Randomf[r]; \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = fast_normalize(cross(collision_normal,RandomVector)); \
         __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RotationAngle = Randomf[r]*2.0f*SURE_PI; \
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE; \
         __VTYPE RandomEqualX = Randomf[r]; \
-        __VTYPE LeanAngle = fma(erfc(RandomEqualX),DrawableCollided.dist_sigma,DrawableCollided.dist_m); \
+        __VTYPE LeanAngle = fma(erf(RandomEqualX),DrawableCollided.dist_sigma,DrawableCollided.dist_m); \
         CNR = fma(collision_normal,native_cos(LeanAngle), \
               fma(CollisionNormalOx,native_cos(RotationAngle)*native_sin(LeanAngle), \
               CollisionNormalOy*native_sin(RotationAngle)*native_sin(LeanAngle))); \
@@ -181,13 +199,18 @@ uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
+//TracePoint = collision_point;
 #define SET_TRACE_POINT_MINUS \
-intersect_dist-=SURE_R_DELTA_GPU_FIX; \
-TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+TracePoint = collision_point;
+
+//intersect_dist-=SURE_R_DELTA_GPU_FIX; \
+//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
 
 #define SET_TRACE_POINT_PLUS \
-intersect_dist+=SURE_R_DELTA_GPU_FIX; \
-TracePoint = fma(intersect_dist,TraceVector,TracePoint);
+TracePoint = collision_point;
+
+//intersect_dist+=SURE_R_DELTA_GPU_FIX; \
+//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
 
 #include <trace_common_t.c>
 }
