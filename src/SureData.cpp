@@ -78,7 +78,7 @@ SureData::SureData()
         TemplateObject.initp4();
 
 
-    LoadState("initial");
+  LoadState("initial");
 
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
