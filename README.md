@@ -4,6 +4,8 @@ S.U.R.E. is Unbiased Render Engine
 # Билды
 * v 0.0003 для win64
 https://github.com/tahktheone/S.U.R.E./blob/master/releases/SURE_v0.0003.w64.zip
+* v 0.0003 для линуксов (работает только с установленными либами qt5 и opencl)
+https://github.com/tahktheone/S.U.R.E./blob/master/releases/SURE_v0.0003_nix.tar.gz
 * v 0.0002 для win64
 https://github.com/tahktheone/S.U.R.E./blob/master/releases/SURE_v0.0002.2.w64.zip
 
