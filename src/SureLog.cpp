@@ -10,6 +10,26 @@ SureLog::SureLog(const char *i_prefix)
     AddLine("Старт");
 }
 
+
+SureLog::SureLog(const SureLog& i_Log)
+{
+    char fname[100];
+    sprintf(prefix,"%s_cop",i_Log.prefix);
+    sprintf(fname,"./%s.log",prefix);
+    f = fopen(fname,"w");
+    AddLine("Старт");
+}
+
+SureLog *SureLog::operator=(const SureLog& i_Log)
+{
+    char fname[100];
+    sprintf(prefix,"%s_cop",i_Log.prefix);
+    sprintf(fname,"./%s.log",prefix);
+    f = fopen(fname,"w");
+    AddLine("Старт");
+    return this;
+}
+
 SureLog::~SureLog()
 {
     AddLine("Финиш");
@@ -23,7 +43,7 @@ void SureLog::AddLine(const char *text)
     tm* timeinfo = localtime(&seconds);
     strftime(StrTime,100,"%d.%m.%Y %H:%M:%S",timeinfo);
     fprintf(f,"%s %s\n",StrTime,text);
-};
+}
 
 void SureLog::AddOCLError(int i_ret, const char *text)
 {
@@ -32,13 +52,13 @@ void SureLog::AddOCLError(int i_ret, const char *text)
     GetOpenCLErrorText(i_ret,cl_err);
     sprintf(line,"%s: %s",text,cl_err);
     AddLine(line);
-};
+}
 
 void SureLog::AddBigText(const char *comment,const char *text)
 {
     AddLine(comment);
     fprintf(f,"%s\n",text);
-};
+}
 
 void SureLog::GetOpenCLErrorText(int i_ret,char *result)
 {
@@ -107,4 +127,4 @@ void SureLog::GetOpenCLErrorText(int i_ret,char *result)
         default : sprintf(cl_err,"Unknown error");break;
     };
     sprintf(result,"Ошибка Opencl №%i (%s)",i_ret,cl_err);
-};
+}

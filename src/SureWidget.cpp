@@ -570,7 +570,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     };
     };
     painter.end();
-};
+}
 
 void SureWidget::keyPressEvent(QKeyEvent *event){
     if(event->key()==Qt::Key_Plus){
@@ -767,7 +767,7 @@ void SureWidget::keyReleaseEvent(QKeyEvent *event){
             EngineData->CameraInfo.subp_rnd = true;
         };
     };
-};
+}
 
 void SureWidget::mouseMoveEvent(QMouseEvent *event)
 {
@@ -789,7 +789,7 @@ void SureWidget::mouseMoveEvent(QMouseEvent *event)
         last_y = lv_rect.height()/2;
     //};
 
-};
+}
 
 void SureWidget::leaveEvent(QEvent *event)
 {
@@ -811,7 +811,7 @@ void SureWidget::leaveEvent(QEvent *event)
         last_y = lv_rect.height()/2;
     };
 
-};
+}
 
 void SureWidget::mousePressEvent(QMouseEvent *event)
 {
@@ -835,9 +835,9 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
 
         };
         if (event->button() == Qt::RightButton) {
-            EngineData->TemplateObject.drawable.rgb.s[0] = 40.0; // цвет
-            EngineData->TemplateObject.drawable.rgb.s[1] = 250.0;// цвет
-            EngineData->TemplateObject.drawable.rgb.s[2] = 60.0; // цвет
+            EngineData->TemplateObject.drawable.rgb.s[0] = 120.0; // цвет
+            EngineData->TemplateObject.drawable.rgb.s[1] = 240.0;// цвет
+            EngineData->TemplateObject.drawable.rgb.s[2] = 120.0; // цвет
             EngineData->TemplateObject.type = SURE_OBJ_MESH;
             EngineData->TemplateObject.lx = 10.0; // длина
             EngineData->TemplateObject.ly = 10.0; // ширина
@@ -853,7 +853,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
             EngineData->TemplateObject.drawable.map_id = -1;// EngineData->GetTexture("colstones");
             EngineData->TemplateObject.drawable.advmap_id = -1;
-            EngineData->TemplateObject.drawable.transp = 0.97;
+            EngineData->TemplateObject.drawable.transp = 0.99;
             EngineData->TemplateObject.drawable.refr = 1.4;
             EngineData->TemplateObject.drawable.dist_type = SURE_D_NORM;
             EngineData->TemplateObject.drawable.dist_sigma = 0.02f;
@@ -928,4 +928,4 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             //};
         }; // (event->button() == Qt::LeftButton)
     }; // if !mousemove
-}; // mousePressEvent
+} // mousePressEvent

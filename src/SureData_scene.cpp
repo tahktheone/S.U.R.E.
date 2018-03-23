@@ -81,9 +81,9 @@ __VTYPE3 X;
     CreateObjectFromTemplate(&X);  // стена -y
 
    TemplateObject.type = SURE_OBJ_PLANE;
-    TemplateObject.lx = 600.0;
-    TemplateObject.ly = 600.0;
-    TemplateObject.lz = 1.0;
+    TemplateObject.lx = 60.0;
+    TemplateObject.ly = 60.0;
+    TemplateObject.lz = 30.0;
     TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
     X.x = 0; X.y = 0; X.z = 25;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
@@ -94,6 +94,7 @@ __VTYPE3 X;
     TemplateObject.drawable.dist_type = SURE_D_EQUAL;
     TemplateObject.drawable.transp = 1.1f;
     TemplateObject.drawable.transp_i = 0.005f;
+    TemplateObject.drawable.refr = 1.01f;
     TemplateObject.drawable.sided = false;
     TemplateObject.collidable = false;
     TemplateObject.drawable.rgb.s[0] = 170; // цвет
@@ -101,7 +102,7 @@ __VTYPE3 X;
     TemplateObject.drawable.rgb.s[2] = 150; // цвет
 
     CreateObjectFromTemplate(&X); // пол туман
-};
+}
 
 
 void SureData::Scene_floor() // Пол и круглая лампа
@@ -163,7 +164,7 @@ __VTYPE3 X;
 
     CreateObjectFromTemplate(&X); // пол туман
 
-};
+}
 
 void SureData::Scene_mirrors() // Пол и зеркала
 {
@@ -224,7 +225,7 @@ __VTYPE3 X;
         CreateObjectFromTemplate(&X);
     };
 
-};
+}
 
 void SureData::Scene_ManySpheres()
 {
@@ -288,9 +289,7 @@ TemplateObject.type = SURE_OBJ_SPHERE;
         TemplateObject.drawable.dist_sigma = (float)rand()/(float)RAND_MAX;
         CreateObjectFromTemplate(&X);
     };
-
-
-};
+}
 
 void SureData::Scene_ManyTetrs()
 {
@@ -357,7 +356,7 @@ __VTYPE3 X;
 
 
 
-};
+}
 
 void SureData::Scene_tetrs() // Пол и лампа
 {
@@ -453,7 +452,7 @@ __VTYPE3 X;
          CreateObjectFromTemplate(&X);
 
 
-};
+}
 
 
 void SureData::Scene_golem()
@@ -492,7 +491,7 @@ __VTYPE3 X;
     TemplateObject.drawable.radiance = 0;
 
     CreateObjectFromTemplate(&X);
-};
+}
 /*
 void SureData::Scene_metaball(double i_x,double i_y,double i_z,double i_sz,int nt) // Пол и круглая лампа
 {

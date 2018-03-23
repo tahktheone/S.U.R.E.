@@ -10,6 +10,8 @@ class SureLog
 {
     public:
         SureLog(const char *prefix);
+        SureLog(const SureLog&);
+        SureLog *operator=(const SureLog&);
         virtual ~SureLog();
         void AddLine(const char *);
         void AddOCLError(int i_ret, const char *);

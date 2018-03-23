@@ -7,7 +7,7 @@ void SureData::SureClear()
     delete Normals;
     delete VrtxCLImg;
     delete MeshCLImg;
-};
+}
 
 #include <SureData_load.cpp>
 #include <SureData_gen.cpp>
@@ -15,7 +15,6 @@ void SureData::SureClear()
 
 SureData::SureData()
 {
-
         VrtxCLImg = new cl_float[CLSIZE_VERTEX]; // 256*256
         MeshCLImg = new cl_int[CLSIZE_VERTEX]; //256*256
         TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
@@ -77,13 +76,12 @@ SureData::SureData()
         TemplateObject.drawable.advmap_id = GetTexture("earth_adv");
         TemplateObject.initp4();
 
-
-  LoadState("initial");
+  //LoadState("initial");
 
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  //Scene_box();
+  Scene_box();
   //Scene_floor();
   //Scene_mirrors();
   //Scene_ManyTetrs();
@@ -170,8 +168,8 @@ void SureData::SaveState(const char *name)
         SAVE_FLOAT_VECTOR("v3",v3);
         SAVE_FLOAT_VECTOR("v4",v4);
 
-        fprintf(f,"ModelName_collider=%s \n",objects[o].ModelName_collider);
-        fprintf(f,"ModelName_drawable=%s \n",objects[o].ModelName_drawable);
+        fprintf(f,"ModelName_collider=%s\n",objects[o].ModelName_collider);
+        fprintf(f,"ModelName_drawable=%s\n",objects[o].ModelName_drawable);
         /* cl_uint ModelID_collider; cl_uint ModelID_drawable; */
 
         SAVE_FLOAT_VECTOR_DRAWABLE("dr_X",X);
@@ -206,7 +204,7 @@ void SureData::SaveState(const char *name)
     fclose(f);
     sprintf(LogLine,"Успешно сохранено состояние %s",name);
     Log->AddLine(LogLine);
-};
+}
 
 void SureData::LoadState(const char *name)
 {
@@ -267,7 +265,7 @@ void SureData::LoadState(const char *name)
         if(fscanf(f,"Lxyz=(%lf;%lf;%lf)\n",&objects[m_objects].lx,&objects[m_objects].ly,&objects[m_objects].lz)<3)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"pl=%lf\n",&objects[m_objects].lp)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"rig=%lf\n",&objects[m_objects].rig)<1)Log->AddLine("Ошибка чтения");
-        if(fscanf(f,"type=%u\n",&objects[m_objects].type)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"type=%i\n",&objects[m_objects].type)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"movable=%hhu\n",(uchar *)&objects[m_objects].movable)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"collidable=%hhu\n",(uchar *)&objects[m_objects].collidable)<1)Log->AddLine("Ошибка чтения");
 
@@ -284,8 +282,8 @@ void SureData::LoadState(const char *name)
         READ_FLOAT_VECTOR(v3);
         READ_FLOAT_VECTOR(v4);
 
-        if(fscanf(f,"ModelName_collider=%s \n",objects[m_objects].ModelName_collider)<1)Log->AddLine("Ошибка чтения");
-        if(fscanf(f,"ModelName_drawable=%s \n",objects[m_objects].ModelName_drawable)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"ModelName_collider=%s\n",objects[m_objects].ModelName_collider)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"ModelName_drawable=%s\n",objects[m_objects].ModelName_drawable)<1)Log->AddLine("Ошибка чтения");
         objects[m_objects].ModelID_collider=GetModel(objects[m_objects].ModelName_collider);
         objects[m_objects].ModelID_drawable=GetModel(objects[m_objects].ModelName_drawable);
 
@@ -295,7 +293,7 @@ void SureData::LoadState(const char *name)
         READ_FLOAT_VECTOR_DRAWABLE(oz);
 
         if(fscanf(f,"dr_Lxyz=(%f;%f;%f)\n",&objects[m_objects].drawable.lx,&objects[m_objects].drawable.ly,&objects[m_objects].drawable.lz)<3)Log->AddLine("Ошибка чтения");
-        if(fscanf(f,"dr_type=%u\n",&objects[m_objects].drawable.type)<1)Log->AddLine("Ошибка чтения");
+        if(fscanf(f,"dr_type=%i\n",&objects[m_objects].drawable.type)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_radiance=%i\n",&objects[m_objects].drawable.radiance)<1)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_ttr=(%f;%f;%f)\n",&objects[m_objects].drawable.transp,&objects[m_objects].drawable.transp_i,&objects[m_objects].drawable.refr)<3)Log->AddLine("Ошибка чтения");
         if(fscanf(f,"dr_dist=(%i;%f,%f)\n",&objects[m_objects].drawable.dist_type,&objects[m_objects].drawable.dist_sigma,&objects[m_objects].drawable.dist_m)<3)Log->AddLine("Ошибка чтения");
@@ -318,7 +316,7 @@ void SureData::LoadState(const char *name)
     fclose(f);
     sprintf(LogLine,"Успешно загружено состояние %s",name);
     Log->AddLine(LogLine);
-};
+}
 
 #include <func_common.c>
 #include <func_CPU.c>

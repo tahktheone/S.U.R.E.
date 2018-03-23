@@ -26,6 +26,8 @@
     };
 
     cur = &Drawables[0];
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *CurrentEnviroment = &Drawables[0];
+
     uint MaximumIterrations = GPUData->r_maxiters;
     #if SURE_RLEVEL>20
     uint MaximumRechecks = GPUData->r_rechecks;
@@ -89,6 +91,9 @@
                         if(t.y<SURE_R_DELTA) break; // отсеиваем случаи когда сфера "сзади"
                         InSphere = t.x<SURE_R_DELTA ? true : false; // определяем мы внутри или снаружи
                         if(InSphere){
+                            if(CurrentEnviroment->refr<lv_dr->refr){
+                                CurrentEnviroment = lv_dr;
+                            };
                             if(t.y<SURE_R_DELTA)break;
                             if(t.y>intersect_dist)break;
                             intersect_dist = t.y;//-SURE_R_DELTA_GPU_FIX;
@@ -101,7 +106,7 @@
                            cur = lv_cur;
                            DrawableCollided.radiance = lv_dr->radiance;
                        }else{
-                           col = &Drawables[0];
+                           col = CurrentEnviroment; //&Drawables[0];
                            cur = lv_dr;
                            DrawableCollided.radiance = 0;
                        };
@@ -146,6 +151,20 @@
                     // Расстояние от точки старта луча до плоскости
                     __VTYPE3 VectorToDrawableCenter = TracePoint-lv_dr->X;
                     __VTYPE DistanceToPlane = dot(lv_dr->oz,VectorToDrawableCenter);
+
+                    if((DistanceToPlane<-SURE_R_DELTA)&&       // "под" плоскостью
+                       (DistanceToPlane>(-lv_dr->lz))&&     // "глубже" чем заданная глубина плоскости
+                       (CurrentEnviroment->refr<lv_dr->refr)){ // более плотная среда
+                        // Локальные координаты точки пересечения
+                        __VTYPE2 Coordinates = {dot(lv_dr->ox,VectorToDrawableCenter),
+                                                dot(lv_dr->oy,VectorToDrawableCenter)};
+                        // Нет попадания в квадрат -- игнорируем
+                        if(Coordinates.x <  lv_dr->lx&&
+                           Coordinates.x > -lv_dr->lx&&
+                           Coordinates.y <  lv_dr->ly&&
+                           Coordinates.y > -lv_dr->ly)
+                           CurrentEnviroment = lv_dr;
+                    };
                     // Если точка старта луча вплотную к плоскости -- игнорируем ее
                     // (чтобы отраженый от плоскости луч из-за округлений не сталкивался с той же плоскостью):
                     if(DistanceToPlane<SURE_R_DELTA&&DistanceToPlane>-SURE_R_DELTA)break;
@@ -186,7 +205,7 @@
                             cur = lv_cur;
                             DrawableCollided.radiance = lv_dr->radiance;
                         }else{  // материал односторонний
-                            col = &Drawables[0];
+                            col = CurrentEnviroment;// &Drawables[0];
                             cur = lv_dr;
                             DrawableCollided.radiance = 0.0f;
                         };
@@ -337,7 +356,7 @@
                                     cur = lv_cur;
                                     DrawableCollided.radiance = lv_dr->radiance;
                                 #else
-                                    col = &Drawables[0];
+                                    col = CurrentEnviroment; //&Drawables[0];
                                     cur = lv_dr;
                                     DrawableCollided.radiance = 0;
                                 #endif
@@ -365,9 +384,10 @@
         #if SURE_RLEVEL>90
         // Добавлем рассеивание средой
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*cur->transp_i;
+        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*CurrentEnviroment->transp_i;
         if(rr<intersect_dist){
-            col = cur;
+            col = CurrentEnviroment;
+            cur = CurrentEnviroment;
             collision_found = true;
             DrawableCollided.radiance = 0.0f;
             SET_COLLISION;
@@ -498,6 +518,15 @@
                                     TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
                                     ++TraceLog->ItemsCount;
                                 #endif // __LOGGING
+
+                            if((CurrentEnviroment==cur)&&(CurrentEnviroment!=&Drawables[0])&&(cur==col)){
+                                // Если луч "выходит" из какого-то объекта (не из воздуха) -
+                                // считаем, что он выходит на "воздух"
+                                // (чтобы на слудующем шаге произошел повторный поиск CurrentEnviroment)
+                                CurrentEnviroment = &Drawables[0];
+                            }else{
+                                CurrentEnviroment = col;
+                            };
                             cur = col;
                         };  // Внутреннее отражение /  преломление
                     };// if(l>0) модифицированная нормаль не коллинеарна вектору трассировки

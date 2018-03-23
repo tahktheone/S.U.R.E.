@@ -31,7 +31,7 @@ void SureData::Mesh_GenerateTetr(int i_model,int norm_type)
 
     Mesh_GenNormals(i_model,norm_type);
 
-};
+}
 
 void SureData::Mesh_GenNormals(int i_model, int norm_type)
 {
@@ -80,7 +80,7 @@ for(uint ms = 0; ms<ModelsInfo[i_model].mesh_count; ++ms)
         };
     };
 
-};
+}
 
 void SureData::Mesh_GenerateCube(int i_model,int norm_type)
 {
@@ -114,7 +114,7 @@ void SureData::Mesh_GenerateCube(int i_model,int norm_type)
 
     Mesh_GenNormals(i_model,norm_type);
 
-};
+}
 
 void SureData::Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count,int norm_type)
 {
@@ -277,7 +277,7 @@ void SureData::Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count
                 };
         ModelsInfo[i_model].mesh_count++;
     };
-};
+}
 
 int SureData::GenModel(const char* name,int type)
 {
@@ -291,7 +291,7 @@ sprintf(ModelsInfo[cur_models].name,"%s",name);
 ModelsInfo[cur_models].toupdate = true;
 cur_models++;
 return result;
-};
+}
 
 int SureData::GenTexture(const char* name,int type)
 {
@@ -334,4 +334,4 @@ int SureData::GenTexture(const char* name,int type)
         cur_textures++;
         return cur_textures - 1;
 
-};
+}

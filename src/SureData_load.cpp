@@ -292,7 +292,7 @@ void SureData::LoadModel(const char* name)
     ModelsInfo[cur_models].toupdate = true;
 
     cur_models++;
-};
+}
 
 void SureData::LoadTexture(const char* name)
 {
@@ -379,7 +379,7 @@ void SureData::LoadTexture(const char* name)
         sprintf(TexturesInfo[cur_textures].name,"%s",name);
         cur_textures++;
     };
-};
+}
 
 int SureData::GetModel(const char* name)
 {
@@ -393,7 +393,7 @@ int SureData::GetModel(const char* name)
             result=-1;
     };
     return result;
-};
+}
 
 int SureData::GetTexture(const char* name)
 {
@@ -407,7 +407,7 @@ int SureData::GetTexture(const char* name)
             result=-1;
     };
     return result;
-};
+}
 
 void SureData::SetDefaultRotationBasis(int i)
 {
@@ -420,7 +420,7 @@ void SureData::SetDefaultRotationBasis(int i)
     objects[i].oz.x = 0;
     objects[i].oz.y = 0;
     objects[i].oz.z = 1;
-};
+}
 
 void SureData::ObjCoordsToDrawable(int i)
 {
@@ -431,7 +431,7 @@ void SureData::ObjCoordsToDrawable(int i)
     objects[i].drawable.lx = objects[i].lx;
     objects[i].drawable.ly = objects[i].ly;
     objects[i].drawable.lz = objects[i].lz;
-};
+}
 
 void SureData::DeleteObject(uint i_object)
 {
@@ -493,7 +493,7 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
     objects[i].external_id = m_ObjExternID;
     m_ObjExternID++;
     return objects[i].external_id;
-};
+}
 
 SureObject *SureData::ObjByID(uint i_id)
 {
@@ -503,7 +503,7 @@ SureObject *SureData::ObjByID(uint i_id)
         if(objects[i].external_id==i_id)
             return &objects[i];
     return result;
-};
+}
 
 int SureData::AddVertex(double x, double y, double z)
 {
@@ -512,14 +512,14 @@ int SureData::AddVertex(double x, double y, double z)
     __VERTEX_Z(cur_vertexes) = (float) z;
     ++cur_vertexes;
     return cur_vertexes-1;
-};
+}
 
 int SureData::AddVertex(my_double3 X)
 {
     __VERTEX_SET(cur_vertexes,X);
     ++cur_vertexes;
     return cur_vertexes-1;
-};
+}
 
 int SureData::AddMesh(int v1, int v2, int v3)
 {
@@ -534,7 +534,7 @@ int SureData::AddMesh(int v1, int v2, int v3)
     __MESH_UV3_V(cur_meshes) = 0;
     ++cur_meshes;
     return cur_meshes-1;
-};
+}
 
 void SureData::MapTexture(int i_model,int type)
 {
@@ -639,5 +639,5 @@ void SureData::MapTexture(int i_model,int type)
         __MESH_UV3_V(i) = 0.5*SURE_R_TEXRES*__MESH_UV3_V(i)/y;
         i++;
     };
-};
+}
 

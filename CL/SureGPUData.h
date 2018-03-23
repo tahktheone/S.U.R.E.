@@ -43,8 +43,8 @@ struct SureDrawable {
     cl_float dist_m = SURE_PI2; // матожидание рандомизации
     cl_uchar3 rgb = cl_uchar3{255,255,255}; // цвет
     cl_bool sided = false; // "Внутренняя" и "Наружная" стороны отличаются
-    cl_uint mesh_start;
-    cl_uint mesh_count;
+    cl_uint mesh_start = 0;
+    cl_uint mesh_count = 0;
     cl_int map_id = -1;
     cl_int advmap_id = -1;
 #endif // CPU
@@ -101,15 +101,14 @@ uint InitRandom(int *x,int *y);
 #define SET_COLLISION \
     collision_found = true; \
     DrawableCollided.refr = __DIVIDE(cur->refr,col->refr); \
+    DrawableCollided.transp = __SURE_MIN(cur->transp,col->transp); \
     if(cur->refr > col->refr){ \
         DrawableCollided.rgb = cur->rgb; \
-        DrawableCollided.transp = cur->transp; \
         DrawableCollided.dist_type = cur->dist_type; \
         DrawableCollided.dist_sigma = cur->dist_sigma; \
         DrawableCollided.dist_m = cur->dist_m; \
     }else{ \
         DrawableCollided.rgb = col->rgb; \
-        DrawableCollided.transp = col->transp; \
         DrawableCollided.dist_type = col->dist_type; \
         DrawableCollided.dist_sigma = col->dist_sigma; \
         DrawableCollided.dist_m = col->dist_m; \

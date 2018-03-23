@@ -223,7 +223,7 @@ __GET_ADVMAP(map_px,map_py,id);
 // Математика для CPU-части:
 // my_double3 имитирует cl_double3
  struct my_double3 {
-   double x, y, z;
+   double x = 0, y = 0, z = 0;
    my_double3(double x_=0, double y_=0, double z_=0){ x=x_; y=y_; z=z_; }
    inline my_double3 (cl_double3 b) {x=b.s[0]; y=b.s[1]; z=b.s[2];};
    inline my_double3 (cl_float3 b) {x=b.s[0]; y=b.s[1]; z=b.s[2];};
@@ -235,21 +235,21 @@ __GET_ADVMAP(map_px,map_py,id);
  };
 
  struct my_uchar3 {
-   double x, y, z;
+   double x=0, y=0, z=0;
    my_uchar3(uchar x_=0, uchar y_=0, uchar z_=0){ x=x_; y=y_; z=z_; }
    my_uchar3 (cl_uchar3 b) {x=b.s[0]; y=b.s[1]; z=b.s[2];};
    operator cl_uchar3() const { cl_uchar3 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; return d;};
 };
 
  struct my_uchar4 {
-   double x, y, z, w;
+   double x=0, y=0, z=0, w=0;
    my_uchar4(uchar x_=0, uchar y_=0, uchar z_=0, uchar w_=0){ x=x_; y=y_; z=z_; w=w_; }
    my_uchar4 (cl_uchar4 b) {x=b.s[0]; y=b.s[1]; z=b.s[2]; w=b.s[3];};
    operator cl_uchar4() const { cl_uchar4 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; d.s[3] = w; return d;};
 };
 
  struct my_int4 {
-   int x, y, z, w;
+   int x=0, y=0, z=0, w=0;
    my_int4(int x_=0, int y_=0, int z_=0, int w_=0){ x=x_; y=y_; z=z_; w=w_; }
    my_int4 (cl_int4 b) {x=b.s[0]; y=b.s[1]; z=b.s[2]; w=b.s[3];};
    operator cl_int4() const { cl_int4 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; d.s[3] = w; return d;};
@@ -257,7 +257,7 @@ __GET_ADVMAP(map_px,map_py,id);
 
 
  struct my_double2 {
-   double x, y;
+   double x=0, y=0;
    my_double2(double x_=0, double y_=0){ x=x_; y=y_;}
    my_double2 operator+(const my_double2 &b) const { return my_double2(x+b.x,y+b.y);}
    my_double2 operator-(const my_double2 &b) const { return my_double2(x-b.x,y-b.y);}

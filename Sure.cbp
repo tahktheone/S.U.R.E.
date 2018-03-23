@@ -37,8 +37,11 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
+					<Add option="-pedantic" />
 					<Add option="-std=c++11" />
+					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-isystem /usr/include/qt5/" />
 					<Add directory="/usr/include/qt5" />
 					<Add directory="include" />
 				</Compiler>
