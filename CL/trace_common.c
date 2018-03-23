@@ -382,6 +382,7 @@
             TraceLog->Items[TraceLog->ItemsCount].CollisionNomal = collision_normal;
             TraceLog->Items[TraceLog->ItemsCount].IntersectDistance = intersect_dist;
             TraceLog->Items[TraceLog->ItemsCount].iter = Iterration;
+            TraceLog->Items[TraceLog->ItemsCount].transp_i = cur->transp_i;
         #endif // __LOGGING
 
          // луч улетел в никуда -- выходим из цикла
@@ -488,15 +489,15 @@
                                 TraceFade.x *= __DIVIDE(DrawableCollided.rgb.__XX,255.0f);
                                 TraceFade.y *= __DIVIDE(DrawableCollided.rgb.__YY,255.0f);
                                 TraceFade.z *= __DIVIDE(DrawableCollided.rgb.__ZZ,255.0f);
+                            #if SURE_RLEVEL>90
+                            };
+                            #endif // SURE_RLEVEL>90
                                 #ifdef __LOGGING
                                     TraceLog->Items[TraceLog->ItemsCount].NormalRandomized = CollisionNormalRandomized;
                                     TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
                                     TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
                                     ++TraceLog->ItemsCount;
                                 #endif // __LOGGING
-                            #if SURE_RLEVEL>90
-                            };
-                            #endif // SURE_RLEVEL>90
                             cur = col;
                         };  // Внутреннее отражение /  преломление
                     };// if(l>0) модифицированная нормаль не коллинеарна вектору трассировки

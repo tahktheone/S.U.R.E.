@@ -78,12 +78,13 @@ SureData::SureData()
         TemplateObject.initp4();
 
 
+    LoadState("initial");
 
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
   //Scene_box();
-  Scene_floor();
+  //Scene_floor();
   //Scene_mirrors();
   //Scene_ManyTetrs();
 
@@ -96,7 +97,7 @@ SureData::SureData()
   //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
   //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
-  Scene_golem();
+  //Scene_golem();
   //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
   //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
 }

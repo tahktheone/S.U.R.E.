@@ -239,6 +239,7 @@ struct SureTraceLogItem{
     my_double3 NormalRandomized;
     int iter;
     int rechecks;
+    float transp_i = 0;
 };
 
 struct SureTraceLog{

@@ -80,6 +80,27 @@ __VTYPE3 X;
 
     CreateObjectFromTemplate(&X);  // стена -y
 
+   TemplateObject.type = SURE_OBJ_PLANE;
+    TemplateObject.lx = 600.0;
+    TemplateObject.ly = 600.0;
+    TemplateObject.lz = 1.0;
+    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
+    X.x = 0; X.y = 0; X.z = 25;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.drawable.map_id = -1;//
+    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.transp = 1.1f;
+    TemplateObject.drawable.transp_i = 0.005f;
+    TemplateObject.drawable.sided = false;
+    TemplateObject.collidable = false;
+    TemplateObject.drawable.rgb.s[0] = 170; // цвет
+    TemplateObject.drawable.rgb.s[1] = 150; // цвет
+    TemplateObject.drawable.rgb.s[2] = 150; // цвет
+
+    CreateObjectFromTemplate(&X); // пол туман
 };
 
 
@@ -108,7 +129,7 @@ __VTYPE3 X;
     TemplateObject.type = SURE_OBJ_SPHERE;
     TemplateObject.lx = 70.0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
-    X.x = 60; X.y = 60; X.z = 150;
+    X.x = 90; X.y = 90; X.z = 150;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
@@ -126,7 +147,7 @@ __VTYPE3 X;
     TemplateObject.ly = 600.0;
     TemplateObject.lz = 1.0;
     TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
-    X.x = 0; X.y = 0; X.z = 10;
+    X.x = 0; X.y = 0; X.z = 20;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
@@ -135,6 +156,7 @@ __VTYPE3 X;
     TemplateObject.drawable.dist_type = SURE_D_EQUAL;
     TemplateObject.drawable.transp = 1.1f;
     TemplateObject.drawable.transp_i = 0.005f;
+    TemplateObject.drawable.sided = false;
     TemplateObject.drawable.rgb.s[0] = 170; // цвет
     TemplateObject.drawable.rgb.s[1] = 150; // цвет
     TemplateObject.drawable.rgb.s[2] = 150; // цвет
@@ -451,14 +473,14 @@ __VTYPE3 X;
     //TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
     TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
-    TemplateObject.oz.x = -1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
-    sprintf(TemplateObject.ModelName_drawable,"ghost_dark");
+    TemplateObject.oz.x = 1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
+    sprintf(TemplateObject.ModelName_drawable,"golem");
     TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
     sprintf(TemplateObject.ModelName_collider,"cube");
     TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
-    TemplateObject.drawable.map_id = GetTexture("ghost_dark");//GenTexture("scells",SURE_GENTEX_UNTRANSP); //GetTexture("ghost_dark");
+    TemplateObject.drawable.map_id = GetTexture("golem");//GetTexture("ghost_dark");//GenTexture("scells",SURE_GENTEX_UNTRANSP);
     //MapTexture(TemplateObject.ModelID_drawable,SURE_MAPPING_SPHERICAL);
-    TemplateObject.drawable.advmap_id = -1;//GetTexture("golem_adv");
+    TemplateObject.drawable.advmap_id = GetTexture("golem_adv");
     TemplateObject.drawable.dist_type = SURE_D_EQUAL;//SURE_D_NORM;
     TemplateObject.drawable.dist_sigma = 0.005f;
     TemplateObject.drawable.rgb.s[0] = 240;

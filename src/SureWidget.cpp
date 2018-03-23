@@ -504,7 +504,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
                 painter.setPen(l_Pen);
                 __VTYPE3 NormPointR = CollisionPoint+10.0f*l_item->NormalRandomized;
                 DRAW_LINE(NormPointR,CollisionPoint);
-                char txt[20];
+                char txt[40];
                 sprintf(txt,"%i(%i)",l_item->iter,l_item->rechecks);
                 CONVERT_TO_CAMERA_XY(CollisionPoint,LocalPoint1,VisibleIndicator1);
                 if(VisibleIndicator1){
@@ -894,6 +894,38 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
                 if(++EngineData->TraceLogsCount>45)
                     EngineData->TraceLogsCount=0;
             };
+        }; // (event->button() == Qt::LeftButton)
+        if (event->button() == Qt::RightButton) {
+
+            int x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
+            int y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            //for(int iter=0;iter<50000;++iter){
+
+            #define __LOGGING
+                //float* rgbmatrix = widget->rgbmatrix;
+                SureDrawable* Drawables = GPUData->Drawables;
+                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
+                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
+                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+            #define SURE_RLEVEL 100
+            #include <trace_common.c>
+            #undef __LOGGING
+            //if(EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount>0)
+            //    if((EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.x+
+            //       EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.y+
+            //       EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.z) > 50){
+            //        iter = 50001;
+            //    };
+            //};
+
+            //if((EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.x+
+            //       EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.y+
+            //       EngineData->TraceLogs[EngineData->TraceLogsCount].Items[EngineData->TraceLogs[EngineData->TraceLogsCount].ItemsCount-1].Color.z) > 50){
+                if(++EngineData->TraceLogsCount>45)
+                    EngineData->TraceLogsCount=0;
+            //};
         }; // (event->button() == Qt::LeftButton)
     }; // if !mousemove
 }; // mousePressEvent

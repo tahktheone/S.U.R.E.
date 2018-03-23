@@ -13,8 +13,8 @@
 #define SURE_RT_N       4
 
 #define SURE_FAA 1
-#define SURE_SCALE 4
-#define SURE_SMOOTH 1
+#define SURE_SCALE 2
+#define SURE_SMOOTH 2
 #define SURE_L_WGRPSIZE 16
 #define SURE_WGRPSIZE 128
 
