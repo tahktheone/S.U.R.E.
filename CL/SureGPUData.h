@@ -114,22 +114,42 @@ uint InitRandom(int *x,int *y);
         DrawableCollided.dist_m = col->dist_m; \
     };
 
+#define SET_COLLISION_IO(I_IN,I_OUT) \
+    collision_found = true; \
+    DrawableCollided.refr = __DIVIDE(I_IN->refr,I_OUT->refr); \
+    DrawableCollided.transp = __SURE_MIN(I_IN->transp,I_OUT->transp); \
+    DrawableCollided.radiance = I_OUT->radiance; \
+    if(I_IN->refr > I_OUT->refr){ \
+        DrawableCollided.rgb = I_IN->rgb; \
+        DrawableCollided.dist_type = I_IN->dist_type; \
+        DrawableCollided.dist_sigma = I_IN->dist_sigma; \
+        DrawableCollided.dist_m = I_IN->dist_m; \
+    }else{ \
+        DrawableCollided.rgb = I_OUT->rgb; \
+        DrawableCollided.dist_type = I_OUT->dist_type; \
+        DrawableCollided.dist_sigma = I_OUT->dist_sigma; \
+        DrawableCollided.dist_m = I_OUT->dist_m; \
+    };
+
+#define SET_COLLISION_INSIDE SET_COLLISION_IO(DrawableIter,DrawableNext);
+
+#define SET_COLLISION_OUTSIDE SET_COLLISION_IO(DrawableCurrent,DrawableIter);
+
 #define SET_COLLISION_MESH \
-SET_COLLISION; \
 intersect_dist = TraceDistance; \
-if(lv_dr->map_id>=0){ \
-    __GET_TEXTURE_UV(CurrentMesh,lv_dr->map_id); \
+if(DrawableIter->map_id>=0){ \
+    __GET_TEXTURE_UV(CurrentMesh,DrawableIter->map_id); \
 }; \
-if(lv_dr->advmap_id>=0){ \
-    __GET_ADVMAP_UV(CurrentMesh,lv_dr->advmap_id); \
+if(DrawableIter->advmap_id>=0){ \
+    __GET_ADVMAP_UV(CurrentMesh,DrawableIter->advmap_id); \
 };
 
 #define GET_SPHERICAL_UV_COORDINATES(COORDS) \
-    __VTYPE3 VectorToCollision = collision_point - lv_dr->X; \
+    __VTYPE3 VectorToCollision = collision_point - DrawableIter->X; \
     __VTYPE3 LocalCoordinates; \
-    LocalCoordinates.x = dot(lv_dr->ox,VectorToCollision); \
-    LocalCoordinates.y = dot(lv_dr->oy,VectorToCollision); \
-    LocalCoordinates.z = dot(lv_dr->oz,VectorToCollision); \
+    LocalCoordinates.x = dot(DrawableIter->ox,VectorToCollision); \
+    LocalCoordinates.y = dot(DrawableIter->oy,VectorToCollision); \
+    LocalCoordinates.z = dot(DrawableIter->oz,VectorToCollision); \
     LocalCoordinates = __NORMALIZE(LocalCoordinates); \
     COORDS.y = __MAD(0.5f,LocalCoordinates.z,0.5f); \
     if(LocalCoordinates.x>0.0f){ \
@@ -141,31 +161,31 @@ if(lv_dr->advmap_id>=0){ \
     COORDS.x*=0.5f;
 
 #define GET_TEXTURE_SQUARE \
-if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0)){ \
-    __VTYPE2 TextureCoordinates = {__DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.x+lv_dr->lx),lv_dr->lx), \
-                                   __DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.y+lv_dr->ly),lv_dr->ly)}; \
-    if(lv_dr->map_id>=0) \
+if((DrawableIter->map_id>=0)||(DrawableIter->advmap_id>=0)){ \
+    __VTYPE2 TextureCoordinates = {__DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.x+DrawableIter->lx),DrawableIter->lx), \
+                                   __DIVIDE((__VTYPE)SURE_R_TEXRES*0.5f*(LocalCoordinates.y+DrawableIter->ly),DrawableIter->ly)}; \
+    if(DrawableIter->map_id>=0) \
     { \
         __GET_TEXTURE(TextureCoordinates.x, \
                       TextureCoordinates.y, \
-                      lv_dr->map_id); \
+                      DrawableIter->map_id); \
     }; \
-    if(lv_dr->advmap_id>=0) \
+    if(DrawableIter->advmap_id>=0) \
     { \
         __GET_ADVMAP(TextureCoordinates.x, \
                      TextureCoordinates.y, \
-                     lv_dr->advmap_id); \
+                     DrawableIter->advmap_id); \
     }; \
 };
 
 #define AABB_CHECK_AXIS(__A,__LA) \
-DistanceToSide = __DIVIDE((lv_dr->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
+DistanceToSide = __DIVIDE((DrawableIter->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
 if((LocalTraceVector.__A)>0.0f){ \
     if(DistanceToSide<AABB_NearestOut) AABB_NearestOut = DistanceToSide; \
 }else{ \
     if(DistanceToSide>AABB_FarestIn) AABB_FarestIn = DistanceToSide; \
 }; \
-DistanceToSide = __DIVIDE((-lv_dr->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
+DistanceToSide = __DIVIDE((-DrawableIter->__LA-LocalTracePoint.__A),LocalTraceVector.__A); \
 if(LocalTraceVector.__A<0.0f){ \
     if(DistanceToSide<AABB_NearestOut) AABB_NearestOut = DistanceToSide; \
 }else{ \
@@ -185,5 +205,15 @@ qvec = cross(tvec, LocalVertex2-LocalVertex1); \
 v = dot(LocalTraceVector, qvec) * inv_det; \
 if (v < 0.0f || (u + v) > 1.0f ) continue; \
 TraceDistance = dot(LocalVertex3-LocalVertex1, qvec) * inv_det * ResizingKoeff;
+
+#define SET_CURRENT \
+if(DrawableIter->refr>DrawableCurrent->refr){ \
+    if(DrawableCurrent->refr>DrawableNext->refr){ \
+        DrawableNext = DrawableCurrent; \
+    }; \
+    DrawableCurrent = DrawableIter; \
+}else if(DrawableIter->refr>DrawableNext->refr){ \
+    DrawableNext = DrawableIter; \
+};
 
 #endif // SUREGPUDATA_H_INCLUDED

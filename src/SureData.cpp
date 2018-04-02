@@ -35,6 +35,7 @@ SureData::SureData()
         LoadModel("test");
 
         LoadModel("golem");
+        //LoadModel("sword");
         LoadModel("teapot");
         LoadModel("monkey");
         LoadModel("ghost_dark");

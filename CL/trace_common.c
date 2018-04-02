@@ -4,10 +4,14 @@
     // drawable, с которым встретился луч (для хранения параметров изменения траектории)
     __SURE_STRUCT SureDrawable DrawableCollided;
 
-    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
-    __SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
-    __SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
-    __SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_dr; // drawable который сейчас анализируется
+    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
+    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
+    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableIter; // drawable который сейчас анализируется
+    // Это нужно, чтобы корректно отслеживать переход луча между средами разной плотности:
+    // (для корректного отражения преломления, например, в стеклянном шаре в воде)
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableCurrent;
+    __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableNext;
 
     //Основные переменные с информацией о трассировке
     __VTYPE  TraceLength = 0; // общий путь трассировки -- до SURE_R_MAXLENGTH
@@ -25,8 +29,7 @@
         TraceVector = DetermineTraceVector(x,y,&CameraInfo);
     };
 
-    cur = &Drawables[0];
-    __SURE_GLOBAL __SURE_STRUCT SureDrawable *CurrentEnviroment = &Drawables[0];
+    //cur = &Drawables[0];
 
     uint MaximumIterrations = GPUData->r_maxiters;
     #if SURE_RLEVEL>20
@@ -47,7 +50,8 @@
         if(TraceLength > SURE_R_MAXDISTANCE)continue;
         if((TraceFade.x+TraceFade.y+TraceFade.z) < SURE_R_FADELIMIT)continue;
 
-        lv_cur = cur;
+        DrawableCurrent = &Drawables[0];// Объект внутри которого находится луч трассировки
+        DrawableNext = &Drawables[0]; // Объект, внутри которого находится объект DrawableCurrent
 
         // параметры пересечения луча с объектом
         __VTYPE3 collision_point;
@@ -68,16 +72,16 @@
                 TraceLog->Items[TraceLog->ItemsCount].TraceVector = TraceVector;
                 TraceLog->Items[TraceLog->ItemsCount].TracePoint = TracePoint;
             #endif // __LOGGING
-            lv_dr = &Drawables[DrawablesIndex];
-            switch(lv_dr->type)
+            DrawableIter = &Drawables[DrawablesIndex];
+            switch(DrawableIter->type)
             {
                 case SURE_DR_SPHERE:
                 {
                     bool InSphere = false;
 
-                    __VTYPE3 VectorToCenter = TracePoint-lv_dr->X;
+                    __VTYPE3 VectorToCenter = TracePoint-DrawableIter->X;
                     __VTYPE B = dot(VectorToCenter,TraceVector);
-                    __VTYPE C = __MAD(-lv_dr->lx,lv_dr->lx,dot(VectorToCenter,VectorToCenter));
+                    __VTYPE C = __MAD(-DrawableIter->lx,DrawableIter->lx,dot(VectorToCenter,VectorToCenter));
                     __VTYPE D = __MAD(B,B,-C);
                     __VTYPE2 t;
 
@@ -87,61 +91,61 @@
                         __VTYPE t2 = -B-kd;
                         t.x = __SURE_MIN(t1,t2);
                         t.y = __SURE_MAX(t1,t2);
+
+                        if((t.x<SURE_R_DELTA)&&(t.y>SURE_R_DELTA)){ // проверка на нахождение в сфере
+                            // если на входе в сферу - граница вклчена
+                            // если на выходе - не включена
+                            SET_CURRENT;
+                        };
+
                         if(t.x>intersect_dist) break; // отсеиваем случаи когда ближайшая точка сферы дальше чем текущий intersect_dist
                         if(t.y<SURE_R_DELTA) break; // отсеиваем случаи когда сфера "сзади"
                         InSphere = t.x<SURE_R_DELTA ? true : false; // определяем мы внутри или снаружи
                         if(InSphere){
-                            if(CurrentEnviroment->refr<lv_dr->refr){
-                                CurrentEnviroment = lv_dr;
-                            };
                             if(t.y<SURE_R_DELTA)break;
                             if(t.y>intersect_dist)break;
                             intersect_dist = t.y;//-SURE_R_DELTA_GPU_FIX;
                         }else{
                             intersect_dist = t.x;//-SURE_R_DELTA_GPU_FIX;
                         };
-                       if(lv_dr->sided||!InSphere)
+                       if(DrawableIter->sided||!InSphere)
                        {
-                           col = lv_dr;
-                           cur = lv_cur;
-                           DrawableCollided.radiance = lv_dr->radiance;
+                           SET_COLLISION_OUTSIDE;
                        }else{
-                           col = CurrentEnviroment; //&Drawables[0];
-                           cur = lv_dr;
-                           DrawableCollided.radiance = 0;
+                           SET_COLLISION_INSIDE
                        };
-                        SET_COLLISION;
+
                         #ifdef __SELECT_OBJECT
                             FoundDrawable = DrawablesIndex;
                         #endif
                         collision_point = __MAD(intersect_dist,TraceVector,TracePoint);
 
                         // Корректируем точку пересечения -- помещаем ее ровно на шар:
-                        collision_point = __MAD(lv_dr->lx,__NORMALIZE(collision_point-lv_dr->X),lv_dr->X);
+                        collision_point = __MAD(DrawableIter->lx,__NORMALIZE(collision_point-DrawableIter->X),DrawableIter->X);
 
-                        if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0)){
+                        if((DrawableIter->map_id>=0)||(DrawableIter->advmap_id>=0)){
                             __VTYPE3 UVCoordinates;
                             GET_SPHERICAL_UV_COORDINATES(UVCoordinates);
                             UVCoordinates.x *= SURE_R_TEXRES;
                             UVCoordinates.y *= SURE_R_TEXRES;
-                            if(lv_dr->map_id>=0)
+                            if(DrawableIter->map_id>=0)
                             {
                                 __GET_TEXTURE(UVCoordinates.x,
                                               UVCoordinates.y,
-                                              lv_dr->map_id);
+                                              DrawableIter->map_id);
                             };
-                            if(lv_dr->advmap_id>=0)
+                            if(DrawableIter->advmap_id>=0)
                             {
                                 __GET_ADVMAP(UVCoordinates.x,
                                              UVCoordinates.y,
-                                             lv_dr->advmap_id);
+                                             DrawableIter->advmap_id);
                             };
-                        }; // if((lv_dr->map_id>=0)||(lv_dr->advmap_id>=0))
+                        }; // if((DrawableIter->map_id>=0)||(DrawableIter->advmap_id>=0))
                         if(InSphere)
                         {
-                            collision_normal = __NORMALIZE(lv_dr->X - collision_point);
+                            collision_normal = __NORMALIZE(DrawableIter->X - collision_point);
                         }else{
-                            collision_normal = __NORMALIZE(collision_point - lv_dr->X);
+                            collision_normal = __NORMALIZE(collision_point - DrawableIter->X);
                         };
                     break;
                 }; // Сфера
@@ -149,27 +153,35 @@
                 case SURE_DR_SQUARE:
                 {
                     // Расстояние от точки старта луча до плоскости
-                    __VTYPE3 VectorToDrawableCenter = TracePoint-lv_dr->X;
-                    __VTYPE DistanceToPlane = dot(lv_dr->oz,VectorToDrawableCenter);
+                    __VTYPE3 VectorToDrawableCenter = TracePoint-DrawableIter->X;
+                    __VTYPE DistanceToPlane = dot(DrawableIter->oz,VectorToDrawableCenter);
+                    // Проекция вектора трассировки на нормаль
+                    __VTYPE TraceVecByNormal = dot(DrawableIter->oz,TraceVector);
 
-                    if((DistanceToPlane<-SURE_R_DELTA)&&       // "под" плоскостью
-                       (DistanceToPlane>(-lv_dr->lz))&&     // "глубже" чем заданная глубина плоскости
-                       (CurrentEnviroment->refr<lv_dr->refr)){ // более плотная среда
-                        // Локальные координаты точки пересечения
-                        __VTYPE2 Coordinates = {dot(lv_dr->ox,VectorToDrawableCenter),
-                                                dot(lv_dr->oy,VectorToDrawableCenter)};
-                        // Нет попадания в квадрат -- игнорируем
-                        if(Coordinates.x <  lv_dr->lx&&
-                           Coordinates.x > -lv_dr->lx&&
-                           Coordinates.y <  lv_dr->ly&&
-                           Coordinates.y > -lv_dr->ly)
-                           CurrentEnviroment = lv_dr;
-                    };
+                    // Условия нахождения "внутри" объекта:
+                    // 1. координаты проекции точки трассировки на плоскость - внутри квадрата.
+                    // 2.1 ИЛИ расстояние до плоскости < дельты И вектор трассировки неколинеарен нормали
+                    // 2.2 ИЛИ расстояние до плоскости <-дельты И вектор трассировки колинеарен нормали
+                    // 3. Расстояние до плоскости < дельты и >-lz
+
+                    if((DistanceToPlane<SURE_R_DELTA)&&
+                       (DistanceToPlane>(-DrawableIter->lz))){
+                        if((TraceVecByNormal<0.0f)||(DistanceToPlane<-SURE_R_DELTA)){
+                            __VTYPE2 Coordinates = {dot(DrawableIter->ox,VectorToDrawableCenter),
+                                                    dot(DrawableIter->oy,VectorToDrawableCenter)};
+                            // Нет попадания в квадрат -- игнорируем
+                            if( Coordinates.x <  DrawableIter->lx&&
+                                Coordinates.x > -DrawableIter->lx&&
+                                Coordinates.y <  DrawableIter->ly&&
+                                Coordinates.y > -DrawableIter->ly){
+                                SET_CURRENT;
+                            }; // попадание в координаты
+                        }; // проверки на границе с плоскостью
+                    }; // точка трассировки под плоскостью
+
                     // Если точка старта луча вплотную к плоскости -- игнорируем ее
                     // (чтобы отраженый от плоскости луч из-за округлений не сталкивался с той же плоскостью):
                     if(DistanceToPlane<SURE_R_DELTA&&DistanceToPlane>-SURE_R_DELTA)break;
-                    // Проекция вектора трассировки на нормаль
-                    __VTYPE TraceVecByNormal = dot(lv_dr->oz,TraceVector);
                     // Расстояние до точки пересечения луча с плоскостью
                     __VTYPE TraceDistance = - __DIVIDE(DistanceToPlane,TraceVecByNormal);
                     // Если дальше чем уже найденное пересечение -- выходим
@@ -179,15 +191,15 @@
                     // Точка пересечения луча с плоскостью
                     __VTYPE3 CollisionPointCandidate = TracePoint+TraceDistance*TraceVector;
                     // Вектор От чентра объекта (внутренние координаты 0 0) к точке пересечения
-                    __VTYPE3 LocalVectorToTracePoint = lv_dr->X - CollisionPointCandidate;
+                    __VTYPE3 LocalVectorToTracePoint = DrawableIter->X - CollisionPointCandidate;
                     // Локальные координаты точки пересечения
-                    __VTYPE2 LocalCoordinates = {dot(lv_dr->ox,LocalVectorToTracePoint),
-                                                 dot(lv_dr->oy,LocalVectorToTracePoint)};
+                    __VTYPE2 LocalCoordinates = {dot(DrawableIter->ox,LocalVectorToTracePoint),
+                                                 dot(DrawableIter->oy,LocalVectorToTracePoint)};
                     // Нет попадания в квадрат -- игнорируем
-                    if(LocalCoordinates.x >  lv_dr->lx||
-                       LocalCoordinates.x < -lv_dr->lx||
-                       LocalCoordinates.y >  lv_dr->ly||
-                       LocalCoordinates.y < -lv_dr->ly)break;
+                    if(LocalCoordinates.x >  DrawableIter->lx||
+                       LocalCoordinates.x < -DrawableIter->lx||
+                       LocalCoordinates.y >  DrawableIter->ly||
+                       LocalCoordinates.y < -DrawableIter->ly)break;
                     // Луч гарантированно столкнулся с квадратом.
                     // Обрабатываем столкновение
                     intersect_dist = TraceDistance;
@@ -195,36 +207,28 @@
                     // Корректируем точку пересечения:
                     // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
                     // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
-                    collision_point = __MAD(-lv_dr->oz,dot(CollisionPointCandidate-lv_dr->X,lv_dr->oz),CollisionPointCandidate);
+                    collision_point = __MAD(-DrawableIter->oz,dot(CollisionPointCandidate-DrawableIter->X,DrawableIter->oz),CollisionPointCandidate);
 
                     if(TraceVecByNormal>0.0f)
                     {  // с внутренней стороны
-                        if(lv_dr->sided)
+                        if(DrawableIter->sided)
                         { // материал двухсторонний
-                            col = lv_dr;
-                            cur = lv_cur;
-                            DrawableCollided.radiance = lv_dr->radiance;
+                            SET_COLLISION_OUTSIDE;
                         }else{  // материал односторонний
-                            col = CurrentEnviroment;// &Drawables[0];
-                            cur = lv_dr;
-                            DrawableCollided.radiance = 0.0f;
+                            SET_COLLISION_INSIDE;
                         };
-                        SET_COLLISION;
                         #ifdef __SELECT_OBJECT
                             FoundDrawable = DrawablesIndex;
                         #endif
                         GET_TEXTURE_SQUARE;
-                        collision_normal = -lv_dr->oz;
+                        collision_normal = -DrawableIter->oz;
                     }else{ // с внешней стороны
-                        col = lv_dr;
-                        cur = lv_cur;
-                        DrawableCollided.radiance = lv_dr->radiance;
-                        SET_COLLISION;
+                        SET_COLLISION_OUTSIDE;
                         #ifdef __SELECT_OBJECT
                             FoundDrawable = DrawablesIndex;
                         #endif
                         GET_TEXTURE_SQUARE;
-                        collision_normal = lv_dr->oz;
+                        collision_normal = DrawableIter->oz;
                     };
                     break;
                 }; // Квадрат
@@ -232,15 +236,15 @@
                 {
 
                     __VTYPE3 LocalTraceVector;
-                    LocalTraceVector.x = dot(TraceVector,lv_dr->ox);
-                    LocalTraceVector.y = dot(TraceVector,lv_dr->oy);
-                    LocalTraceVector.z = dot(TraceVector,lv_dr->oz);
+                    LocalTraceVector.x = dot(TraceVector,DrawableIter->ox);
+                    LocalTraceVector.y = dot(TraceVector,DrawableIter->oy);
+                    LocalTraceVector.z = dot(TraceVector,DrawableIter->oz);
 
                     __VTYPE3 LocalTracePoint;
-                    __VTYPE3 VectorToTracePoint = TracePoint-lv_dr->X;
-                    LocalTracePoint.x = dot(VectorToTracePoint,lv_dr->ox);
-                    LocalTracePoint.y = dot(VectorToTracePoint,lv_dr->oy);
-                    LocalTracePoint.z = dot(VectorToTracePoint,lv_dr->oz);
+                    __VTYPE3 VectorToTracePoint = TracePoint-DrawableIter->X;
+                    LocalTracePoint.x = dot(VectorToTracePoint,DrawableIter->ox);
+                    LocalTracePoint.y = dot(VectorToTracePoint,DrawableIter->oy);
+                    LocalTracePoint.z = dot(VectorToTracePoint,DrawableIter->oz);
 
                     // Проверка на пересечение луча с AABB (в локальных координатах)
                     // AABB - Axis Aligned Bounding Box
@@ -258,9 +262,9 @@
                     // Приводим размеры вектора трассировки к размерам объекта
                     // Потому что все координаты Vertex'ов в mesh'ах - от -1.0 до 1.0
                     // И мы не хотим переводить их все в глобальные координаты
-                    __VTYPE3 LocalSizeMultiplier = { __INV(lv_dr->lx),
-                                                     __INV(lv_dr->ly),
-                                                     __INV(lv_dr->lz)};
+                    __VTYPE3 LocalSizeMultiplier = { __INV(DrawableIter->lx),
+                                                     __INV(DrawableIter->ly),
+                                                     __INV(DrawableIter->lz)};
                     LocalTraceVector.x*=LocalSizeMultiplier.x;
                     LocalTraceVector.y*=LocalSizeMultiplier.y;
                     LocalTraceVector.z*=LocalSizeMultiplier.z;
@@ -277,14 +281,18 @@
                     // чтобы избежать искажений в мелких деталях
                     __VTYPE LocalRenderDelta = SURE_R_DELTA*ResizingKoeff;
 
-                    for(uint MeshIndex = 0;MeshIndex<lv_dr->mesh_count;++MeshIndex)
+                    // для определения того, находимся ли мы "внутри"
+                    __VTYPE FirstIn = SURE_R_MAXDISTANCE;
+                    __VTYPE FirstOut = SURE_R_MAXDISTANCE;
+
+                    for(uint MeshIndex = 0;MeshIndex<DrawableIter->mesh_count;++MeshIndex)
                     { // Для каждой meshины
 
                         // переменные для алгоритма поиска пересечения луча и треугольника
                         __VTYPE3 pvec; __VTYPE3 tvec; __VTYPE det; __VTYPE inv_det;
                         __VTYPE u; __VTYPE v; __VTYPE3 qvec; __VTYPE TraceDistance;
 
-                        uint CurrentMesh = lv_dr->mesh_start + MeshIndex;
+                        uint CurrentMesh = DrawableIter->mesh_start + MeshIndex;
                         __SURE_VINT4 MeshData;
                         __VTYPE3 LocalVertex1;
                         __VTYPE3 LocalVertex2;
@@ -324,20 +332,20 @@
                         LocalNormal = __NORMALIZE(LocalNormal);
 
                         // переводим нормаль в глобальные координаты
-                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*lv_dr->oz,lv_dr->lz,
-                                                             __MAD(LocalNormal.y*lv_dr->oy,lv_dr->ly,
-                                                                   LocalNormal.x*lv_dr->ox*lv_dr->lx)));
+                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*DrawableIter->oz,DrawableIter->lz,
+                                                             __MAD(LocalNormal.y*DrawableIter->oy,DrawableIter->ly,
+                                                                   LocalNormal.x*DrawableIter->ox*DrawableIter->lx)));
 
                         __VTYPE3 LocalTrueNormal = cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1);
-                        __VTYPE3 GlobalTrueNormal = __NORMALIZE(__MAD(LocalTrueNormal.z*lv_dr->oz,lv_dr->lz,
-                                                                  __MAD(LocalTrueNormal.y*lv_dr->oy,lv_dr->ly,
-                                                                        LocalTrueNormal.x*lv_dr->ox*lv_dr->lx)));
+                        __VTYPE3 GlobalTrueNormal = __NORMALIZE(__MAD(LocalTrueNormal.z*DrawableIter->oz,DrawableIter->lz,
+                                                                  __MAD(LocalTrueNormal.y*DrawableIter->oy,DrawableIter->ly,
+                                                                        LocalTrueNormal.x*DrawableIter->ox*DrawableIter->lx)));
 
                         // точка на плоскости -- одна из вершин грани, с которой произошло пересечение:
-                        __VTYPE3 CollisionCheckPoint = __MAD(LocalVertex1.z*lv_dr->oz,lv_dr->lz,
-                                                       __MAD(LocalVertex1.y*lv_dr->oy,lv_dr->ly,
-                                                       __MAD(LocalVertex1.x*lv_dr->ox,lv_dr->lx,
-                                                             lv_dr->X)));
+                        __VTYPE3 CollisionCheckPoint = __MAD(LocalVertex1.z*DrawableIter->oz,DrawableIter->lz,
+                                                       __MAD(LocalVertex1.y*DrawableIter->oy,DrawableIter->ly,
+                                                       __MAD(LocalVertex1.x*DrawableIter->ox,DrawableIter->lx,
+                                                             DrawableIter->X)));
                         // Корректируем точку пересечения:
                         // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
                         // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
@@ -345,52 +353,43 @@
 
                         if(dot(LocalTraceVector,cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1))>0.0f)
                         { // с внутренней стороны
-                            if(lv_dr->sided)
+                            if(TraceDistance<FirstOut)FirstOut=TraceDistance;
+                            if(DrawableIter->sided)
                             { // материал двухсторонний
-                                col = lv_dr;
-                                cur = lv_cur;
-                                DrawableCollided.radiance = lv_dr->radiance;
+                                SET_COLLISION_OUTSIDE;
                             }else{  // материал односторонний
-                                #if SURE_RLEVEL<30
-                                    col = lv_dr;
-                                    cur = lv_cur;
-                                    DrawableCollided.radiance = lv_dr->radiance;
-                                #else
-                                    col = CurrentEnviroment; //&Drawables[0];
-                                    cur = lv_dr;
-                                    DrawableCollided.radiance = 0;
-                                #endif
+                                SET_COLLISION_INSIDE;
                             };
                             collision_normal = -collision_normal;
                             SET_COLLISION_MESH;
                         }else{ // с внешней стороны
-                            col = lv_dr;
-                            cur = lv_cur;
-                            DrawableCollided.radiance = lv_dr->radiance;
+                            if(TraceDistance<FirstIn)FirstIn=TraceDistance;
+                            SET_COLLISION_OUTSIDE
                             SET_COLLISION_MESH;
                         };
                         #ifdef __SELECT_OBJECT
                             FoundDrawable = DrawablesIndex;
                         #endif
                     }; // Для каждой meshины
+                    // определяем, не находится ли точка трассировки внутри mesh
+                    if(FirstOut<FirstIn){
+                        SET_CURRENT;
+                    };
                     break;
                 }; // Mesh
                 default:
                     break;
-            }; // switch(lv_dr->type)
+            }; // switch(DrawableIter->type)
         };// Цикл по Drawables
 
         // Тут мы прошлись по всем Drawables и нашли (или нет) с чем пересекается луч.
         #if SURE_RLEVEL>90
         // Добавлем рассеивание средой
         if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*CurrentEnviroment->transp_i;
+        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*DrawableCurrent->transp_i;
         if(rr<intersect_dist){
-            col = CurrentEnviroment;
-            cur = CurrentEnviroment;
-            collision_found = true;
-            DrawableCollided.radiance = 0.0f;
-            SET_COLLISION;
+            DrawableIter = DrawableCurrent;
+            SET_COLLISION_OUTSIDE;
             intersect_dist = rr;
             collision_normal = -TraceVector;
             collision_point = __MAD(intersect_dist,TraceVector,TracePoint);
@@ -402,7 +401,7 @@
             TraceLog->Items[TraceLog->ItemsCount].CollisionNomal = collision_normal;
             TraceLog->Items[TraceLog->ItemsCount].IntersectDistance = intersect_dist;
             TraceLog->Items[TraceLog->ItemsCount].iter = Iterration;
-            TraceLog->Items[TraceLog->ItemsCount].transp_i = cur->transp_i;
+            TraceLog->Items[TraceLog->ItemsCount].transp_i = DrawableCurrent->transp_i;
         #endif // __LOGGING
 
          // луч улетел в никуда -- выходим из цикла
@@ -518,16 +517,6 @@
                                     TraceLog->Items[TraceLog->ItemsCount].rechecks = RecheckCounter;
                                     ++TraceLog->ItemsCount;
                                 #endif // __LOGGING
-
-                            if((CurrentEnviroment==cur)&&(CurrentEnviroment!=&Drawables[0])&&(cur==col)){
-                                // Если луч "выходит" из какого-то объекта (не из воздуха) -
-                                // считаем, что он выходит на "воздух"
-                                // (чтобы на слудующем шаге произошел повторный поиск CurrentEnviroment)
-                                CurrentEnviroment = &Drawables[0];
-                            }else{
-                                CurrentEnviroment = col;
-                            };
-                            cur = col;
                         };  // Внутреннее отражение /  преломление
                     };// if(l>0) модифицированная нормаль не коллинеарна вектору трассировки
                 }else{ // не сработала прозрачность -- считаем отражение

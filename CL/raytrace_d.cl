@@ -199,18 +199,11 @@ uint4 advmap;
 if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
-//TracePoint = collision_point;
 #define SET_TRACE_POINT_MINUS \
 TracePoint = collision_point;
 
-//intersect_dist-=SURE_R_DELTA_GPU_FIX; \
-//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
-
 #define SET_TRACE_POINT_PLUS \
 TracePoint = collision_point;
-
-//intersect_dist+=SURE_R_DELTA_GPU_FIX; \
-//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
 
 #include <trace_common_d.c>
 }
