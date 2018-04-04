@@ -300,6 +300,10 @@ class SureData
         int m_objects = 0;
         uint m_ObjExternID = 1;
 
+        // Стандартные объекты
+        void SetTemplate_GlassSphere(float Radius);
+        void SetTemplate_DarkCube(float SideLen);
+
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int i_model,int norm_type); // не забыть вернуть в private
         void Mesh_GenerateCube(int i_model,int norm_type); // не забыть вернуть в private

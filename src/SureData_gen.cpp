@@ -335,3 +335,49 @@ int SureData::GenTexture(const char* name,int type)
         return cur_textures - 1;
 
 }
+
+void SureData::SetTemplate_GlassSphere(float Radius){
+    TemplateObject.drawable.rgb.s[0] = 240.0;
+    TemplateObject.drawable.rgb.s[1] = 240.0;
+    TemplateObject.drawable.rgb.s[2] = 250.0;
+    TemplateObject.movable = true;
+    TemplateObject.collidable = true;
+    TemplateObject.type = SURE_OBJ_SPHERE;
+    TemplateObject.drawable.radiance = 0;
+    TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
+    TemplateObject.lx = Radius;
+    TemplateObject.lp = Radius*1.7;
+    TemplateObject.drawable.transp = 0.96;
+    TemplateObject.drawable.refr = 1.21f;
+    TemplateObject.drawable.transp_i = 0.88;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+}
+
+void SureData::SetTemplate_DarkCube(float SideLen){
+    TemplateObject.movable = true;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.rgb.s[0] = 13.0;
+    TemplateObject.drawable.rgb.s[1] = 10.0;
+    TemplateObject.drawable.rgb.s[2] = 10.0;
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.lx = SideLen; // длина
+    TemplateObject.ly = SideLen; // ширина
+    TemplateObject.lz = SideLen; // высота
+    TemplateObject.lp = SideLen*1.7f;
+    TemplateObject.drawable.radiance = 0.0f;
+    sprintf(TemplateObject.ModelName_drawable,"cube");
+    TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
+    sprintf(TemplateObject.ModelName_collider,"cube");
+    TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.transp = 1.1f;
+    TemplateObject.drawable.transp_i = 0.005f;
+    TemplateObject.drawable.refr = 1.02;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.type = SURE_DR_MESH;
+}

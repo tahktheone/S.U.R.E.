@@ -189,7 +189,7 @@
                     // Если плоскость сзади, за стартом луча -- выходим.
                     if(TraceDistance<SURE_R_DELTA)break;
                     // Точка пересечения луча с плоскостью
-                    __VTYPE3 CollisionPointCandidate = __MAD(TraceDistance,TraceVector,TracePoint);
+                    __VTYPE3 CollisionPointCandidate = TracePoint+TraceDistance*TraceVector;
                     // Вектор От чентра объекта (внутренние координаты 0 0) к точке пересечения
                     __VTYPE3 LocalVectorToTracePoint = DrawableIter->X - CollisionPointCandidate;
                     // Локальные координаты точки пересечения
