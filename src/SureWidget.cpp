@@ -494,6 +494,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
             painter.setPen(l_Pen);
             for(int TraceItemID = 0;TraceItemID<(int)EngineData->TraceLogs[TraceLogID].ItemsCount;TraceItemID++){
                 SureTraceLogItem *l_item = &EngineData->TraceLogs[TraceLogID].Items[TraceItemID];
+
+                l_Color.setRed(l_item->rgb_current.x);
+                l_Color.setGreen(l_item->rgb_current.y);
+                l_Color.setBlue(l_item->rgb_current.z);
+                l_Pen.setColor(l_Color);
+                painter.setPen(l_Pen);
+
                 __VTYPE3 CollisionPoint = l_item->TracePoint + l_item->TraceVector*l_item->IntersectDistance;
                 DRAW_LINE(l_item->TracePoint,CollisionPoint);
                 l_Pen.setColor(Qt::green);
@@ -512,11 +519,11 @@ void SureWidget::paintEvent(QPaintEvent * event)
                     P1.setY(LocalPoint1.y);
                     painter.drawText(P1,txt);
                 };
-                l_Color.setRed(l_inicolor_x*l_item->Fade.x);
-                l_Color.setGreen(l_inicolor_y*l_item->Fade.y);
-                l_Color.setBlue(l_inicolor_z*l_item->Fade.z);
-                l_Pen.setColor(l_Color);
-                painter.setPen(l_Pen);
+                //l_Color.setRed(l_inicolor_x*l_item->Fade.x);
+                //l_Color.setGreen(l_inicolor_y*l_item->Fade.y);
+                //l_Color.setBlue(l_inicolor_z*l_item->Fade.z);
+                //l_Pen.setColor(l_Color);
+                //painter.setPen(l_Pen);
             };
         };
         painter.setPen(Qt::blue);
@@ -817,22 +824,17 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
 {
     if(mousemove)
     {
-
         if (event->button() == Qt::LeftButton) {
-            EngineData->SetTemplate_GlassSphere(10.0f);
-            __VTYPE3 X = EngineData->CameraInfo.cam_x;
-            uint o = EngineData->CreateObjectFromTemplate(&X);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
-
-        };
-        if (event->button() == Qt::RightButton) {
-            EngineData->SetTemplate_DarkCube(15.0f);
             EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
             EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
             __VTYPE3 X = EngineData->CameraInfo.cam_x;
             uint o = EngineData->CreateObjectFromTemplate(&X);
             EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
+        };
+        if (event->button() == Qt::RightButton) {
+            EngineData->SetNextTemplate();
+            EngineData->reset = true;
         };
     }else{ // if mousemove
         if (event->button() == Qt::LeftButton) {

@@ -315,11 +315,26 @@
                         // Главное -- он работает, и говорят, что это самый быстрый вариант решения
                         // для поиска пересечения луча и треугольника.
 
-                        // Сзади, слишком близко или дальше чем уже найденное пересечение -- выходим:
-                        if(TraceDistance<LocalRenderDelta||TraceDistance>intersect_dist)continue;
+                        //__VTYPE GlobalTraceDistance = TraceDistance * ResizingKoeff;
+
+                        // Сзади или слишком близко -- выходим:
+                        if(TraceDistance<LocalRenderDelta)continue;
+
+                        __VTYPE3 LocalTrueNormal = __NORMALIZE(cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1));
+
+                        bool CollisionIsInner = (dot(LocalTraceVector,LocalTrueNormal)>0.0f);
+
+                        if(CollisionIsInner){
+                            if(TraceDistance<FirstOut)FirstOut=TraceDistance;
+                        }else{
+                            if(TraceDistance<FirstIn)FirstIn=TraceDistance;
+                        };
+
+                        // Дальше чем уже найденная точка пересечения
+                        if(TraceDistance>intersect_dist)continue;
 
                         // точка пересечения
-                        collision_point = __MAD(TraceVector,TraceDistance,TracePoint);
+                        __VTYPE3 LocalCollisionPoint = __MAD(LocalTraceVector,__DIVIDE(TraceDistance,ResizingKoeff),LocalTracePoint);
 
                         // читаем нормали по vertex'ам
                         __VTYPE3 n1; __VTYPE3 n2; __VTYPE3 n3;
@@ -332,28 +347,21 @@
                         LocalNormal = __NORMALIZE(LocalNormal);
 
                         // переводим нормаль в глобальные координаты
-                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*DrawableIter->oz,DrawableIter->lz,
-                                                             __MAD(LocalNormal.y*DrawableIter->oy,DrawableIter->ly,
-                                                                   LocalNormal.x*DrawableIter->ox*DrawableIter->lx)));
+                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*DrawableIter->oz,__INV(DrawableIter->lz),
+                                                             __MAD(LocalNormal.y*DrawableIter->oy,__INV(DrawableIter->ly),
+                                                                   LocalNormal.x*DrawableIter->ox*__INV(DrawableIter->lx))));
 
-                        __VTYPE3 LocalTrueNormal = cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1);
-                        __VTYPE3 GlobalTrueNormal = __NORMALIZE(__MAD(LocalTrueNormal.z*DrawableIter->oz,DrawableIter->lz,
-                                                                  __MAD(LocalTrueNormal.y*DrawableIter->oy,DrawableIter->ly,
-                                                                        LocalTrueNormal.x*DrawableIter->ox*DrawableIter->lx)));
-
-                        // точка на плоскости -- одна из вершин грани, с которой произошло пересечение:
-                        __VTYPE3 CollisionCheckPoint = __MAD(LocalVertex1.z*DrawableIter->oz,DrawableIter->lz,
-                                                       __MAD(LocalVertex1.y*DrawableIter->oy,DrawableIter->ly,
-                                                       __MAD(LocalVertex1.x*DrawableIter->ox,DrawableIter->lx,
-                                                             DrawableIter->X)));
                         // Корректируем точку пересечения:
                         // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
                         // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
-                        collision_point = __MAD(-GlobalTrueNormal,dot(collision_point-CollisionCheckPoint,GlobalTrueNormal),collision_point);
+                        //LocalCollisionPoint = __MAD(-LocalTrueNormal,dot(LocalCollisionPoint-LocalVertex1,LocalTrueNormal),LocalCollisionPoint);
+                        collision_point = __MAD(LocalCollisionPoint.z*DrawableIter->oz,DrawableIter->lz,
+                                                __MAD(LocalCollisionPoint.y*DrawableIter->oy,DrawableIter->ly,
+                                                      __MAD(LocalCollisionPoint.x*DrawableIter->ox,DrawableIter->lx,
+                                                             DrawableIter->X)));
 
-                        if(dot(LocalTraceVector,cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1))>0.0f)
+                        if(CollisionIsInner)
                         { // с внутренней стороны
-                            if(TraceDistance<FirstOut)FirstOut=TraceDistance;
                             if(DrawableIter->sided)
                             { // материал двухсторонний
                                 SET_COLLISION_OUTSIDE;
@@ -363,7 +371,6 @@
                             collision_normal = -collision_normal;
                             SET_COLLISION_MESH;
                         }else{ // с внешней стороны
-                            if(TraceDistance<FirstIn)FirstIn=TraceDistance;
                             SET_COLLISION_OUTSIDE
                             SET_COLLISION_MESH;
                         };
@@ -402,6 +409,7 @@
             TraceLog->Items[TraceLog->ItemsCount].IntersectDistance = intersect_dist;
             TraceLog->Items[TraceLog->ItemsCount].iter = Iterration;
             TraceLog->Items[TraceLog->ItemsCount].transp_i = DrawableCurrent->transp_i;
+            TraceLog->Items[TraceLog->ItemsCount].rgb_current = DrawableCurrent->rgb;
         #endif // __LOGGING
 
          // луч улетел в никуда -- выходим из цикла

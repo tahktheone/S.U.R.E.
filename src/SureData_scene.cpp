@@ -4,6 +4,13 @@ void SureData::Scene_box() // коробка со светящимся пото�
 {
 __VTYPE3 X;
   // свет
+    TemplateObject.drawable.sided = true;
+    TemplateObject.drawable.refr = 1.49f;
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.dist_sigma = 0.03f;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.transp = 0.0f;
+    TemplateObject.drawable.transp_i = 0.1f;
     TemplateObject.type = SURE_OBJ_PLANE;
     TemplateObject.drawable.advmap_id = -1;
     TemplateObject.drawable.map_id = -1;
@@ -36,7 +43,7 @@ __VTYPE3 X;
 
     CreateObjectFromTemplate(&X); // пол
 
-    TemplateObject.drawable.refr = 1.01; // Коэффициент преломления
+    TemplateObject.drawable.refr = 99.0; // Коэффициент преломления
     TemplateObject.drawable.dist_type = SURE_D_NORM; // тип рандомизации
     TemplateObject.drawable.dist_sigma = 0.01; // sigma рандомизации
     X.x = 50; X.y = 0; X.z = 50;
@@ -392,7 +399,6 @@ __VTYPE3 X;
     TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
     sprintf(TemplateObject.ModelName_drawable,"tetr");
     TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
-
     TemplateObject.drawable.refr = 1.01; // Коэффициент преломления
     TemplateObject.drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
     TemplateObject.drawable.dist_sigma = 1.0f; // sigma рандомизации

@@ -1467,6 +1467,30 @@ void SurePhysThread::drawscene()
     GPUData->Drawables[i].sided = true;
     GPUData->m_drawables++;
 
+    // Нарисуем TemplateObject:
+    GPUData->Drawables[++i] = EngineData->TemplateObject.drawable;
+    GPUData->Drawables[i].X = EngineData->CameraInfo.cam_x
+                            + EngineData->CameraInfo.cam_vec*5.0
+                            + EngineData->CameraInfo.cam_upvec*4.5
+                            + cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec)*6.0;
+    GPUData->Drawables[i].ox.s[0] = 1; //Локальная ось x
+    GPUData->Drawables[i].ox.s[1] = 0;
+    GPUData->Drawables[i].ox.s[2] = 0;
+    GPUData->Drawables[i].oy.s[0] = 0; //Локальная ось x
+    GPUData->Drawables[i].oy.s[1] = 1;
+    GPUData->Drawables[i].oy.s[2] = 0;
+    GPUData->Drawables[i].oz.s[0] = 0; //Локальная ось x
+    GPUData->Drawables[i].oz.s[1] = 0;
+    GPUData->Drawables[i].oz.s[2] = 1;
+    if(EngineData->TemplateObject.drawable.type==SURE_DR_MESH){
+        GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_start;
+        GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_count;
+    };
+    GPUData->Drawables[i].lx = 0.5f;
+    GPUData->Drawables[i].ly = 0.5f;
+    GPUData->Drawables[i].lz = 0.5f;
+    GPUData->m_drawables++;
+
     for(int d = 0;d<EngineData->m_objects;++d)
     {
         EngineData->objects[d].drawable.X = EngineData->objects[d].X;

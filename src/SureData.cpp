@@ -42,40 +42,7 @@ SureData::SureData()
         GenModel("cube",0);
         GenModel("tetr",1);
 
-// Шаблонный объект
-        TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
-        TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
-        TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
 
-        TemplateObject.X.x = 0; TemplateObject.X.y = 0; TemplateObject.X.z = 0;
-        TemplateObject.lx = 1.0; // длина
-        TemplateObject.ly = 1.0; // ширина
-        TemplateObject.lz = 1.0; // высота
-        TemplateObject.lp = 1.7; // размер инерциоида
-        TemplateObject.movable = true;
-        TemplateObject.collidable = true;
-        TemplateObject.drawable.X  = TemplateObject.X;
-        TemplateObject.drawable.ox = TemplateObject.ox;
-        TemplateObject.drawable.oy = TemplateObject.oy;
-        TemplateObject.drawable.oz = TemplateObject.oz;
-        TemplateObject.drawable.lx = TemplateObject.lx;
-        TemplateObject.drawable.ly = TemplateObject.ly;
-        TemplateObject.drawable.lz = TemplateObject.lz;
-        TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
-        TemplateObject.drawable.radiance = 0.0; // свечение
-        TemplateObject.drawable.transp = 0;//0.8+0.3*(float)rand()/(float)RAND_MAX; // прозрачность
-        TemplateObject.drawable.transp_i = 0.1;//+0.6*(float)rand()/(float)RAND_MAX; // прозрачность
-        TemplateObject.drawable.refr = 1.49; // Коэффициент преломления
-        TemplateObject.drawable.dist_type = SURE_D_NORM; // тип рандомизации
-        TemplateObject.drawable.dist_sigma = 3.0; // sigma рандомизации
-        TemplateObject.drawable.dist_m = 0 ; // матожидание рандомизации
-        TemplateObject.drawable.rgb.s[0] = 200.0; // цвет
-        TemplateObject.drawable.rgb.s[1] = 20.0;// цвет
-        TemplateObject.drawable.rgb.s[2] = 20.0; // цвет
-        TemplateObject.drawable.sided = true;
-        TemplateObject.drawable.map_id = GetTexture("earth");
-        TemplateObject.drawable.advmap_id = GetTexture("earth_adv");
-        TemplateObject.initp4();
 
   //LoadState("initial");
 
@@ -90,15 +57,11 @@ SureData::SureData()
   //Scene_ManySpheres();
 
   //Scene_tetrs();
-  //Scene_tetra(30,30,30,40,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
-  //Scene_tetra(25,15,30,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,true);
-
-  //Scene_tetra(-50,10,20,80,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
-  //Scene_tetra(-25,-30,20,70,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ,false);
 
   //Scene_golem();
-  //Scene_metaball(-10,-10,30,25,SURE_NORMALS_SHPERICAL);
-  //Scene_metaball(30,30,20,20,SURE_NORMALS_DEFAULT);
+
+    // Шаблонный объект
+    SetTemplate_DarkCube(10.0f);
 }
 
 SureData::~SureData()

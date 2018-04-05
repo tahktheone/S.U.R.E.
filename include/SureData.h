@@ -236,6 +236,7 @@ struct SureTraceLogItem{
     float IntersectDistance;
     my_double3 Fade;
     my_uchar3 Color;
+    my_uchar3 rgb_current;
     my_double3 NormalRandomized;
     int iter;
     int rechecks;
@@ -301,8 +302,18 @@ class SureData
         uint m_ObjExternID = 1;
 
         // Стандартные объекты
+        int TemplateIndex = 0;
+        const int Templates = 9;
+        void SetNextTemplate();
+        void SetTemplate_GlassCube(float SideLen);
         void SetTemplate_GlassSphere(float Radius);
         void SetTemplate_DarkCube(float SideLen);
+        void SetTemplate_DarkSphere(float Radius);
+        void SetTemplate_EarthCube(float SideLen);
+        void SetTemplate_EarthSphere(float Radius);
+        void SetTemplate_GlowCube(float SideLen);
+        void SetTemplate_GlowSphere(float Radius);
+        void SetTemplate_RegularTetr(float SideLen);
 
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int i_model,int norm_type); // не забыть вернуть в private
