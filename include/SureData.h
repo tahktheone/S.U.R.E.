@@ -304,6 +304,8 @@ class SureData
         // Стандартные объекты
         int TemplateIndex = 0;
         const int Templates = 9;
+        timespec ShowTemplateTime;
+        bool ShowTemplate = false;
         void SetNextTemplate();
         void SetTemplate_GlassCube(float SideLen);
         void SetTemplate_GlassSphere(float Radius);
@@ -315,9 +317,17 @@ class SureData
         void SetTemplate_GlowSphere(float Radius);
         void SetTemplate_RegularTetr(float SideLen);
 
+        void SetTemplate_GlowPlane();
+        void SetTemplate_RegularPlane();
+        void SetTemplate_FogPlane();
+        void SetTemplate_RegularCube();
+        void SetTemplate_RegularPandus();
+
+
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int i_model,int norm_type); // не забыть вернуть в private
         void Mesh_GenerateCube(int i_model,int norm_type); // не забыть вернуть в private
+        void Mesh_GeneratePandus(int i_model,int norm_type);
         void Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count,int norm_type);
         void Mesh_GenNormals(int i_model,int norm_type);
         void MapTexture(int i_model,int type); // не забыть вернуть в private
@@ -345,6 +355,7 @@ class SureData
         void Scene_golem();
         void Scene_ManyTetrs();
         void Scene_ManySpheres();
+        void Scene_Polygon();
         //void Scene_metaball(double x, double y, double z, double sz,int nt);
         //void Scene_cube(double x, double y, double z, double sz,int nt,int mt);
         //void Scene_tetra(double x, double y, double z, double sz,int nt,int mt,bool movable);

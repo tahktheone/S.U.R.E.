@@ -116,6 +116,46 @@ void SureData::Mesh_GenerateCube(int i_model,int norm_type)
 
 }
 
+void SureData::Mesh_GeneratePandus(int i_model,int norm_type)
+{
+    ModelsInfo[i_model].mesh_start = cur_meshes;
+    ModelsInfo[i_model].vertex_start = cur_vertexes;
+    double x = 1.0f;
+    double y = 1.0f;
+    double z = 1.0f;
+    int cv = AddVertex(-x,-y,-z); // cv
+    AddVertex(-x, y,-z); // cv+1
+    AddVertex( x, y,-z); // cv+2
+    AddVertex( x,-y,-z); // cv+3
+    AddVertex( x,-y, z); // cv+4
+    AddVertex(-x,-y, z); // cv+5
+    //AddVertex(-x, y, z); // cv+6
+    //AddVertex( x, y, z); // cv+7
+    AddMesh(cv  ,cv+1,cv+2);
+    AddMesh(cv+2,cv+3,cv  );
+    //AddMesh(cv+4,cv+6,cv+5);
+    //AddMesh(cv+6,cv+4,cv+7);
+    //AddMesh(cv  ,cv+6,cv+1);
+    AddMesh(cv  ,cv+5,cv+1);
+    //AddMesh(cv+6,cv  ,cv+5);
+    //AddMesh(cv+1,cv+7,cv+2);
+    //AddMesh(cv+7,cv+1,cv+6);
+    //AddMesh(cv+2,cv+4,cv+3);
+    AddMesh(cv+2,cv+4,cv+3);
+    //AddMesh(cv+4,cv+2,cv+7);
+    AddMesh(cv+3,cv+5,cv  );
+    AddMesh(cv+5,cv+3,cv+4);
+
+    AddMesh(cv+1,cv+4,cv+2);
+    AddMesh(cv+4,cv+1,cv+5);
+
+    ModelsInfo[i_model].mesh_count = 8;
+    ModelsInfo[i_model].vertex_count = cur_vertexes - ModelsInfo[i_model].vertex_start;
+
+    Mesh_GenNormals(i_model,norm_type);
+
+}
+
 void SureData::Mesh_GenerateHull(int i_model,my_double3* vertexes,int vert_count,int norm_type)
 {
     ModelsInfo[i_model].mesh_start = cur_meshes;
@@ -286,6 +326,8 @@ if(type == 0)
     Mesh_GenerateCube(cur_models,SURE_NORMALS_DEFAULT);
 if(type == 1)
     Mesh_GenerateTetr(cur_models,SURE_NORMALS_DEFAULT);
+if(type == 2)
+    Mesh_GeneratePandus(cur_models,SURE_NORMALS_DEFAULT);
 MapTexture(cur_models,SURE_MAPPING_PLANAR_XY);
 sprintf(ModelsInfo[cur_models].name,"%s",name);
 ModelsInfo[cur_models].toupdate = true;
@@ -386,6 +428,8 @@ void SureData::SetNextTemplate(){
     default:
         break;
     };
+    clock_gettime(CLOCK_MONOTONIC,&ShowTemplateTime);
+    ShowTemplate = true;
     TemplateIndex++;
     if(TemplateIndex>=Templates)
         TemplateIndex = 0;
@@ -397,6 +441,7 @@ void SureData::SetTemplate_GlassSphere(float Radius){
     TemplateObject.drawable.rgb.s[2] = 250.0;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_SPHERE;
     TemplateObject.drawable.radiance = 0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
@@ -418,6 +463,7 @@ void SureData::SetTemplate_EarthSphere(float Radius){
     TemplateObject.drawable.rgb.s[2] = 250.0;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_SPHERE;
     TemplateObject.drawable.radiance = 0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
@@ -439,6 +485,7 @@ void SureData::SetTemplate_DarkSphere(float Radius){
     TemplateObject.drawable.rgb.s[2] = 10.0;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_SPHERE;
     TemplateObject.drawable.radiance = 0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
@@ -457,6 +504,7 @@ void SureData::SetTemplate_DarkSphere(float Radius){
 void SureData::SetTemplate_DarkCube(float SideLen){
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.drawable.rgb.s[0] = 13.0;
     TemplateObject.drawable.rgb.s[1] = 10.0;
     TemplateObject.drawable.rgb.s[2] = 10.0;
@@ -484,6 +532,7 @@ void SureData::SetTemplate_DarkCube(float SideLen){
 void SureData::SetTemplate_GlassCube(float SideLen){
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.drawable.rgb.s[0] = 240.0;
     TemplateObject.drawable.rgb.s[1] = 240.0;
     TemplateObject.drawable.rgb.s[2] = 250.0;
@@ -510,6 +559,7 @@ void SureData::SetTemplate_GlassCube(float SideLen){
 
 void SureData::SetTemplate_EarthCube(float SideLen){
     TemplateObject.movable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.collidable = true;
     TemplateObject.drawable.rgb.s[0] = 13.0;
     TemplateObject.drawable.rgb.s[1] = 10.0;
@@ -538,10 +588,11 @@ void SureData::SetTemplate_EarthCube(float SideLen){
 
 void SureData::SetTemplate_GlowCube(float SideLen){
     TemplateObject.movable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.collidable = true;
-    TemplateObject.drawable.rgb.s[0] = 150.0;
+    TemplateObject.drawable.rgb.s[0] = 80.0;
     TemplateObject.drawable.rgb.s[1] = 250.0;
-    TemplateObject.drawable.rgb.s[2] = 140.0;
+    TemplateObject.drawable.rgb.s[2] = 60.0;
     TemplateObject.type = SURE_OBJ_MESH;
     TemplateObject.lx = SideLen; // длина
     TemplateObject.ly = SideLen; // ширина
@@ -562,9 +613,67 @@ void SureData::SetTemplate_GlowCube(float SideLen){
     TemplateObject.drawable.dist_sigma = 0.01f;
     TemplateObject.drawable.type = SURE_DR_MESH;
 }
+
+void SureData::SetTemplate_RegularCube(){
+    TemplateObject.movable = false;
+    TemplateObject.drawable.sided = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.rgb.s[0] = 100.0;
+    TemplateObject.drawable.rgb.s[1] = 100.0;
+    TemplateObject.drawable.rgb.s[2] = 100.0;
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.lx = 10.0; // длина
+    TemplateObject.ly = 10.0; // ширина
+    TemplateObject.lz = 10.0; // высота
+    TemplateObject.lp = 17.0;
+    TemplateObject.drawable.radiance = 0.0f;
+    sprintf(TemplateObject.ModelName_drawable,"cube");
+    TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
+    sprintf(TemplateObject.ModelName_collider,"cube");
+    TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.transp = 0.0;
+    TemplateObject.drawable.refr = 9.91f;
+    TemplateObject.drawable.transp_i = 0.88;
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.type = SURE_DR_MESH;
+}
+
+void SureData::SetTemplate_RegularPandus(){
+    TemplateObject.movable = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
+    TemplateObject.drawable.rgb.s[0] = 100.0;
+    TemplateObject.drawable.rgb.s[1] = 100.0;
+    TemplateObject.drawable.rgb.s[2] = 100.0;
+    TemplateObject.type = SURE_OBJ_MESH;
+    TemplateObject.lx = 10; // длина
+    TemplateObject.ly = 10; // ширина
+    TemplateObject.lz = 10; // высота
+    TemplateObject.lp = 17;
+    TemplateObject.drawable.radiance = 0.0f;
+    sprintf(TemplateObject.ModelName_drawable,"pand");
+    TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
+    sprintf(TemplateObject.ModelName_collider,"pand");
+    TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+    TemplateObject.drawable.transp = 0.0;
+    TemplateObject.drawable.refr = 9.91f;
+    TemplateObject.drawable.transp_i = 0.88;
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.type = SURE_DR_MESH;
+}
+
 void SureData::SetTemplate_RegularTetr(float SideLen){
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.drawable.rgb.s[0] = 120.0;
     TemplateObject.drawable.rgb.s[1] = 90.0;
     TemplateObject.drawable.rgb.s[2] = 160.0;
@@ -590,11 +699,12 @@ void SureData::SetTemplate_RegularTetr(float SideLen){
 }
 
 void SureData::SetTemplate_GlowSphere(float Radius){
-    TemplateObject.drawable.rgb.s[0] = 150.0;
+    TemplateObject.drawable.rgb.s[0] = 80.0;
     TemplateObject.drawable.rgb.s[1] = 250.0;
-    TemplateObject.drawable.rgb.s[2] = 140.0;
+    TemplateObject.drawable.rgb.s[2] = 60.0;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_SPHERE;
     TemplateObject.drawable.radiance = 1.0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
@@ -606,6 +716,78 @@ void SureData::SetTemplate_GlowSphere(float Radius){
     TemplateObject.drawable.dist_type = SURE_D_EQUAL;
     TemplateObject.drawable.dist_m = 0;
     TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+}
+
+void SureData::SetTemplate_GlowPlane()
+{
+    TemplateObject.drawable.rgb.s[0] = 253.0;
+    TemplateObject.drawable.rgb.s[1] = 245.0;
+    TemplateObject.drawable.rgb.s[2] = 250.0;
+    TemplateObject.movable = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = false;
+    TemplateObject.type = SURE_OBJ_PLANE;
+    TemplateObject.drawable.radiance = 1.0;
+    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
+    TemplateObject.lx = 10.0;
+    TemplateObject.ly = 10.0;
+    TemplateObject.lz = 10.0;
+    TemplateObject.drawable.transp = 0.0;
+    TemplateObject.drawable.refr = 9.21f;
+    TemplateObject.drawable.transp_i = 0.88;
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.dist_sigma = 0.01f;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+}
+
+void SureData::SetTemplate_RegularPlane()
+{
+    TemplateObject.drawable.rgb.s[0] = 100.0;
+    TemplateObject.drawable.rgb.s[1] = 100.0;
+    TemplateObject.drawable.rgb.s[2] = 100.0;
+    TemplateObject.movable = false;
+    TemplateObject.collidable = true;
+    TemplateObject.drawable.sided = true;
+    TemplateObject.type = SURE_OBJ_PLANE;
+    TemplateObject.drawable.radiance = 0.0;
+    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
+    TemplateObject.lx = 10.0;
+    TemplateObject.ly = 10.0;
+    TemplateObject.lz = 10.0;
+    TemplateObject.drawable.transp = 0.0;
+    TemplateObject.drawable.refr = 9.21f;
+    TemplateObject.drawable.transp_i = 0.88;
+    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.dist_sigma = 1.01f;
+    TemplateObject.drawable.map_id = -1;
+    TemplateObject.drawable.advmap_id = -1;
+}
+
+void SureData::SetTemplate_FogPlane()
+{
+    TemplateObject.drawable.rgb.s[0] = 250.0;
+    TemplateObject.drawable.rgb.s[1] = 200.0;
+    TemplateObject.drawable.rgb.s[2] = 200.0;
+    TemplateObject.movable = false;
+    TemplateObject.collidable = false;
+    TemplateObject.drawable.sided = false;
+    TemplateObject.type = SURE_OBJ_PLANE;
+    TemplateObject.drawable.radiance = 0.0;
+    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
+    TemplateObject.lx = 10.0;
+    TemplateObject.ly = 10.0;
+    TemplateObject.lz = 10.0;
+    TemplateObject.drawable.transp = 1.1;
+    TemplateObject.drawable.refr = 1.001f;
+    TemplateObject.drawable.transp_i = 0.01;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_m = 0;
+    TemplateObject.drawable.dist_sigma = 0.001f;
     TemplateObject.drawable.map_id = -1;
     TemplateObject.drawable.advmap_id = -1;
 }

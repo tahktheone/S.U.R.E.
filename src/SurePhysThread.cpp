@@ -1419,6 +1419,11 @@ delete l_image;
 
         drawscene();// Данные -- в GPU
         clock_gettime(CLOCK_MONOTONIC,&frametime);
+        if(EngineData->ShowTemplate)
+            if((frametime.tv_sec - EngineData->ShowTemplateTime.tv_sec)>2.0){
+                EngineData->ShowTemplate = false;
+                EngineData->reset = true;
+            }
         EngineData->frametime = frametime.tv_sec * 1000.0 + (float) frametime.tv_nsec / 1000000.0 - (  framestart.tv_sec*1000.0 + (float) framestart.tv_nsec / 1000000.0 );
         if(EngineData->frametime<SURE_P_DELAY)
             msleep((int)(SURE_P_DELAY-EngineData->frametime));
@@ -1468,28 +1473,31 @@ void SurePhysThread::drawscene()
     GPUData->m_drawables++;
 
     // Нарисуем TemplateObject:
-    GPUData->Drawables[++i] = EngineData->TemplateObject.drawable;
-    GPUData->Drawables[i].X = EngineData->CameraInfo.cam_x
-                            + EngineData->CameraInfo.cam_vec*5.0
-                            + EngineData->CameraInfo.cam_upvec*4.5
-                            + cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec)*6.0;
-    GPUData->Drawables[i].ox.s[0] = 1; //Локальная ось x
-    GPUData->Drawables[i].ox.s[1] = 0;
-    GPUData->Drawables[i].ox.s[2] = 0;
-    GPUData->Drawables[i].oy.s[0] = 0; //Локальная ось x
-    GPUData->Drawables[i].oy.s[1] = 1;
-    GPUData->Drawables[i].oy.s[2] = 0;
-    GPUData->Drawables[i].oz.s[0] = 0; //Локальная ось x
-    GPUData->Drawables[i].oz.s[1] = 0;
-    GPUData->Drawables[i].oz.s[2] = 1;
-    if(EngineData->TemplateObject.drawable.type==SURE_DR_MESH){
-        GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_start;
-        GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_count;
+    if(EngineData->ShowTemplate)
+    {
+        GPUData->Drawables[++i] = EngineData->TemplateObject.drawable;
+        GPUData->Drawables[i].X = EngineData->CameraInfo.cam_x
+                                + EngineData->CameraInfo.cam_vec*3.0;
+                                //+ EngineData->CameraInfo.cam_upvec*4.5
+                                //+ cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec)*6.0;
+        GPUData->Drawables[i].ox.s[0] = 1; //Локальная ось x
+        GPUData->Drawables[i].ox.s[1] = 0;
+        GPUData->Drawables[i].ox.s[2] = 0;
+        GPUData->Drawables[i].oy.s[0] = 0; //Локальная ось x
+        GPUData->Drawables[i].oy.s[1] = 1;
+        GPUData->Drawables[i].oy.s[2] = 0;
+        GPUData->Drawables[i].oz.s[0] = 0; //Локальная ось x
+        GPUData->Drawables[i].oz.s[1] = 0;
+        GPUData->Drawables[i].oz.s[2] = 1;
+        if(EngineData->TemplateObject.drawable.type==SURE_DR_MESH){
+            GPUData->Drawables[i].mesh_start = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_start;
+            GPUData->Drawables[i].mesh_count = EngineData->ModelsInfo[EngineData->TemplateObject.ModelID_drawable].mesh_count;
+        };
+        GPUData->Drawables[i].lx = 0.5f;
+        GPUData->Drawables[i].ly = 0.5f;
+        GPUData->Drawables[i].lz = 0.5f;
+        GPUData->m_drawables++;
     };
-    GPUData->Drawables[i].lx = 0.5f;
-    GPUData->Drawables[i].ly = 0.5f;
-    GPUData->Drawables[i].lz = 0.5f;
-    GPUData->m_drawables++;
 
     for(int d = 0;d<EngineData->m_objects;++d)
     {

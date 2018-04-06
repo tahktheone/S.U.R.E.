@@ -116,6 +116,7 @@ void SureData::Scene_floor() // Пол и круглая лампа
 {
 __VTYPE3 X;
     // пол
+    TemplateObject.collidable = true;
     TemplateObject.type = SURE_OBJ_PLANE;
     TemplateObject.lx = 60.0;
     TemplateObject.ly = 60.0;
@@ -149,28 +150,6 @@ __VTYPE3 X;
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
 
     CreateObjectFromTemplate(&X);   // свет
-
-    TemplateObject.type = SURE_OBJ_PLANE;
-    TemplateObject.lx = 600.0;
-    TemplateObject.ly = 600.0;
-    TemplateObject.lz = 1.0;
-    TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
-    X.x = 0; X.y = 0; X.z = 20;
-    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
-    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
-    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
-    TemplateObject.drawable.map_id = -1;//
-    TemplateObject.drawable.radiance = 0.0; // свечение
-    TemplateObject.drawable.dist_type = SURE_D_EQUAL;
-    TemplateObject.drawable.transp = 1.1f;
-    TemplateObject.drawable.transp_i = 0.005f;
-    TemplateObject.drawable.sided = false;
-    TemplateObject.drawable.rgb.s[0] = 170; // цвет
-    TemplateObject.drawable.rgb.s[1] = 150; // цвет
-    TemplateObject.drawable.rgb.s[2] = 150; // цвет
-
-    CreateObjectFromTemplate(&X); // пол туман
-
 }
 
 void SureData::Scene_mirrors() // Пол и зеркала
@@ -498,6 +477,338 @@ __VTYPE3 X;
 
     CreateObjectFromTemplate(&X);
 }
+
+void SureData::Scene_Polygon()
+{
+
+    CameraInfo.cam_x.s[0] = 573;
+    CameraInfo.cam_x.s[1] = -534;
+    CameraInfo.cam_x.s[2] = 400;
+
+    __VTYPE3 cx;
+    cx.x = 0.7; cx.y = 0.6; cx.z = 0;
+    cx = __NORMALIZE(cx);
+    __VTYPE3 cv;
+    cv.x = -0.6; cv.y = 0.7; cv.z = -0.36;
+    cv = __NORMALIZE(cv);
+
+    CameraInfo.cam_vec = cv;
+    CameraInfo.cam_upvec = __NORMALIZE(cross(cx,cv));
+
+    uint ScellsMapID = GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    __VTYPE3 X;
+    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+
+    SetTemplate_RegularCube();
+    TemplateObject.drawable.map_id = ScellsMapID;
+    TemplateObject.lx = 500;
+    TemplateObject.ly = 500;
+    TemplateObject.lz = 100;
+    X.x = -500;
+    X.y = 500;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 500;
+    TemplateObject.ly = 750;
+    TemplateObject.lz = 100;
+    X.x = 500;
+    X.y = -250;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 50;
+    TemplateObject.ly = 750;
+    TemplateObject.lz = 100;
+    X.x = -950;
+    X.y = -250;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 450;
+    TemplateObject.ly = 250;
+    TemplateObject.lz = 100;
+    X.x = -450;
+    X.y = -750;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularCube();
+    TemplateObject.drawable.rgb.s[0] = 180.0;
+    TemplateObject.drawable.rgb.s[1] = 160.0;
+    TemplateObject.drawable.rgb.s[2] = 250.0;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.01;
+    TemplateObject.lx = 60;
+    TemplateObject.ly = 60;
+    TemplateObject.lz = 250;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 1; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 250;
+    X.y = -500;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPandus();
+    TemplateObject.drawable.rgb.s[0] = 190.0;
+    TemplateObject.drawable.rgb.s[1] = 250.0;
+    TemplateObject.drawable.rgb.s[2] = 180.0;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.drawable.dist_sigma = 0.01;
+    TemplateObject.drawable.transp = 0.93;
+    TemplateObject.drawable.transp_i = 0.6;
+    TemplateObject.drawable.refr = 1.21;
+    TemplateObject.lx = 250;
+    TemplateObject.ly = 40;
+    TemplateObject.lz = 199;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -500;
+    X.y = 80;
+    X.z = 300;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPandus();
+    TemplateObject.drawable.map_id = ScellsMapID;
+    TemplateObject.lx = 500;
+    TemplateObject.ly = 250;
+    TemplateObject.lz = 100;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 500;
+    X.y = 750;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 250;
+    TemplateObject.ly = 200;
+    TemplateObject.lz = 100;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = -1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -200;
+    X.y = -250;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 250;
+    TemplateObject.ly = 200;
+    TemplateObject.lz = 100;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -700;
+    X.y = -250;
+    X.z = 0;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_GlassCube(10);
+    TemplateObject.movable = false;
+    TemplateObject.lx = 249;
+    TemplateObject.ly = 249;
+    TemplateObject.lz = 10;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 1; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 750;
+    X.y = 250;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_EarthSphere(10.0);
+    TemplateObject.lx = 150;
+    TemplateObject.ly = 1;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 750;
+    X.y = -250;
+    X.z = 250;
+    TemplateObject.movable = false;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_GlassSphere(10);
+    TemplateObject.drawable.transp = 0;
+    TemplateObject.drawable.dist_sigma = 0.03;
+    TemplateObject.lx = 150;
+    TemplateObject.ly = 1;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -500;
+    X.y = 500;
+    X.z = 200;
+    TemplateObject.movable = false;
+    CreateObjectFromTemplate(&X);
+
+
+    SetTemplate_RegularPlane();
+    TemplateObject.lx = 80;
+    TemplateObject.ly = 250;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -450;
+    X.y = -250;
+    X.z = -99;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPlane();
+    TemplateObject.drawable.rgb.s[0] = 250.0;
+    TemplateObject.drawable.rgb.s[1] = 250.0;
+    TemplateObject.drawable.rgb.s[2] = 180.0;
+    TemplateObject.drawable.dist_sigma = 0.05;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.lx = 500;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = -1; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 500;
+    X.y = 1000;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPlane();
+    TemplateObject.drawable.map_id = GetTexture("colstones");
+    TemplateObject.lx = 1000;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = -1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 1000;
+    X.y = 0;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.drawable.rgb.s[0] = 60.0;
+    TemplateObject.drawable.rgb.s[1] = 250.0;
+    TemplateObject.drawable.rgb.s[2] = 250.0;
+    TemplateObject.lx = 500;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 1; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -500;
+    X.y = -1000;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.drawable.rgb.s[0] = 150.0;
+    TemplateObject.drawable.rgb.s[1] = 150.0;
+    TemplateObject.drawable.rgb.s[2] = 40.0;
+    TemplateObject.lx = 1000;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -1000;
+    X.y = 0;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPlane();
+    TemplateObject.drawable.rgb.s[0] = 250.0;
+    TemplateObject.drawable.rgb.s[1] = 250.0;
+    TemplateObject.drawable.rgb.s[2] = 180.0;
+    TemplateObject.drawable.dist_sigma = 0.05;
+    TemplateObject.drawable.dist_type = SURE_D_NORM;
+    TemplateObject.lx = 700;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = 0.3; TemplateObject.oz.y = -1; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = -500;
+    X.y = 800;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPlane();
+    TemplateObject.drawable.rgb.s[0] = 200.0;
+    TemplateObject.drawable.rgb.s[1] = 250.0;
+    TemplateObject.drawable.rgb.s[2] = 180.0;
+    TemplateObject.lx = 700;
+    TemplateObject.ly = 400;
+    TemplateObject.lz = 1;
+    TemplateObject.oz.x = -0.3; TemplateObject.oz.y = 1; TemplateObject.oz.z = 0;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 500;
+    X.y = -800;
+    X.z = 250;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_FogPlane();
+    TemplateObject.lx = 1010;
+    TemplateObject.ly = 1010;
+    TemplateObject.lz = 100;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    X.x = 0;
+    X.y = 0;
+    X.z = 80;
+    CreateObjectFromTemplate(&X);
+
+    SetTemplate_GlowPlane();
+    TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
+    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
+    TemplateObject.lx = 1000;
+    TemplateObject.ly = 1000;
+    TemplateObject.lz = 1;
+    X.x = 0;
+    X.y = 0;
+    X.z = 500;
+    CreateObjectFromTemplate(&X);
+
+}
+
 /*
 void SureData::Scene_metaball(double i_x,double i_y,double i_z,double i_sz,int nt) // Пол и круглая лампа
 {

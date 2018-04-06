@@ -20,7 +20,10 @@ SureData::SureData()
         TexturesData = new cl_uchar[SURE_R_MAXTEX * SURE_R_TEXRES * SURE_R_TEXRES * 4];
         UVMap = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
+
         srand(time(NULL));
+        clock_gettime(CLOCK_MONOTONIC,&ShowTemplateTime);
+
         Log = new SureLog("engine");
 
         LoadTexture("parket");
@@ -41,6 +44,7 @@ SureData::SureData()
         LoadModel("ghost_dark");
         GenModel("cube",0);
         GenModel("tetr",1);
+        GenModel("pand",2);
 
 
 
@@ -49,8 +53,9 @@ SureData::SureData()
   //Scene_cube(0,0,20,20,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(20,-30,20,19,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_XZ);
   //Scene_cube(-20,20,15,14,SURE_NORMALS_DEFAULT,SURE_MAPPING_PLANAR_YZ);
-  Scene_box();
+  //Scene_box();
   //Scene_floor();
+  Scene_Polygon();
   //Scene_mirrors();
   //Scene_ManyTetrs();
 
