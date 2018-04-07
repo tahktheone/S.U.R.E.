@@ -203,7 +203,6 @@ struct SureObject
     };
 };
 
-void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl);
 
 struct SureLink
 {
@@ -386,6 +385,14 @@ struct SureOCLData{
     cl_mem cmUVMap; // указатель на массив uv-mappingа
     cl_mem cmNormals; // указатель на массив uv-mappingа
 };
+
+void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl);
+void PhysCollideSphereSphere(SureObject* o1,SureObject* o2);
+void PhysCollideSpherePlane(SureObject* o1,SureObject* o2);
+void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData);
+void PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData);
+void PhysCollideCreaturePlane(SureObject* o1,SureObject* o2);
+void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData);
 
 // Работа с OpenCL из CPU-части:
 void ocl_errtext(cl_int);

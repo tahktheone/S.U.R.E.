@@ -683,6 +683,7 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
     };
     if(event->key()==Qt::Key_Backspace){
         EngineData->DeleteObject(EngineData->SelectedObject);
+        EngineData->reset = true;
     };
     if(event->key()==Qt::Key_L){
         EngineData->reset = true;

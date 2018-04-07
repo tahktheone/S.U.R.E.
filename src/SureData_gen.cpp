@@ -784,7 +784,7 @@ void SureData::SetTemplate_FogPlane()
     TemplateObject.lz = 10.0;
     TemplateObject.drawable.transp = 1.1;
     TemplateObject.drawable.refr = 1.001f;
-    TemplateObject.drawable.transp_i = 0.01;
+    TemplateObject.drawable.transp_i = 0.03;
     TemplateObject.drawable.dist_type = SURE_D_NORM;
     TemplateObject.drawable.dist_m = 0;
     TemplateObject.drawable.dist_sigma = 0.001f;

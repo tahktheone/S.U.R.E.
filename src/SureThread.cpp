@@ -248,10 +248,10 @@ void SureThread::oclInit()
     // -cl-opt-disable -- выключить оптимизацию, всю
     // -Werror -- все предупреждения = ошибки. -w -- подавлять предупреждения
 
-    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION17 -D SURE_RLEVEL=99"); //99
-    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION17 -D SURE_RLEVEL=65"); //65
-    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION17 -D SURE_RLEVEL=45"); //45
-    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION17 -D SURE_RLEVEL=10"); //10
+    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=99"); //99
+    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=65"); //65
+    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=45"); //45
+    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=10"); //10
     OCL_GET_("clCreateKernel",OCLData->kernel_t,clCreateKernel(program_t,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_f,clCreateKernel(program_f,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_d,clCreateKernel(program_d,"Trace",NULL));

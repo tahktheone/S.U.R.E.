@@ -784,7 +784,7 @@ void SureData::Scene_Polygon()
     SetTemplate_FogPlane();
     TemplateObject.lx = 1010;
     TemplateObject.ly = 1010;
-    TemplateObject.lz = 100;
+    TemplateObject.lz = 250;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
     TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
