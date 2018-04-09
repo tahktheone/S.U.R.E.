@@ -8,10 +8,15 @@
 struct SureObject
 {
     uint external_id;
+    int ParentID = -1;
     my_double3 X;  //Координаты центра
     my_double3 ox; //Локальная ось x
     my_double3 oy; //Локальная ось y
     my_double3 oz; //Нормаль (Локальная ось z)
+    my_double3 X_byparent;  //Координаты центра
+    my_double3 ox_byparent; //Локальная ось x
+    my_double3 oy_byparent; //Локальная ось y
+    //my_double3 oz_byparent; //Нормаль (Локальная ось z)  - вычисляемая, cross(ox,oy)
     double lx; // длина
     double ly; // ширина
     double lz; // высота
@@ -40,6 +45,19 @@ struct SureObject
 
     int DrawableGPUID = -1;
 
+
+    void align_byparent(SureObject *parent){
+                    X = parent->X + X_byparent.x*parent->ox
+                                  + X_byparent.y*parent->oy
+                                  + X_byparent.z*parent->oz;
+                    ox = __NORMALIZE( ox_byparent.x*parent->ox
+                                    + ox_byparent.y*parent->oy
+                                    + ox_byparent.z*parent->oz);
+                    oy = __NORMALIZE( oy_byparent.x*parent->ox
+                                    + oy_byparent.y*parent->oy
+                                    + oy_byparent.z*parent->oz);
+                    oz = __NORMALIZE(cross(ox,oy));
+    }
     void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
@@ -386,13 +404,85 @@ struct SureOCLData{
     cl_mem cmNormals; // указатель на массив uv-mappingа
 };
 
+struct SurePhysCollision{
+    SureObject* Object1;
+    SureObject* Object2;
+    my_double3 CollisionPoint;
+    my_double3 CollisionVector;
+    double CollisionLength;
+};
+
 void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl);
-void PhysCollideSphereSphere(SureObject* o1,SureObject* o2);
-void PhysCollideSpherePlane(SureObject* o1,SureObject* o2);
-void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData);
-void PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData);
-void PhysCollideCreaturePlane(SureObject* o1,SureObject* o2);
-void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData);
+bool PhysCollideSphereSphere(SureObject* o1,SureObject* o2,SurePhysCollision *Collision);
+bool PhysCollideSpherePlane(SureObject* o1,SureObject* o2,SurePhysCollision *Collision);
+bool PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
+bool PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
+bool PhysCollideCreaturePlane(SureObject* o1,SureObject* o2,SurePhysCollision *Collision);
+bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
+
+class SureGJK{
+    public:
+        SureGJK();
+        SureGJK(SureData *i_Engine);
+        virtual ~SureGJK();
+
+        void SetEngine(SureData *i_Engine);
+        void SetupMinkowski(SureObject *o1,SureObject *o2);
+        void InitiateLoop();
+        void InitiateCoverLoop();
+        void ExitLoop_Collision();
+        void ExitLoop_NoCollision();
+        bool LoopExit();
+        void LoopNextStep();
+
+        bool CollisionFound();
+        bool CoverExpanded();
+        void SetCoverExpanded();
+        void CheckCoverIterration();
+        void CoverFindNearestTo00(double *e_l,uint *e_f);
+
+        bool TIContains00();
+        double GetMaximumDistanceTo00();
+        bool FindNextTNI();
+
+        void Set_TI(uint *i_TI);
+        void Set_TNI(uint *i_TNI);
+        void Get_TI(uint *e_TI);
+        void Get_TNI(uint *e_TNI);
+        void TNI_to_TI();
+        void Get_Cover(uint *e_C,uint *e_cc,bool *e_incover);
+        void Set_Cover(uint *i_C,uint *i_cc,bool *i_incover);
+
+        uint GetMinkowski(my_double3 *e_M);
+
+    protected:
+
+    private:
+        SureData *EngineData;
+
+        SurePhysCollision Collision;
+        bool collision_found = false;
+
+        bool exit_no_collision = false;
+        bool exit_collision = false;
+        bool cover_expanded = false;
+        bool incover[SURE_MINKOWSKI_MAX];
+        uint C[SURE_MINKOWSKI_MAX];
+        uint cc = 0;
+        uint C_N[SURE_MINKOWSKI_MAX];
+        uint cc_n = 0;
+        uint iter = 0; // подсчет итерраций - гарантия от зацикливаний
+        uint TI[4] = {0,0,0,0};
+        uint TNI[4] = {0,0,0,0};
+
+        double L1;
+        double L2;
+        double L3;
+        double L4;
+
+        uint mc = 0; // количество точек в разности минковского
+        my_double3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
+};
 
 // Работа с OpenCL из CPU-части:
 void ocl_errtext(cl_int);

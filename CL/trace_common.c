@@ -4,22 +4,38 @@
     // drawable, с которым встретился луч (для хранения параметров изменения траектории)
     __SURE_STRUCT SureDrawable DrawableCollided;
 
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableIter; // drawable который сейчас анализируется
     // Это нужно, чтобы корректно отслеживать переход луча между средами разной плотности:
     // (для корректного отражения преломления, например, в стеклянном шаре в воде)
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableCurrent;
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableNext;
 
+    // Инициализируем рандом
+    uint r = InitRandom(&x,&y);
+
+    #ifndef __LOGGING
+    #ifndef __SELECT_OBJECT
+    if(GPUData->reset){
+        uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
+        for(int sx=0;sx<SURE_SCALE;++sx)
+        for(int sy=0;sy<SURE_SCALE;++sy)
+        {
+            uint d = k+sy*SURE_MAXRES_X*3+sx*3;
+            rgbmatrix[d++] = 0;
+            rgbmatrix[d++] = 0;
+            rgbmatrix[d++] = 0;
+        };
+    };
+    #ifdef GPU
+    for(int SAAIter = 0;SAAIter<GPUData->SAA;++SAAIter){
+    #endif // GPU
+    #endif // __SELECT_OBJECT
+    #endif // ifndef __LOGGING
+
     //Основные переменные с информацией о трассировке
     __VTYPE  TraceLength = 0; // общий путь трассировки -- до SURE_R_MAXLENGTH
     __VTYPE3 TraceFade   = {1.0,1.0,1.0};
     __VTYPE3 TraceColor  = {0,0,0};
-
-    // Инициализируем рандом
-    uint r = InitRandom(&x,&y);
 
     __VTYPE3 TracePoint = CameraInfo.cam_x;
     __VTYPE3 TraceVector;
@@ -46,7 +62,6 @@
 
     for(uint Iterration = 0;Iterration<MaximumIterrations;Iterration++)
     {
-
         if(TraceLength > SURE_R_MAXDISTANCE)continue;
         if((TraceFade.x+TraceFade.y+TraceFade.z) < SURE_R_FADELIMIT)continue;
 
@@ -616,21 +631,17 @@
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
     };
 
-    uint k = y*SURE_MAXRES_X*3*SURE_FAA*SURE_SCALE+x*3*SURE_SCALE;
+    uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
     for(int sx=0;sx<SURE_SCALE;++sx)
     for(int sy=0;sy<SURE_SCALE;++sy)
     {
-        uint d = k+sy*SURE_MAXRES_X*3*SURE_FAA+sx*3;
-        if(GPUData->reset)
-        {
-            rgbmatrix[d++] = TraceColor.x;
-            rgbmatrix[d++] = TraceColor.y;
-            rgbmatrix[d++] = TraceColor.z;
-        }else{
-            rgbmatrix[d++] += TraceColor.x;
-            rgbmatrix[d++] += TraceColor.y;
-            rgbmatrix[d++] += TraceColor.z;
-        };
+        uint d = k+sy*SURE_MAXRES_X*3+sx*3;
+        rgbmatrix[d++] += TraceColor.x;
+        rgbmatrix[d++] += TraceColor.y;
+        rgbmatrix[d++] += TraceColor.z;
     };
+    #ifdef GPU
+    }; // SAAIter
+    #endif
     #endif // __SELECT_OBJECT
     #endif // ifndef __LOGGING

@@ -21,10 +21,10 @@ void SurePhysThread::run()
             for(int i = 0;i<EngineData->m_objects;++i)
             {
                 SureObject* lv_o = &EngineData->objects[i];
-                if(lv_o->movable)
+                if((lv_o->ParentID<0)&&(lv_o->movable))
                 {
                     lv_o->next_tick();
-                    lv_o->push(lv_o->X,my_double3{0,0,-1},0.01);
+                    lv_o->push(lv_o->X,my_double3{0,0,-1},0.03);
                 };
             };
 
@@ -50,28 +50,42 @@ void SurePhysThread::run()
             for(int i = 0;i<EngineData->m_objects;++i)
             {
                 SureObject* lv_o = &EngineData->objects[i];
-                if(lv_o->movable){
+                if((lv_o->movable)&&(lv_o->ParentID<0)){
                     lv_o->align_p4();
+                };
+                if(lv_o->ParentID>=0){
+                    SureObject *lv_parent = EngineData->ObjByID(lv_o->ParentID);
+                    lv_o->align_byparent(lv_parent);
                 };
             };
 
-            for(int i = 0;i<EngineData->m_objects;++i){
+            SurePhysCollision Collisions[1000];
+            int CollisionsCounter = -1;
+            int TotalObjects = EngineData->m_objects;
+
+            #pragma omp parallel for schedule(dynamic,3)
+            for(int i = 0;i<TotalObjects;++i){
+                SurePhysCollision Collision;
+                bool CollisionFound = false;
                 SureObject* lv_o1 = &EngineData->objects[i];
                 if(lv_o1->collidable){
-                    for(int j = i+1;j<EngineData->m_objects;++j){
+                    for(int j = i+1;j<TotalObjects;++j){
                         SureObject* lv_o2 = &EngineData->objects[j];
+
+                        if(  (lv_o2->ParentID!=lv_o1->ParentID)
+                           ||((lv_o2->ParentID<0)&&(lv_o1->ParentID<0)) )
+                        // не должно срабатывать внутри одного составного объекта
                         if((lv_o2->collidable)&&(lv_o2->movable||lv_o1->movable)){
                             if(lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_SPHERE){ // шарик с шариком
-                                PhysCollideSphereSphere(lv_o1,lv_o2);
+                                CollisionFound = PhysCollideSphereSphere(lv_o1,lv_o2,&Collision);
                             };  // шарик с шариком
 
                             if((lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_PLANE)||
                                (lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE)){   // шарик с плоскостью
-                                if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE)
-                                {
-                                    PhysCollideSpherePlane(lv_o2,lv_o1);
+                                if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE){
+                                    CollisionFound = PhysCollideSpherePlane(lv_o2,lv_o1,&Collision);
                                 }else{
-                                    PhysCollideSpherePlane(lv_o1,lv_o2);
+                                    CollisionFound = PhysCollideSpherePlane(lv_o1,lv_o2,&Collision);
                                 };
                             }; // шарик с плоскостью
 
@@ -79,9 +93,9 @@ void SurePhysThread::run()
                                (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_SPHERE)){   // mesh с шариком
                                 if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_MESH)
                                 {
-                                    PhysCollideSphereMesh(lv_o2,lv_o1,EngineData);
+                                    CollisionFound = PhysCollideSphereMesh(lv_o2,lv_o1,EngineData,&Collision);
                                 }else{
-                                    PhysCollideSphereMesh(lv_o1,lv_o2,EngineData);
+                                    CollisionFound = PhysCollideSphereMesh(lv_o1,lv_o2,EngineData,&Collision);
                                 };
 
                             }; // mesh сталкивается с шаром
@@ -90,9 +104,9 @@ void SurePhysThread::run()
                                (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)){   // mesh с плоскостью
                                 if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)
                                 {
-                                    PhysCollideMeshPlane(lv_o2,lv_o1,EngineData);
+                                    CollisionFound = PhysCollideMeshPlane(lv_o2,lv_o1,EngineData,&Collision);
                                 }else{
-                                    PhysCollideMeshPlane(lv_o1,lv_o2,EngineData);
+                                    CollisionFound = PhysCollideMeshPlane(lv_o1,lv_o2,EngineData,&Collision);
                                 };
                             }; // mesh с плоскостью
 
@@ -100,24 +114,48 @@ void SurePhysThread::run()
                                (lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE)){   // сложный объект с плоскостью
                                 if(lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE)
                                 {
-                                    PhysCollideCreaturePlane(lv_o2,lv_o1);
+                                    CollisionFound = PhysCollideCreaturePlane(lv_o2,lv_o1,&Collision);
                                 }else{
-                                    PhysCollideCreaturePlane(lv_o1,lv_o2);
+                                    CollisionFound = PhysCollideCreaturePlane(lv_o1,lv_o2,&Collision);
                                 };
                             };
 
                             if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH){ // mesh'ы
-                                PhysCollideMeshMesh(lv_o1,lv_o2,EngineData);
+                                CollisionFound = PhysCollideMeshMesh(lv_o1,lv_o2,EngineData,&Collision);
                             };// mesh'ы
 
                             if(lv_o1->type==SURE_OBJ_PLANE&&lv_o2->type==SURE_OBJ_PLANE){ // квадратик с квадратиком
                                 // Нет. Квадратики у нас -- стены и полы. Им не нужно между собой сталкиваться
                             }; // квадратик с квадратиком
 
+                            if(CollisionFound){
+                                Collisions[++CollisionsCounter] = Collision;
+                            };
+
                         }; // if(lv_o2->collidable&&lv_o2!=lv_o1)
                     }; //for(int j = 0;j<EngineData->m_objects;++j)
                 }; // if(lv_o1->movable&&lv_o1->collidable)
             };//  for(int i = 0;i<EngineData->m_objects;++i)
+
+            for(int i = 0;i<=CollisionsCounter;++i){
+                SureObject *o1;
+                if(Collisions[i].Object1->ParentID<0){
+                    o1 = Collisions[i].Object1;
+                }else{
+                    o1 = EngineData->ObjByID(Collisions[i].Object1->ParentID);
+                };
+                SureObject *o2;
+                if(Collisions[i].Object2->ParentID<0){
+                    o2 = Collisions[i].Object2;
+                }else{
+                    o2 = EngineData->ObjByID(Collisions[i].Object2->ParentID);
+                };
+                ObjCollide(o1,
+                           o2,
+                           Collisions[i].CollisionPoint,
+                           Collisions[i].CollisionVector,
+                           Collisions[i].CollisionLength);
+            };
 
             EngineData->reset = true;
         }; // !paused
@@ -257,6 +295,10 @@ void SurePhysThread::drawscene()
         EngineData->objects[d].DrawableGPUID = -1;
 
         switch(EngineData->objects[d].type){
+            case SURE_OBJ_NONE:
+            {
+                break;
+            };
             case SURE_OBJ_SPHERE:
             {
                 GPUData->Drawables[++i] = EngineData->objects[d].drawable;

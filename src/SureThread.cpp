@@ -210,7 +210,7 @@ void SureThread::oclInit()
     // создаем очередь команд
     OCL_GET_("clCreateCommandQueue",OCLData->cqCommandQue,clCreateCommandQueue(context, device, 0,&ret));
     // Создаем буфферы обмены данными между CPU и GPU
-    OCL_GET_("clCreateBuffer(RGBmatrix)",OCLData->cmRGBmatrix,clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA, NULL, &ret));
+    OCL_GET_("clCreateBuffer(RGBmatrix)",OCLData->cmRGBmatrix,clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * SURE_MAXRES_X*SURE_MAXRES_Y*3, NULL, &ret));
     OCL_GET_("clCreateBuffer(GPUData)",OCLData->cmGPUData,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(SureGPUData), NULL, &ret));
     OCL_GET_("clCreateBuffer(Drawables)",OCLData->cmDrawables,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(SureDrawable) * SURE_DR_MAX, NULL, &ret));
     OCL_GET_("clCreateBuffer(Random)",OCLData->cmRandom,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * SURE_R_RNDSIZE, NULL, &ret));
@@ -248,10 +248,10 @@ void SureThread::oclInit()
     // -cl-opt-disable -- выключить оптимизацию, всю
     // -Werror -- все предупреждения = ошибки. -w -- подавлять предупреждения
 
-    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=99"); //99
-    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=65"); //65
-    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=45"); //45
-    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=10"); //10
+    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION76 -D SURE_RLEVEL=99"); //99
+    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION76 -D SURE_RLEVEL=65"); //65
+    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION76 -D SURE_RLEVEL=45"); //45
+    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION76 -D SURE_RLEVEL=10"); //10
     OCL_GET_("clCreateKernel",OCLData->kernel_t,clCreateKernel(program_t,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_f,clCreateKernel(program_f,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_d,clCreateKernel(program_d,"Trace",NULL));
@@ -334,7 +334,7 @@ void SureThread::run()
     Log = new SureLog("render");
 
     oclInit();
-    OCL_RUN_("clEnqueueWriteBuffer",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA,(void*)widget->rgbmatrix,0,NULL,NULL));
+    OCL_RUN_("clEnqueueWriteBuffer",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3,(void*)widget->rgbmatrix,0,NULL,NULL));
     cl_int ret = 0;
     srand(time(NULL));
 
@@ -544,7 +544,7 @@ void SureThread::run()
         if(tick>SURE_R_DELAY)
         {
             if(widget!=nullptr)
-                OCL_RUN_("clEnqueueReadBuffer",clEnqueueReadBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA,widget->rgbmatrix,0,NULL,NULL));
+                OCL_RUN_("clEnqueueReadBuffer",clEnqueueReadBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3,widget->rgbmatrix,0,NULL,NULL));
             widget->update();
             clock_gettime(CLOCK_MONOTONIC,&lframestart);
 

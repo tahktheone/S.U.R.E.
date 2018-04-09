@@ -608,11 +608,11 @@
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
     };
 
-    uint k = y*SURE_MAXRES_X*3*SURE_FAA*SURE_SCALE+x*3*SURE_SCALE;
+    uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
     for(int sx=0;sx<SURE_SCALE;++sx)
     for(int sy=0;sy<SURE_SCALE;++sy)
     {
-        uint d = k+sy*SURE_MAXRES_X*3*SURE_FAA+sx*3;
+        uint d = k+sy*SURE_MAXRES_X*3+sx*3;
         if(GPUData->reset)
         {
             rgbmatrix[d++] = TraceColor.x;

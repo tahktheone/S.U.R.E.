@@ -287,5 +287,305 @@ void SureData::LoadState(const char *name)
     Log->AddLine(LogLine);
 }
 
+SureGJK::SureGJK(SureData *i_engine)
+{
+    EngineData = i_engine;
+}
+
+SureGJK::SureGJK()
+{
+
+}
+
+void SureGJK::SetEngine(SureData *i_engine)
+{
+    EngineData = i_engine;
+}
+
+SureGJK::~SureGJK()
+{
+
+}
+
+void SureGJK::SetupMinkowski(SureObject *o1,SureObject *o2)
+{
+    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+    __VTYPE3 p1,p2; // точки из объектов, для получения разности
+    __VTYPE3 gp1,gp2; // точки в глобальных координатах
+
+    // 1. Составляем разность минковского.
+    uint l1_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
+    uint l1_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
+    uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
+    uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
+
+    // для каждой точки
+    for(uint i1 = 0;i1<l1_limit;++i1)
+    {
+        uint cv1 = l1_start + i1;
+        __GET_VERTEX(p1,cv1);
+        p1.x = p1.x * o1->lx;
+        p1.y = p1.y * o1->ly;
+        p1.z = p1.z * o1->lz;
+        gp1 = o1->ox*p1.x + o1->oy*p1.y+o1->oz*p1.z + o1->X;
+        for(uint i2 = 0;i2<l2_limit;++i2)
+        { // каждая точка с каждой точкой
+            uint cv2 = l2_start + i2;
+            __GET_VERTEX(p2,cv2);
+            p2.x = p2.x * o2->lx;
+            p2.y = p2.y * o2->ly;
+            p2.z = p2.z * o2->lz;
+            gp2 = o2->ox*p2.x + o2->oy*p2.y+o2->oz*p2.z + o2->X;
+            M[mc]=gp2-gp1;
+            ++mc;
+        };// каждая точка с каждой точкой
+    };
+}
+
+void SureGJK::InitiateLoop()
+{
+    // [Тэтраэдр T. 4 точки. 2 раза -- для текущего шага и для следующего]
+    TI[0] = 0;
+    TI[1] = 1;
+    TI[2] = 2;
+    TI[3] = 3;
+    //разворачиваем тэтраэдр наружу нормалями.
+    if(dot(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]]),M[TI[3]]-M[TI[0]])>0) //вершина 4 снаружи T0 T1 T2 ?
+    { // T2 <=> T1 (меняем местами)
+        uint TTI = TI[2];
+        TI[2] = TI[1];
+        TI[1] = TTI;
+    };
+    exit_no_collision = false;
+    exit_collision = false;
+    iter = 0; // подсчет итерраций - гарантия от зацикливаний
+}
+
+uint SureGJK::GetMinkowski(my_double3 *e_M)
+{
+    for(uint i = 0;i<mc;++i){
+        e_M[i] = M[i];
+    };
+    return mc;
+}
+
+bool SureGJK::LoopExit()
+{
+    return (exit_no_collision||exit_collision);
+}
+
+void SureGJK::ExitLoop_Collision()
+{
+    exit_collision = true;
+    collision_found = true;
+}
+
+void SureGJK::ExitLoop_NoCollision()
+{
+    exit_no_collision = true;
+}
+
+bool SureGJK::CoverExpanded()
+{
+    return cover_expanded;
+}
+
+void SureGJK::SetCoverExpanded()
+{
+    cover_expanded = true;
+}
+
+void SureGJK::InitiateCoverLoop()
+{
+
+    for(uint incb=0;incb<mc;++incb)
+        incover[incb]=false;
+
+    C[cc*3+0]=TI[0]; incover[TI[0]]=true;
+    C[cc*3+1]=TI[1]; incover[TI[1]]=true;
+    C[cc*3+2]=TI[2]; incover[TI[2]]=true;
+    ++cc;
+
+    C[cc*3+0]=TI[0]; incover[TI[0]]=true;
+    C[cc*3+1]=TI[3]; incover[TI[3]]=true;
+    C[cc*3+2]=TI[1]; incover[TI[1]]=true;
+    ++cc;
+
+    C[cc*3+0]=TI[1]; incover[TI[1]]=true;
+    C[cc*3+1]=TI[3]; incover[TI[3]]=true;
+    C[cc*3+2]=TI[2]; incover[TI[2]]=true;
+    ++cc;
+
+    C[cc*3+0]=TI[2]; incover[TI[2]]=true;
+    C[cc*3+1]=TI[3]; incover[TI[3]]=true;
+    C[cc*3+2]=TI[0]; incover[TI[0]]=true;
+    ++cc;
+
+    iter = 0;
+}
+
+void SureGJK::CheckCoverIterration()
+{
+    if(iter>16){
+        SetCoverExpanded();
+        EngineData->Log->AddLine("i!");
+    };
+    ++iter;
+}
+
+void SureGJK::Set_TI(uint *i_TI)
+{
+    TI[0] = i_TI[0];
+    TI[1] = i_TI[1];
+    TI[2] = i_TI[2];
+    TI[3] = i_TI[3];
+}
+
+void SureGJK::Set_TNI(uint *i_TNI)
+{
+    TNI[0] = i_TNI[0];
+    TNI[1] = i_TNI[1];
+    TNI[2] = i_TNI[2];
+    TNI[3] = i_TNI[3];
+}
+
+void SureGJK::Get_TI(uint *e_TI)
+{
+    e_TI[0] = TI[0];
+    e_TI[1] = TI[1];
+    e_TI[2] = TI[2];
+    e_TI[3] = TI[3];
+}
+
+void SureGJK::Get_TNI(uint *e_TNI)
+{
+    e_TNI[0] = TNI[0];
+    e_TNI[1] = TNI[1];
+    e_TNI[2] = TNI[2];
+    e_TNI[3] = TNI[3];
+}
+
+bool SureGJK::TIContains00()
+{
+    //Проверяем, содержит ли тэтраэдр 0,0.
+    //заодно ищем грань ближайшую к 0,0
+    L1 = dot(__NORMALIZE(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]])),-M[TI[0]]); // грань 0 1 2
+    L2 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[0]],M[TI[1]]-M[TI[0]])),-M[TI[0]]); // грань 0 3 1
+    L3 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[1]],M[TI[2]]-M[TI[1]])),-M[TI[1]]); // грань 1 3 2
+    L4 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[2]],M[TI[0]]-M[TI[2]])),-M[TI[2]]); // грань 2 3 0
+
+    return (L1<0.0&&L2<0.0&&L3<0.0&&L4<0.0);
+}
+
+double SureGJK::GetMaximumDistanceTo00()
+{
+    #define SET_TN(A,B,C) TN[0]=T[A];TN[1]=T[B];TN[2]=T[C];
+    #define SET_TNI(A,B,C) TNI[0]=TI[A];TNI[1]=TI[B];TNI[2]=TI[C];
+    // ищем грань, для которой [0,0] снаружи
+    double LM = 0;
+    if(L1>LM){ SET_TNI(0,1,2); LM=L1 + SURE_R_DELTA;};
+    if(L2>LM){ SET_TNI(0,3,1); LM=L2 + SURE_R_DELTA;};
+    if(L3>LM){ SET_TNI(1,3,2); LM=L3 + SURE_R_DELTA;};
+    if(L4>LM){ SET_TNI(2,3,0); LM=L4 + SURE_R_DELTA;};
+    return LM;
+}
+
+bool SureGJK::FindNextTNI()
+{
+    __VTYPE3 v = __NORMALIZE(cross(M[TNI[1]]-M[TNI[0]],M[TNI[2]]-M[TNI[0]])); // нормаль основания нового тэтраэдра
+    __VTYPE md = dot(v,M[TNI[0]])+SURE_R_DELTA;
+    __VTYPE ld;
+    bool f = false;
+    for(uint i = 0;i<mc;++i){// для каждой точки M[i] -- есть точка в направлении v?
+        ld = dot(v,M[i]);
+        if(ld>md){
+            md = ld;
+            TNI[3] = i;
+            f = true;
+        };
+    };
+    return f;
+}
+
+void SureGJK::Get_Cover(uint *e_C,uint *e_cc,bool *e_incover)
+{
+    for(uint i=0;i<cc;++i){
+        e_C[i*3+0] = C[i*3+0];
+        e_C[i*3+1] = C[i*3+1];
+        e_C[i*3+2] = C[i*3+2];
+    };
+    for(uint i = 0;i<mc;++i){
+        e_incover[i] = incover[i];
+    };
+    *e_cc = cc;
+}
+
+void SureGJK::Set_Cover(uint *i_C,uint *i_cc,bool *i_incover)
+{
+    cc = *i_cc;
+    for(uint i = 0;i<cc;++i){
+        C[i*3+0] = i_C[i*3+0];
+        C[i*3+1] = i_C[i*3+1];
+        C[i*3+2] = i_C[i*3+2];
+    };
+    for(uint i = 0;i<mc;++i){
+        incover[i] = i_incover[i];
+    };
+}
+
+void SureGJK::CoverFindNearestTo00(double *e_l,uint *e_f)
+{
+                    #define CVF0 M[C[ci*3+0]]
+                    #define CVF1 M[C[ci*3+1]]
+                    #define CVF2 M[C[ci*3+2]]
+    double LM = SURE_R_MAXDISTANCE;
+    uint cf = 0;
+    for(uint ci=0;ci<cc;++ci)
+    { // для каждой грани cover
+    // (помним что для всех граней 0,0 внутри)
+        __VTYPE L = fabs(dot(__NORMALIZE(cross(CVF1-CVF0,CVF2-CVF0)),-CVF0));
+        // расстояние до 0,0
+        if(L<LM)
+        {
+            LM = L;
+            cf = ci;
+        }; // (L<LM)
+    }; // для каждой грани cover
+    *e_l = LM;
+    *e_f = cf;
+}
+
+void SureGJK::TNI_to_TI()
+{
+    TI[0]=TNI[0];
+    TI[1]=TNI[2];
+    TI[2]=TNI[1];
+    TI[3]=TNI[3];
+}
+
+void SureGJK::LoopNextStep()
+{
+    double LM = GetMaximumDistanceTo00();
+    if(LM>0){
+        if(FindNextTNI()){   // нужно новый тэтраэдр
+            TNI_to_TI();
+        }else{
+            ExitLoop_NoCollision();
+        };
+        iter++;
+        if(iter>20){
+            ExitLoop_NoCollision();
+            EngineData->Log->AddLine("f!");
+        };
+    }else{ // расстояние до 0,0 больше преыдущего
+        ExitLoop_NoCollision();
+    };
+}
+
+bool SureGJK::CollisionFound()
+{
+    return collision_found;
+}
+
 #include <func_common.c>
 #include <func_CPU.c>

@@ -436,6 +436,7 @@ void SureData::SetNextTemplate(){
 }
 
 void SureData::SetTemplate_GlassSphere(float Radius){
+    TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 240.0;
     TemplateObject.drawable.rgb.s[1] = 240.0;
     TemplateObject.drawable.rgb.s[2] = 250.0;
@@ -458,6 +459,7 @@ void SureData::SetTemplate_GlassSphere(float Radius){
 }
 
 void SureData::SetTemplate_EarthSphere(float Radius){
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 240.0;
     TemplateObject.drawable.rgb.s[1] = 240.0;
     TemplateObject.drawable.rgb.s[2] = 250.0;
@@ -480,6 +482,7 @@ void SureData::SetTemplate_EarthSphere(float Radius){
 }
 
 void SureData::SetTemplate_DarkSphere(float Radius){
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 13.0;
     TemplateObject.drawable.rgb.s[1] = 10.0;
     TemplateObject.drawable.rgb.s[2] = 10.0;
@@ -502,6 +505,7 @@ void SureData::SetTemplate_DarkSphere(float Radius){
 }
 
 void SureData::SetTemplate_DarkCube(float SideLen){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
@@ -530,6 +534,7 @@ void SureData::SetTemplate_DarkCube(float SideLen){
 }
 
 void SureData::SetTemplate_GlassCube(float SideLen){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
@@ -558,6 +563,7 @@ void SureData::SetTemplate_GlassCube(float SideLen){
 }
 
 void SureData::SetTemplate_EarthCube(float SideLen){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = true;
     TemplateObject.drawable.sided = false;
     TemplateObject.collidable = true;
@@ -587,6 +593,7 @@ void SureData::SetTemplate_EarthCube(float SideLen){
 }
 
 void SureData::SetTemplate_GlowCube(float SideLen){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = true;
     TemplateObject.drawable.sided = false;
     TemplateObject.collidable = true;
@@ -615,6 +622,7 @@ void SureData::SetTemplate_GlowCube(float SideLen){
 }
 
 void SureData::SetTemplate_RegularCube(){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = false;
     TemplateObject.drawable.sided = false;
     TemplateObject.collidable = true;
@@ -643,6 +651,7 @@ void SureData::SetTemplate_RegularCube(){
 }
 
 void SureData::SetTemplate_RegularPandus(){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = false;
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
@@ -671,6 +680,7 @@ void SureData::SetTemplate_RegularPandus(){
 }
 
 void SureData::SetTemplate_RegularTetr(float SideLen){
+TemplateObject.ParentID = -1;
     TemplateObject.movable = true;
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
@@ -699,6 +709,7 @@ void SureData::SetTemplate_RegularTetr(float SideLen){
 }
 
 void SureData::SetTemplate_GlowSphere(float Radius){
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 80.0;
     TemplateObject.drawable.rgb.s[1] = 250.0;
     TemplateObject.drawable.rgb.s[2] = 60.0;
@@ -722,6 +733,7 @@ void SureData::SetTemplate_GlowSphere(float Radius){
 
 void SureData::SetTemplate_GlowPlane()
 {
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 253.0;
     TemplateObject.drawable.rgb.s[1] = 245.0;
     TemplateObject.drawable.rgb.s[2] = 250.0;
@@ -746,6 +758,7 @@ void SureData::SetTemplate_GlowPlane()
 
 void SureData::SetTemplate_RegularPlane()
 {
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 100.0;
     TemplateObject.drawable.rgb.s[1] = 100.0;
     TemplateObject.drawable.rgb.s[2] = 100.0;
@@ -770,6 +783,7 @@ void SureData::SetTemplate_RegularPlane()
 
 void SureData::SetTemplate_FogPlane()
 {
+TemplateObject.ParentID = -1;
     TemplateObject.drawable.rgb.s[0] = 250.0;
     TemplateObject.drawable.rgb.s[1] = 200.0;
     TemplateObject.drawable.rgb.s[2] = 200.0;

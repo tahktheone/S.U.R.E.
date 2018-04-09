@@ -75,10 +75,6 @@ const cl_float3 operator-(cl_float3 a){
 return cl_float3{-a.s[0],-a.s[1],-a.s[2]};
 }
 
-//const cl_float3 operator-(cl_float3 a,my_double3 b){
-//return cl_float3{a.s[0]-b.x,a.s[1]-b.y,a.s[2]-b.z};
-//};
-
 void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double pl)
 {
     if(pl<SURE_R_DELTA)return;
@@ -105,20 +101,23 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
 
  }
 
-void PhysCollideSphereSphere(SureObject* o1,SureObject* o2)
+bool PhysCollideSphereSphere(SureObject* o1,SureObject* o2,SurePhysCollision* Collision)
 {
     my_double3 pd = o1->X-o2->X;
     double d = __LENGTH(pd);
     if(d<(o1->lx+o2->lx))
     { // есть пересечение
-        pd = __NORMALIZE(pd); // Penetration Direction
-        my_double3 pp = (o1->X+o2->X)*0.5f; // Penetration point
-        double pl = o1->lx+o2->lx-d; // Penetration Length
-        ObjCollide(o1,o2,pp,pd,pl);
+        Collision->CollisionVector = __NORMALIZE(pd); // Penetration Direction
+        Collision->CollisionPoint = (o1->X+o2->X)*0.5f; // Penetration point
+        Collision->CollisionLength = o1->lx+o2->lx-d; // Penetration Length
+        Collision->Object1 = o1;
+        Collision->Object2 = o2;
+        return true;
     };// есть пересечение
+    return false;
 }
 
-void PhysCollideSpherePlane(SureObject* o1,SureObject* o2)
+bool PhysCollideSpherePlane(SureObject* o1,SureObject* o2,SurePhysCollision* Collision)
 {
     // шарик с плоскостью
     // o1 - шарик
@@ -131,125 +130,114 @@ void PhysCollideSpherePlane(SureObject* o1,SureObject* o2)
         double ly = -dot(vtp,o2->oy); // локальная y-координата центра шара
         if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
         {// центр шара внутри прямоугольника
-            my_double3 pd = o2->oz*dist; // Penetration Direction
-            double pl = (o1->lx-fabs(dist)); // Penetration Length
-            pd = __NORMALIZE(pd);
-            my_double3 pp = o1->X-pd*(o1->lx-pl); // Penetration point
-            ObjCollide(o1,o2,pp,pd,pl);
+            Collision->CollisionLength = (o1->lx-fabs(dist)); // Penetration Length
+            Collision->CollisionVector = __NORMALIZE(o2->oz*dist);
+            Collision->CollisionPoint = o1->X-Collision->CollisionVector*(o1->lx-Collision->CollisionLength); // Penetration point
+            Collision->Object1 = o1;
+            Collision->Object2 = o2;
+            return true;
         }else{ // центр шара вне прямоугольника
             if(fabs(lx)<o2->lx){
             // в пределах оси x -- столкновение с гранью y
-                my_double3 pp;
                 double cd = sqrt(dist*dist+(fabs(ly)-o2->ly)*(fabs(ly)-o2->ly));
                 if(cd<o1->lx)
                 {
                     if(ly<0){
-                            pp = o2->X+o2->ox*lx-o2->oy*o2->ly;
+                            Collision->CollisionPoint = o2->X+o2->ox*lx-o2->oy*o2->ly;
                     }else{
-                            pp = o2->X+o2->ox*lx+o2->oy*o2->ly;
+                            Collision->CollisionPoint = o2->X+o2->ox*lx+o2->oy*o2->ly;
                     };
-                    double pl = o1->lx-cd;
-                    my_double3 pd = o1->X - pp;
-                    pd = __NORMALIZE(pd);
-                    ObjCollide(o1,o2,pp,pd,pl);
+                    Collision->CollisionLength = o1->lx-cd;
+                    Collision->CollisionVector = __NORMALIZE(o1->X - Collision->CollisionPoint);
+                    Collision->Object1 = o1;
+                    Collision->Object2 = o2;
+                    return true;
                 };
             }else if(fabs(ly)<o2->ly){
             // в пределах оси y -- столкновение с гранью x
-                my_double3 pp;
                 double cd = sqrt(dist*dist+(fabs(lx)-o2->lx)*(fabs(lx)-o2->lx));
                 if(cd<o1->lx)
                 {
                     if(lx<0){
-                            pp = o2->X+o2->oy*ly-o2->ox*o2->lx;
+                            Collision->CollisionPoint = o2->X+o2->oy*ly-o2->ox*o2->lx;
                     }else{
-                            pp = o2->X+o2->oy*ly+o2->ox*o2->lx;
+                            Collision->CollisionPoint = o2->X+o2->oy*ly+o2->ox*o2->lx;
                     };
-                    double pl = o1->lx-cd;
-                    my_double3 pd = o1->X - pp;
-                    pd = __NORMALIZE(pd);
-                    ObjCollide(o1,o2,pp,pd,pl);
+                    Collision->CollisionLength = o1->lx-cd;
+                    Collision->CollisionVector = __NORMALIZE(o1->X - Collision->CollisionPoint);
+                    Collision->Object1 = o1;
+                    Collision->Object2 = o2;
+                    return true;
                 };
             }else{
             // столкновение с углом?
-                my_double3 pp;
                 double cd = sqrt(dist*dist+(fabs(lx)-o2->lx)*(fabs(lx)-o2->lx)+(fabs(ly)-o2->ly)*(fabs(ly)-o2->ly));
                 if(cd<o1->lx)
                 {
-                    pp = o2->X;
+                    Collision->CollisionPoint = o2->X;
                     if(lx<0){
-                        pp -= o2->ox*o2->lx;
+                        Collision->CollisionPoint -= o2->ox*o2->lx;
                     }else{
-                        pp += o2->ox*o2->lx;
+                        Collision->CollisionPoint += o2->ox*o2->lx;
                     };
                     if(ly<0){
-                        pp -= o2->oy*o2->ly;
+                        Collision->CollisionPoint -= o2->oy*o2->ly;
                     }else{
-                        pp += o2->oy*o2->ly;
+                        Collision->CollisionPoint += o2->oy*o2->ly;
                     };
-                    double pl = o1->lx-cd;
-                    my_double3 pd = o1->X - pp;
-                    pd = __NORMALIZE(pd);
-                    ObjCollide(o1,o2,pp,pd,pl);
+                    Collision->CollisionLength = o1->lx-cd;
+                    Collision->CollisionVector = __NORMALIZE(o1->X - Collision->CollisionPoint);
+                    Collision->Object1 = o1;
+                    Collision->Object2 = o2;
+                    return true;
                 };
             };
         }; // if(fabs(lx)<o2->lx&&fabs(ly)<o2->ly)
     };// есть пересечение
+    return false;
 }
 
-void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
+
+void PhysPeflectSphereByPoint(my_double3 Point,my_double3 SphereCenter,SurePhysCollision* Collision,SureObject *o1,SureObject* o2,bool* collision_found)
 {
-                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-            cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
-    // Параметры для ObjCollide():
-    // ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+    my_double3 VectorToSphere = SphereCenter - Point;
+    __VTYPE DistanceToCenter = __LENGTH(VectorToSphere);
+    __VTYPE LocalCollisionLength = o1->lx-DistanceToCenter;
+    if(LocalCollisionLength>=Collision->CollisionLength){
+        Collision->CollisionLength = LocalCollisionLength;
+        Collision->CollisionVector = __NORMALIZE(VectorToSphere.x*o2->ox+VectorToSphere.y*o2->oy+VectorToSphere.z*o2->oz);
+        Collision->CollisionPoint = o1->X-Collision->CollisionVector*DistanceToCenter;
+        *collision_found = true;
+    };
+}
+
+void PhysPeflectSphereByEdge(my_double3 Point1,my_double3 Point2,my_double3 SphereCenter,SurePhysCollision* Collision,SureObject *o1,SureObject* o2,bool* collision_found)
+{
+    my_double3 EdgeVector = Point2-Point1;
+    double EdgeLength = __LENGTH(EdgeVector);
+    EdgeVector = __NORMALIZE(EdgeVector);
+    double DistanceToProjection = dot(EdgeVector,SphereCenter-Point1);
+    my_double3 ProjectionPoint = Point1+EdgeVector*DistanceToProjection;
+    my_double3 CollisionVector = SphereCenter-ProjectionPoint;
+    double CollisionVectorLength = __LENGTH(CollisionVector);
+    if(CollisionVectorLength<=o1->lx&&DistanceToProjection>0&&DistanceToProjection<EdgeLength){
+        double LocalCollisionLength = o1->lx-CollisionVectorLength;
+        if(LocalCollisionLength>=Collision->CollisionLength){
+            Collision->CollisionLength = LocalCollisionLength;
+            Collision->CollisionVector = __NORMALIZE(CollisionVector.x*o2->ox+CollisionVector.y*o2->oy+CollisionVector.z*o2->oz);
+            Collision->CollisionPoint = o1->X-Collision->CollisionVector*CollisionVectorLength;
+            *collision_found = true;
+        };
+    };
+}
+
+bool PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision* Collision)
+{
+    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+    cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
     // o1 - шарик
     // o2 - mesh
-    __VTYPE3 collision_point;
-    __VTYPE3 collision_normal;
-    __VTYPE collision_distance = 0;
     bool collision_found = false;
-
-    // отталкиваем шарик от грани
-    #define __REFL_FR(fr_b,fr_e) \
-    __VTYPE3 vo = ltp - fr_b; \
-    __VTYPE3 v = __NORMALIZE(fr_e-fr_b); \
-    __VTYPE l = dot(v,vo); \
-    __VTYPE3 fr = fr_e-fr_b; \
-    __VTYPE lf = __LENGTH(fr); \
-    __VTYPE3 p = fr_b + v*l; \
-    __VTYPE3 dp = ltp-p; \
-    __VTYPE pl = __LENGTH(dp); \
-    if(pl<=o1->lx&&l>0&&l<lf){ \
-        dd = o1->lx - pl; \
-        if(dd>=collision_distance) \
-        { \
-            collision_found = true; \
-            collision_distance = dd; \
-            __VTYPE3 vp = __NORMALIZE(dp); \
-            __VTYPE3 n = vp.x*o2->ox+ \
-                         vp.y*o2->oy+ \
-                         vp.z*o2->oz; \
-            collision_normal = __NORMALIZE(n); \
-            collision_point = o1->X-collision_normal*pl; \
-        }; \
-    };
-
-    // отталкиваем шарик от угла
-    #define __REFL_PT(pt) \
-    __VTYPE3 cl = ltp - pt; \
-    __VTYPE cdl = __LENGTH(cl); \
-    __VTYPE cd = o1->lx-cdl; \
-    if(cd>=collision_distance) \
-    { \
-        collision_found = true; \
-        collision_distance = cd; \
-        __VTYPE3 cln = __NORMALIZE(cl); \
-        __VTYPE3 n = cln.x*o2->ox+ \
-                     cln.y*o2->oy+ \
-                     cln.z*o2->oz; \
-        collision_normal = __NORMALIZE(n); \
-        collision_point = o1->X-collision_normal*cdl; \
-    };
 
     __VTYPE3 ltp; // координаты шара в локальных координатах mesh'ы
     ltp.x = dot(o1->X-o2->X,o2->ox);
@@ -300,28 +288,25 @@ void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
                     if(dot(t3,cn)>0)
                     { // третья грань -- "внутри"
                         __VTYPE cd = o1->lx-fabs(dd);
-                        if(cd>=collision_distance)
+                        if(cd>=Collision->CollisionLength)
                         {
                             collision_found = true;
-                            collision_distance = cd;
-                            __VTYPE3 n = cn.x*o2->ox+
-                                         cn.y*o2->oy+
-                                         cn.z*o2->oz; // нормаль в глобальных координатах
-                            collision_normal = __NORMALIZE(n);
-                            collision_point = o1->X+collision_normal*dd;
-                        }; //cd<=collision_distance
+                            Collision->CollisionLength = cd;
+                            Collision->CollisionVector = __NORMALIZE(cn.x*o2->ox+cn.y*o2->oy+cn.z*o2->oz); // нормаль в глобальных координатах
+                            Collision->CollisionPoint = o1->X+Collision->CollisionVector*dd;
+                        }; //cd<=Collision->CollisionLength
                     }else{ // третья грань снаружи
                         // отталкиваемся от третей грани
-                        __REFL_FR(gm3,gm1);
+                        PhysPeflectSphereByEdge(gm3,gm1,ltp,Collision,o1,o2,&collision_found);
                     };  // третья грань
                 }else{// вторая грань снаружи
                     if(dot(t3,cn)>0)
                     { // третья грань -- "внутри"
                         // Отталкиваемся от второй грани
-                        __REFL_FR(gm2,gm3);
+                        PhysPeflectSphereByEdge(gm2,gm3,ltp,Collision,o1,o2,&collision_found);
                     }else{ // третья грань снаружи
                         // отталкиваемся от угла gm3
-                        __REFL_PT(gm3);
+                        PhysPeflectSphereByPoint(gm3,ltp,Collision,o1,o2,&collision_found);
                     };  // третья грань
                 };  // вторая грань
             }else{ // первая грань снаружи
@@ -330,16 +315,16 @@ void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
                     if(dot(t3,cn)>0)
                     { // третья грань -- "внутри"
                         // Отталкиваемся от первой грани
-                        __REFL_FR(gm1,gm2);
+                        PhysPeflectSphereByEdge(gm1,gm2,ltp,Collision,o1,o2,&collision_found);
                     }else{ // третья грань снаружи
                         // отталкиваемся от угла gm1
-                        __REFL_PT(gm1);
+                        PhysPeflectSphereByPoint(gm1,ltp,Collision,o1,o2,&collision_found);
                     };  // третья грань
                 }else{ // вторая грань снаружи
                     if(dot(t3,cn)>0)
                     { // третья грань -- "внутри"
                         // отталкиваемся от угла gm2
-                        __REFL_PT(gm2);
+                        PhysPeflectSphereByPoint(gm2,ltp,Collision,o1,o2,&collision_found);
                     }else{ // третья грань снаружи
                         // Все грани снаружи?
                         // Пространственный континум разорван,
@@ -348,15 +333,19 @@ void PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
                 }; // вторая грань
             }; // первая грань
         }; // сфера пересеклась с плоскостью
-    }; // для каждой грани:
+    }; // для каждой грани
     if(collision_found)
-        ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+    {
+        Collision->Object1 = o1;
+        Collision->Object2 = o2;
+        return true;
+    };
+    return false;
 }
 
-void PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData)
+bool PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision* Collision)
 {
-                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-            cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
     // mesh с плоскостью
     // o1 - mesh
     // o2 - плоскость
@@ -440,28 +429,34 @@ void PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData)
                           cp.y*o1->oy+
                           cp.z*o1->oz+
                           o1->X;
-        ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+        Collision->Object1 = o1;
+        Collision->Object2 = o2;
+        Collision->CollisionLength = collision_distance;
+        Collision->CollisionPoint = collision_point;
+        Collision->CollisionVector = collision_normal;
+        return true;
     }; // столкновение есть
+    return false;
 }
 
-void PhysCollideCreaturePlane(SureObject* o1,SureObject* o2)
+bool PhysCollideCreaturePlane(SureObject* o1,SureObject* o2,SurePhysCollision* Collision)
 {
-
+    return false;
 }
 
-void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
+bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision* Collision)
 {
     // ============================================================================================
     // ====  Алгоритм Гилберта-Джонсона-Кёрти =====================================================
     // ============================================================================================
 
-            cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-            cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+    SureGJK LocalGJK;
+    LocalGJK.SetEngine(EngineData);
 
     __VTYPE3 collision_point;
     __VTYPE3 collision_normal;
     __VTYPE collision_distance = 0;
-    bool collision_found = false;
 
     uint mc = 0; // количество точек в разности минковского
     __VTYPE3 p1,p2; // точки из объектов, для получения разности
@@ -469,171 +464,40 @@ void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
     __VTYPE3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
 
     // 1. Составляем разность минковского.
-    // для каждой точки
-    uint l1_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
-    uint l1_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
-    uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
-    uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
+    LocalGJK.SetupMinkowski(o1,o2);
 
-    for(uint i1 = 0;i1<l1_limit;++i1)
-    {
-        uint cv1 = l1_start + i1;
-        __GET_VERTEX(p1,cv1);
-        p1.x = p1.x * o1->lx;
-        p1.y = p1.y * o1->ly;
-        p1.z = p1.z * o1->lz;
-        gp1 = o1->ox*p1.x + o1->oy*p1.y+o1->oz*p1.z + o1->X;
-        for(uint i2 = 0;i2<l2_limit;++i2)
-        { // каждая точка с каждой точкой
-            uint cv2 = l2_start + i2;
-            __GET_VERTEX(p2,cv2);
-            p2.x = p2.x * o2->lx;
-            p2.y = p2.y * o2->ly;
-            p2.z = p2.z * o2->lz;
-            gp2 = o2->ox*p2.x + o2->oy*p2.y+o2->oz*p2.z + o2->X;
-            M[mc]=gp2-gp1;
-            ++mc;
-        };// каждая точка с каждой точкой
-    };
+    mc = LocalGJK.GetMinkowski(M);
 
-    // [Тэтраэдр T. 4 точки. 2 раза -- для текущего шага и для следующего]
-    uint TI[4];
-    uint TNI[4] = {0,0,0,0};
-    TI[0] = 0;
-    TI[1] = 1;
-    TI[2] = 2;
-    TI[3] = 3;
-    //разворачиваем тэтраэдр наружу нормалями.
-    if(dot(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]]),M[TI[3]]-M[TI[0]])>0) //вершина 4 снаружи T0 T1 T2 ?
-    { // T2 <=> T1 (меняем местами)
-        uint TTI = TI[2];
-        TI[2] = TI[1];
-        TI[1] = TTI;
-    };
-
-    bool exit_no_collision = false;
-    bool exit_collision = false;
     bool incover[SURE_MINKOWSKI_MAX];
 
-    uint iter = 0; // подсчет итерраций - гарантия от зацикливаний
+    LocalGJK.InitiateLoop();
 
-    while(!(exit_no_collision||exit_collision))
+    while(!LocalGJK.LoopExit())
     {
-        #ifdef COLLISION_LOGGING_00
-        l_log_index++;
-        l_log_textline = 0;
-        #endif // COLLISION_LOGGING
-
-        //Проверяем, содержит ли тэтраэдр 0,0.
-        //заодно ищем грань ближайшую к 0,0
-        __VTYPE L1 = dot(__NORMALIZE(cross(M[TI[1]]-M[TI[0]],M[TI[2]]-M[TI[0]])),-M[TI[0]]); // грань 0 1 2
-        __VTYPE L2 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[0]],M[TI[1]]-M[TI[0]])),-M[TI[0]]); // грань 0 3 1
-        __VTYPE L3 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[1]],M[TI[2]]-M[TI[1]])),-M[TI[1]]); // грань 1 3 2
-        __VTYPE L4 = dot(__NORMALIZE(cross(M[TI[3]]-M[TI[2]],M[TI[0]]-M[TI[2]])),-M[TI[2]]); // грань 2 3 0
-
-        if(L1>0||L2>0||L3>0||L4>0)
+        if(!LocalGJK.TIContains00())
         { // тэтраэдр не содержит 0,0
-            bool f = false;
-            #define SET_TN(A,B,C) TN[0]=T[A];TN[1]=T[B];TN[2]=T[C];
-            #define SET_TNI(A,B,C) TNI[0]=TI[A];TNI[1]=TI[B];TNI[2]=TI[C];
-            __VTYPE LM = 0;
-            // ищем грань, для которой [0,0] снаружи
-            if(L1>LM){ SET_TNI(0,1,2); LM=L1 + SURE_R_DELTA; f = true; };
-            if(L2>LM){ SET_TNI(0,3,1); LM=L2 + SURE_R_DELTA; f = true; };
-            if(L3>LM){ SET_TNI(1,3,2); LM=L3 + SURE_R_DELTA; f = true; };
-            if(L4>LM){ SET_TNI(2,3,0); LM=L4 + SURE_R_DELTA; f = true; };
-            if(f)
-            {
-                __VTYPE3 v = __NORMALIZE(cross(M[TNI[1]]-M[TNI[0]],M[TNI[2]]-M[TNI[0]])); // нормаль основания нового тэтраэдра
-                __VTYPE md = dot(v,M[TNI[0]])+SURE_R_DELTA;
-                __VTYPE ld;
-                f = false;
-                for(uint i = 0;i<mc;++i)
-                {// для каждой точки M[i] -- есть точка в направлении v?
-                    ld = dot(v,M[i]);
-                    if(ld>md)
-                    {
-                        md = ld;
-                        TNI[3] = i;
-                        f = true;
-                    };
-                };
-
-                if(f)
-                {   // нужно новый тэтраэдр
-                    TI[0]=TNI[0];
-                    TI[1]=TNI[2];
-                    TI[2]=TNI[1];
-                    TI[3]=TNI[3];
-                }else{
-                    exit_no_collision = true;
-                };
-                iter++;
-                if(iter>20){
-                    exit_no_collision = true;
-                    EngineData->Log->AddLine("f!");
-                };
-            }else{ // расстояние до 0,0 больше преыдущего
-                exit_no_collision = true;
-            };
+            LocalGJK.LoopNextStep();
         }else{
             // тэттраэдр содержит 0,0
-            exit_collision = true;
-            bool cover_expanded = false;
-            collision_found = true;
-            // создаем cover для минковского
+            LocalGJK.ExitLoop_Collision();
 
             uint C[SURE_MINKOWSKI_MAX];
             uint cc = 0;
             uint C_N[SURE_MINKOWSKI_MAX];
             uint cc_n = 0;
 
-            for(uint incb=0;incb<mc;++incb)
-                incover[incb]=false;
+            LocalGJK.InitiateCoverLoop();
+            LocalGJK.Get_Cover(C,&cc,incover);
 
-            C[cc*3+0]=TI[0]; incover[TI[0]]=true;
-            C[cc*3+1]=TI[1]; incover[TI[1]]=true;
-            C[cc*3+2]=TI[2]; incover[TI[2]]=true;
-            ++cc;
-
-            C[cc*3+0]=TI[0]; incover[TI[0]]=true;
-            C[cc*3+1]=TI[3]; incover[TI[3]]=true;
-            C[cc*3+2]=TI[1]; incover[TI[1]]=true;
-            ++cc;
-
-            C[cc*3+0]=TI[1]; incover[TI[1]]=true;
-            C[cc*3+1]=TI[3]; incover[TI[3]]=true;
-            C[cc*3+2]=TI[2]; incover[TI[2]]=true;
-            ++cc;
-
-            C[cc*3+0]=TI[2]; incover[TI[2]]=true;
-            C[cc*3+1]=TI[3]; incover[TI[3]]=true;
-            C[cc*3+2]=TI[0]; incover[TI[0]]=true;
-            ++cc;
-
-            iter = 0;
-            while(!cover_expanded)
+            while(!LocalGJK.CoverExpanded())
             {
-                    #define CF0 M[C[ci*3+0]]
-                    #define CF1 M[C[ci*3+1]]
-                    #define CF2 M[C[ci*3+2]]
-
-                //Ищем грань ближайшую к 0 0.
-                __VTYPE LM = SURE_R_MAXDISTANCE;
-                uint cf = 0;
                 cc_n = 0;
-                //std::cout << "C:" << "\n";
-                for(uint ci=0;ci<cc;++ci)
-                { // для каждой грани cover
-                // (помним что для всех граней 0,0 внутри)
-                    __VTYPE L = fabs(dot(__NORMALIZE(cross(CF1-CF0,CF2-CF0)),-CF0));
-                    // расстояние до 0,0
-                    if(L<LM)
-                    {
-                        LM = L;
-                        cf = ci;
-                    }; // (L<LM)
-                }; // для каждой грани cover
+
+                double LM;
+                uint cf;
+                //Ищем грань ближайшую к 0 0.
+                LocalGJK.Set_Cover(C,&cc,incover);
+                LocalGJK.CoverFindNearestTo00(&LM,&cf);
 
                 collision_distance = LM;
 
@@ -711,17 +575,9 @@ void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
                     };
                     cc = cc_n;
 
-                    if(iter>16)
-                    {
-                        cover_expanded = true;
-                        EngineData->Log->AddLine("i!");
-                    };
-                    ++iter;
-
+                    LocalGJK.CheckCoverIterration();
                 }else{
-                    //std::cout << "fin(" << iter << ")" << "\n";
-                    cover_expanded = true;
-
+                    LocalGJK.SetCoverExpanded();
                 }; // поиск расширения для cover
             }; // while (!cover_expanded
             // cover максимально расширен в сторону 0,0
@@ -803,6 +659,11 @@ void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
             __VTYPE g1dis;
             __VTYPE g2dis;
 
+            uint l1_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
+            uint l1_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
+            uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
+            uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
+
             __GET_MINMAX_BYVEC(o1,n,G_min,G_max,l1_start,l1_limit); // нашли самую дальюю и самую ближнюю точки
             GD = G_max-G_min;
             GD *= 0.999; // отсекаем только дальние
@@ -846,8 +707,15 @@ void PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData)
                 collision_point = aver2;
             };
 
-            if(collision_found)
-                ObjCollide(o1,o2,collision_point,collision_normal,collision_distance);
+            if(LocalGJK.CollisionFound()){
+                Collision->Object1 = o1;
+                Collision->Object2 = o2;
+                Collision->CollisionLength = collision_distance;
+                Collision->CollisionPoint = collision_point;
+                Collision->CollisionVector = collision_normal;
+                return true;
+            };
         };  // тэттраэдр содержит 0,0
     };// while(!exit)
+    return false;
 }

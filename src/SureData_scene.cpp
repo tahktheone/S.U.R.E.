@@ -807,6 +807,79 @@ void SureData::Scene_Polygon()
     X.z = 500;
     CreateObjectFromTemplate(&X);
 
+    // 360, -128
+    SetTemplate_RegularPandus();
+    TemplateObject.lx = 100;
+    TemplateObject.ly = 100;
+    TemplateObject.lz = 100;
+    TemplateObject.lp = 170;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oy,TemplateObject.oz));
+    TemplateObject.type = SURE_OBJ_NONE;
+    TemplateObject.drawable.type = SURE_DR_NONE;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    X.x = 360;
+    X.y = -130;
+    X.z = 170;
+    uint ParentCup = CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularPandus();
+    TemplateObject.lx = 100;
+    TemplateObject.ly = 50;
+    TemplateObject.lz = 50;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 0;
+    TemplateObject.X_byparent.y = -50;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentCup;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 100;
+    TemplateObject.ly = 50;
+    TemplateObject.lz = 50;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = -1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = -1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 0;
+    TemplateObject.X_byparent.y = 50;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentCup;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 100;
+    TemplateObject.ly = 50;
+    TemplateObject.lz = 50;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 0; TemplateObject.ox_byparent.y = -1; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 1; TemplateObject.oy_byparent.y = 0; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = -50;
+    TemplateObject.X_byparent.y = 0;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentCup;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 100;
+    TemplateObject.ly = 50;
+    TemplateObject.lz = 50;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 0; TemplateObject.ox_byparent.y = 1; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = -1; TemplateObject.oy_byparent.y = 0; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 50;
+    TemplateObject.X_byparent.y = 0;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentCup;
+    CreateObjectFromTemplate(&X);
+
 }
 
 /*

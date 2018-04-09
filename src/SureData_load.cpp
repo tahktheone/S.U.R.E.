@@ -454,6 +454,9 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
     objects[i].ly = TemplateObject.ly;
     objects[i].lz = TemplateObject.lz;
     objects[i].lp = TemplateObject.lp;
+    objects[i].X_byparent = TemplateObject.X_byparent;
+    objects[i].ox_byparent = TemplateObject.ox_byparent;
+    objects[i].oy_byparent = TemplateObject.oy_byparent;
     objects[i].movable = TemplateObject.movable;
     objects[i].collidable = TemplateObject.collidable;
    // objects[i].drawable = TemplateObject.drawable;
@@ -489,7 +492,11 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
         objects[i].drawable.mesh_count = TemplateObject.drawable.mesh_count;
     };
 
-    objects[i].initp4();
+    objects[i].ParentID = TemplateObject.ParentID;
+    if(objects[i].ParentID<0)
+        objects[i].initp4();
+    if(objects[i].ParentID>=0)
+        objects[i].align_byparent(ObjByID(objects[i].ParentID));
     objects[i].external_id = m_ObjExternID;
     m_ObjExternID++;
     return objects[i].external_id;

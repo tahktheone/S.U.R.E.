@@ -4,6 +4,9 @@
 // Графика
 // * Исправлены баги с обзором изнутри тумана и пересечением стекла с туманом
 //   (добавлена логика определения того, внутри какого объекта находится точка трассровки)
+// Физика
+// * Распараллеливание расчетов столкновений
+// * Составные объекты
 // Другое
 // * (в работе) Наведен порядок в коде widget'а
 
@@ -69,14 +72,14 @@ int main(int argc, char* argv[]) {
     widget.setMouseTracking(true);
     widget.setCursor(QCursor(Qt::BlankCursor));
 
-    widget.rgbmatrix = new float[SURE_MAXRES_X*SURE_MAXRES_Y*3*SURE_FAA*SURE_FAA];
+    widget.rgbmatrix = new float[SURE_MAXRES_X*SURE_MAXRES_Y*3];
 
-    for(int i = 0;i<SURE_MAXRES_Y*SURE_FAA;++i)
-        for(int j = 0;j<SURE_MAXRES_X*SURE_FAA;++j)
+    for(int i = 0;i<SURE_MAXRES_Y;++i)
+        for(int j = 0;j<SURE_MAXRES_X;++j)
         {
-            widget.rgbmatrix[SURE_MAXRES_X*i*3*SURE_FAA+j*3] = 0;
-            widget.rgbmatrix[SURE_MAXRES_X*i*3*SURE_FAA+j*3+1] = 0;
-            widget.rgbmatrix[SURE_MAXRES_X*i*3*SURE_FAA+j*3+2] = 0;
+            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3] = 0;
+            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3+1] = 0;
+            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3+2] = 0;
         };
 
     GPUData.Drawables = Drawables;

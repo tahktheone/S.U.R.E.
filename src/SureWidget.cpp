@@ -17,8 +17,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
     uchar* lv_pixel;
     delete image;
     image = new QImage(x,y,QImage::Format_ARGB32);
-    EngineData->CameraInfo.m_amx = rect().right()*SURE_FAA/SURE_SCALE;
-    EngineData->CameraInfo.m_amy = rect().bottom()*SURE_FAA/SURE_SCALE;
+    EngineData->CameraInfo.m_amx = rect().right()/SURE_SCALE;
+    EngineData->CameraInfo.m_amy = rect().bottom()/SURE_SCALE;
     clock_gettime(CLOCK_MONOTONIC,&framestart);
     double lv_max = 0;
     double lv_med = 0;
@@ -78,7 +78,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     {
         double l_m = lv_max;
         double lv_mm = lv_med;
-        int k = y*3*SURE_MAXRES_X*SURE_FAA*SURE_FAA+x*3*SURE_FAA;
+        int k = y*3*SURE_MAXRES_X+x*3;
         lv_max = rgbmatrix[k] > lv_max ? rgbmatrix[k] : lv_max;
         lv_max = rgbmatrix[k+1] > lv_max ? rgbmatrix[k+1] : lv_max;
         lv_max = rgbmatrix[k+2] > lv_max ? rgbmatrix[k+2] : lv_max;
@@ -95,23 +95,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
     lv_med /= mx*my*3;
     lv_max /= (lv_max/lv_med)*150.0;
     //lv_max /= 255.0;
-    #pragma omp parallel for schedule(dynamic,1) private (lv_pixel,x,y)
+    #pragma omp parallel for schedule(static,8) private (lv_pixel,x,y)
     for(y=0;y<my;++y){
         uint32_t* scanLine = (uint32_t*)image->scanLine(y);
         for(x=0;x<mx;++x){
-            float r=0;
-            float g=0;
-            float b=0;
-            for(int i_aax=0;i_aax<SURE_FAA;++i_aax)
-            for(int i_aay=0;i_aay<SURE_FAA;++i_aay)
-            {
-                r += rgbmatrix[y*3*SURE_MAXRES_X*SURE_FAA*SURE_FAA-i_aay*3*SURE_MAXRES_X*SURE_FAA+x*3*SURE_FAA-i_aax*3];
-                g += rgbmatrix[y*3*SURE_MAXRES_X*SURE_FAA*SURE_FAA-i_aay*3*SURE_MAXRES_X*SURE_FAA+x*3*SURE_FAA-i_aax*3+1];
-                b += rgbmatrix[y*3*SURE_MAXRES_X*SURE_FAA*SURE_FAA-i_aay*3*SURE_MAXRES_X*SURE_FAA+x*3*SURE_FAA-i_aax*3+2];
-            };
-            r /= SURE_FAA*SURE_FAA*lv_max;
-            g /= SURE_FAA*SURE_FAA*lv_max;
-            b /= SURE_FAA*SURE_FAA*lv_max;
+            float r = rgbmatrix[y*3*SURE_MAXRES_X+x*3]/lv_max;
+            float g = rgbmatrix[y*3*SURE_MAXRES_X+x*3+1]/lv_max;
+            float b = rgbmatrix[y*3*SURE_MAXRES_X+x*3+2]/lv_max;
             if(r>255)r=255;
             if(g>255)g=255;
             if(b>255)b=255;
@@ -253,8 +243,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p.setX(5);
             sprintf(s,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
             painter.drawText(p,s);
-            x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
-            y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+            y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
             __VTYPE3 tv = DetermineTraceVector(x,y,&EngineData->CameraInfo);
             //__VTYPE3 tp = EngineData->CameraInfo.cam_x;
             p.setY(rect().bottom()-15);
@@ -831,7 +821,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
             __VTYPE3 X = EngineData->CameraInfo.cam_x;
             uint o = EngineData->CreateObjectFromTemplate(&X);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,0.8);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,1.2);
         };
         if (event->button() == Qt::RightButton) {
             EngineData->SetNextTemplate();
@@ -840,8 +830,8 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
     }else{ // if mousemove
         if (event->button() == Qt::LeftButton) {
 
-            int x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
-            int y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+            int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
             for(int iter=0;iter<50000;++iter){
 
             #define __LOGGING
@@ -872,8 +862,8 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
         }; // (event->button() == Qt::LeftButton)
         if (event->button() == Qt::RightButton) {
 
-            int x = QWidget::mapFromGlobal(QCursor::pos()).x()*SURE_FAA/SURE_SCALE;
-            int y = QWidget::mapFromGlobal(QCursor::pos()).y()*SURE_FAA/SURE_SCALE;
+            int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+            int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
             //for(int iter=0;iter<50000;++iter){
 
             #define __LOGGING

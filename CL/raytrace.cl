@@ -90,9 +90,6 @@ DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
 
-//DrawableCollided.transp = 1.0f - native_divide((float)col_rgba.w,255.0f);
-
-
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
 int tid = cm; \
