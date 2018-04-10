@@ -9,9 +9,6 @@ SurePhysThread::~SurePhysThread()
 
 void SurePhysThread::run()
 {
-    #ifdef COLLISION_LOGGING_BASE
-    int l_collision_index = 0;
-    #endif // COLLISION_LOGGING
     while(m_running)
     {
         clock_gettime(CLOCK_MONOTONIC,&framestart);

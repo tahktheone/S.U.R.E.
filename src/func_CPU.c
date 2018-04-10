@@ -449,270 +449,45 @@ bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,Sure
     // ============================================================================================
     // ====  Алгоритм Гилберта-Джонсона-Кёрти =====================================================
     // ============================================================================================
-
-    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
     SureGJK LocalGJK;
     LocalGJK.SetEngine(EngineData);
-
-    __VTYPE3 collision_point;
-    __VTYPE3 collision_normal;
-    __VTYPE collision_distance = 0;
-
-    uint mc = 0; // количество точек в разности минковского
-    __VTYPE3 p1,p2; // точки из объектов, для получения разности
-    __VTYPE3 gp1,gp2; // точки в глобальных координатах
-    __VTYPE3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
-
     // 1. Составляем разность минковского.
     LocalGJK.SetupMinkowski(o1,o2);
-
-    mc = LocalGJK.GetMinkowski(M);
-
-    bool incover[SURE_MINKOWSKI_MAX];
-
     LocalGJK.InitiateLoop();
-
-    while(!LocalGJK.LoopExit())
-    {
-        if(!LocalGJK.TIContains00())
-        { // тэтраэдр не содержит 0,0
+    while(!LocalGJK.LoopExit()){
+        if(!LocalGJK.TIContains00()){
+            // тэтраэдр не содержит 0,0
             LocalGJK.LoopNextStep();
         }else{
             // тэттраэдр содержит 0,0
             LocalGJK.ExitLoop_Collision();
-
-            uint C[SURE_MINKOWSKI_MAX];
-            uint cc = 0;
-            uint C_N[SURE_MINKOWSKI_MAX];
-            uint cc_n = 0;
-
             LocalGJK.InitiateCoverLoop();
-            LocalGJK.Get_Cover(C,&cc,incover);
-
-            while(!LocalGJK.CoverExpanded())
-            {
-                cc_n = 0;
-
-                double LM;
-                uint cf;
-                //Ищем грань ближайшую к 0 0.
-                LocalGJK.Set_Cover(C,&cc,incover);
-                LocalGJK.CoverFindNearestTo00(&LM,&cf);
-
-                collision_distance = LM;
-
-                // в направлении от 0,0 есть еще точки?
-                #define CFF0 M[C[cf*3+0]]
-                #define CFF1 M[C[cf*3+1]]
-                #define CFF2 M[C[cf*3+2]]
-                __VTYPE3 v = __NORMALIZE(cross(CFF1-CFF0,CFF2-CFF0));
-                collision_normal = v;
-
-                // ищем дальнюю точку в M в направлении v
-                __VTYPE md = dot(v,CFF0)+SURE_R_DELTA;
-                __VTYPE ld;
-                bool f = false;
+            while(!LocalGJK.CoverExpanded()){
+                LocalGJK.ClearNewCover();
+                LocalGJK.SetCollisionByCover();
                 uint fndi = 0;
-                for(uint li = 0;li<mc;++li){// для каждой точки M[i]
-                    if(!incover[li]){ // если точка не в оболочке уже
-                        ld = dot(v,M[li]);
-                        if(ld>md){
-                            md = ld;
-                            fndi = li;
-                            f = true;
-                        };
-                    }; // если точка не в оболочке уже
-                }; // для каждой точки M[i]
-
-                if(f){
-                // cover нужно расширить добавив точку M[fndi]
-                    incover[fndi] = true;
-                    for(uint aci = 0;aci<cc;++aci)
-                    { // для каждой грани cover
-                        #define CFA0 M[C[aci*3+0]]
-                        #define CFA1 M[C[aci*3+1]]
-                        #define CFA2 M[C[aci*3+2]]
-                        // грань видимая?
-                        if(dot(cross(CFA1-CFA0,CFA2-CFA0),M[fndi]-CFA0)>SURE_R_DELTA)
-                        { // грань видимая
-                            bool out = false;
-
-                            // Логика check_cover:
-                            // для всех точек в M[] проверяем, лежат ли они снаружи
-                            // проверяемой грани. Если все внутри --
-                            // добавляем грань в COVER
-                            #define CHECK_COVER(A0,B0,C0) \
-                            out = false; \
-                            for(uint cci = 0;cci<mc;++cci) \
-                                if(incover[cci]) \
-                                    if(dot(cross(M[B0]-M[A0],M[C0]-M[A0]),M[cci]-M[A0])>SURE_R_DELTA) \
-                                        out = true; \
-                            if(!out) \
-                            { \
-                                C_N[cc_n*3+0] = A0; \
-                                C_N[cc_n*3+1] = B0; \
-                                C_N[cc_n*3+2] = C0; \
-                                ++cc_n; \
-                            };
-                            CHECK_COVER(C[aci*3+0],C[aci*3+1],fndi);
-                            CHECK_COVER(C[aci*3+1],C[aci*3+2],fndi);
-                            CHECK_COVER(C[aci*3+2],C[aci*3+0],fndi);
-
-                        }else{
-                         // грань невидимая - оставляем в cover
-                            C_N[cc_n*3+0] = C[aci*3+0];
-                            C_N[cc_n*3+1] = C[aci*3+1];
-                            C_N[cc_n*3+2] = C[aci*3+2];
-                            ++cc_n;
-                        }; // грань видимая?
-                    };// для каждой грани cover
-
-                    for(uint icn = 0;icn<cc_n;++icn)
-                    {
-                        C[icn*3+0] = C_N[icn*3+0];
-                        C[icn*3+1] = C_N[icn*3+1];
-                        C[icn*3+2] = C_N[icn*3+2];
-                    };
-                    cc = cc_n;
-
+                if(LocalGJK.FindFarestMinkowskiByVector(LocalGJK.Collision.CollisionVector,&fndi)){
+                    // cover нужно расширить добавив точку M[fndi]
+                    LocalGJK.ExpandCover(fndi);
+                    LocalGJK.SwitchCover();
                     LocalGJK.CheckCoverIterration();
                 }else{
                     LocalGJK.SetCoverExpanded();
                 }; // поиск расширения для cover
             }; // while (!cover_expanded
-            // cover максимально расширен в сторону 0,0
-            // уже есть collision_normal, collision_distance
-            // Для каждого объекта оперделяем "крайние" точки в направлении вектора контакта
-            // у нас o2 - o1.
-            // это значит нормаль направлена в сторону 1го объекта (так ведь?)
-            // для 1го объекта ищем в направлении -n
-            // для 2го в направлении n
 
-            #define __RE_MINMAX \
-            xmax = -SURE_R_MAXDISTANCE; \
-            ymax = -SURE_R_MAXDISTANCE; \
-            zmax = -SURE_R_MAXDISTANCE; \
-            xmin = SURE_R_MAXDISTANCE; \
-            ymin = SURE_R_MAXDISTANCE; \
-            zmin = SURE_R_MAXDISTANCE; \
-            G_max = -SURE_R_MAXDISTANCE; \
-            G_min = SURE_R_MAXDISTANCE;
-
-            #define __GET_VERTEX_BYOBJ_G(l_start,o,id,gvertex) \
-            uint cv = l_start + id; \
-            __VTYPE3 lvertex; \
-            __GET_VERTEX(lvertex,cv); \
-            lvertex.x = lvertex.x * o->lx; \
-            lvertex.y = lvertex.y * o->ly; \
-            lvertex.z = lvertex.z * o->lz; \
-            gvertex = o->ox*lvertex.x + o->oy*lvertex.y+o->oz*lvertex.z + o->X;
-
-            #define __GET_MINMAX_BYVEC(o,vec,gmin,gmax,l_start,l_limit) \
-            for(uint ii = 0;ii<l_limit;++ii) \
-            { \
-                __VTYPE3 gp; \
-                __GET_VERTEX_BYOBJ_G(l_start,o,ii,gp); \
-                __VTYPE l = dot(vec,gp); \
-                GL[ii]=l; \
-                if(l>gmax)gmax=l; \
-                if(l<gmin)gmin=l; \
-            };
-
-            #define __GET_AVER_DIS_BYOBJ(o,av,avc,dis,l_start,l_limit) \
-            for(uint ii = 0;ii<l_limit;++ii) \
-            { \
-                if(GL[ii]>GD) \
-                { \
-                    __VTYPE3 gp; \
-                    __GET_VERTEX_BYOBJ_G(l_start,o,ii,gp); \
-                    if(xmax<gp.x)xmax=gp.x; \
-                    if(ymax<gp.y)ymax=gp.y; \
-                    if(zmax<gp.z)zmax=gp.z; \
-                    if(xmin>gp.x)xmin=gp.x; \
-                    if(ymin>gp.y)ymin=gp.y; \
-                    if(zmin>gp.z)zmin=gp.z; \
-                    colverts[colverts_c] = gp; \
-                    colverts_c++; \
-                    av = av + gp; \
-                    avc = avc + 1.0; \
-                }; \
-            }; \
-            dis = xmax-xmin + ymax-ymin + zmax-zmin; \
-            av = av * (1.0/avc); \
-
-            __VTYPE G_max = -SURE_R_MAXDISTANCE;
-            __VTYPE G_min = SURE_R_MAXDISTANCE;
-            __VTYPE GD = 0;
-            __VTYPE3 n = -collision_normal;
-            __VTYPE GL[64]; // список расстояний проекций радиус-векторов
-                            // всех точек объекта на верктор столкновения
-            __VTYPE xmax;
-            __VTYPE ymax;
-            __VTYPE zmax;
-            __VTYPE xmin;
-            __VTYPE ymin;
-            __VTYPE zmin;
-            __VTYPE3 aver1 = {0,0,0};
-            __VTYPE3 aver2 = {0,0,0};
-            __VTYPE avc1 = 0;
-            __VTYPE avc2 = 0;
-            __VTYPE g1dis;
-            __VTYPE g2dis;
-
-            uint l1_limit = EngineData->ModelsInfo[o1->ModelID_collider].vertex_count;
-            uint l1_start = EngineData->ModelsInfo[o1->ModelID_collider].vertex_start;
-            uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
-            uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
-
-            __GET_MINMAX_BYVEC(o1,n,G_min,G_max,l1_start,l1_limit); // нашли самую дальюю и самую ближнюю точки
-            GD = G_max-G_min;
-            GD *= 0.999; // отсекаем только дальние
-            GD += G_min;
-            __RE_MINMAX;
-            __VTYPE3 colverts[16];
-            int colverts_c = 0;
-            __VTYPE l_dcn;
-            __GET_AVER_DIS_BYOBJ(o1,aver1,avc1,g1dis,l1_start,l1_limit); // ищем среднее по дальним 5% точек
-            if(colverts_c>=3){
-                // если в коллизии учавствует плоскость -- поворачиваем нормаль
-                __VTYPE3 tcn = collision_normal;
-                collision_normal = __NORMALIZE(cross(colverts[1]-colverts[0],colverts[2]-colverts[0]));
-                l_dcn = dot(collision_normal,tcn);
-                if(l_dcn<0)
-                    collision_normal = - collision_normal;
-                collision_distance = collision_distance * fabs(l_dcn);
-            };
-
-            __GET_MINMAX_BYVEC(o2,collision_normal,G_min,G_max,l2_start,l2_limit); // нашли самую дальюю и самую ближнюю точки
-            GD = G_max-G_min;
-            GD *= 0.999; // отсекаем только дальние
-            GD += G_min;
-            __RE_MINMAX;
-            colverts_c = 0;
-            __GET_AVER_DIS_BYOBJ(o2,aver2,avc2,g2dis,l2_start,l2_limit); // ищем среднее по дальним 5% точек
-            if(colverts_c>=3){
-                // если в коллизии учавствует плоскость -- поворачиваем нормаль
-                __VTYPE3 tcn = collision_normal;
-                collision_normal = __NORMALIZE(cross(colverts[1]-colverts[0],colverts[2]-colverts[0]));
-                l_dcn = dot(collision_normal,tcn);
-                if(l_dcn<0)
-                    collision_normal = - collision_normal;
-                collision_distance = collision_distance * fabs(l_dcn);
-            };
-
-            if(g1dis<g2dis)
-            {
-                collision_point = aver1;
+            double dist1;
+            double dist2;
+            my_double3 CollisionPoint1 = LocalGJK.GetCollisionPointByObject(o1,-LocalGJK.Collision.CollisionVector,&dist1);
+            my_double3 CollisionPoint2 = LocalGJK.GetCollisionPointByObject(o2,LocalGJK.Collision.CollisionVector,&dist2);
+            if(dist1<dist2){
+                LocalGJK.Collision.CollisionPoint = CollisionPoint1;
             }else{
-                collision_point = aver2;
+                LocalGJK.Collision.CollisionPoint = CollisionPoint2;
             };
 
             if(LocalGJK.CollisionFound()){
-                Collision->Object1 = o1;
-                Collision->Object2 = o2;
-                Collision->CollisionLength = collision_distance;
-                Collision->CollisionPoint = collision_point;
-                Collision->CollisionVector = collision_normal;
+                *Collision = LocalGJK.Collision;
                 return true;
             };
         };  // тэттраэдр содержит 0,0

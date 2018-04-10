@@ -11,7 +11,8 @@
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableNext;
 
     // Инициализируем рандом
-    uint r = InitRandom(&x,&y);
+    uint r = mad24(x,mad24(x+y,x,y),x+y);
+    while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
 
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
@@ -44,8 +45,6 @@
     }else{
         TraceVector = DetermineTraceVector(x,y,&CameraInfo);
     };
-
-    //cur = &Drawables[0];
 
     uint MaximumIterrations = GPUData->r_maxiters;
     #if SURE_RLEVEL>20

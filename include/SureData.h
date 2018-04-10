@@ -426,6 +426,9 @@ class SureGJK{
         SureGJK(SureData *i_Engine);
         virtual ~SureGJK();
 
+        SurePhysCollision Collision;
+        bool collision_found = false;
+
         void SetEngine(SureData *i_Engine);
         void SetupMinkowski(SureObject *o1,SureObject *o2);
         void InitiateLoop();
@@ -439,29 +442,31 @@ class SureGJK{
         bool CoverExpanded();
         void SetCoverExpanded();
         void CheckCoverIterration();
-        void CoverFindNearestTo00(double *e_l,uint *e_f);
 
         bool TIContains00();
         double GetMaximumDistanceTo00();
         bool FindNextTNI();
+        bool FindFarestMinkowskiByVector(my_double3 Vector,uint *e_result);
+        bool IsCoverFaceVisibleByPoint(uint f,uint point);
+        void CheckAndAddFaceToNewCover(uint face,uint fndi);
+        void AddFaceToNewCover(uint face);
+        void CheckAndAddFaceToNewCover(uint p1, uint p2, uint p3);
+        void AddFaceToNewCover(uint p1, uint p2, uint p3);
+        void SwitchCover();
+        void ExpandCover(uint fndi);
+        void SetIncover(uint i);
+        void ClearNewCover();
+        void SetCollisionByCover();
+        my_double3 GetCoverFaceNormal(uint face);
 
-        void Set_TI(uint *i_TI);
-        void Set_TNI(uint *i_TNI);
-        void Get_TI(uint *e_TI);
-        void Get_TNI(uint *e_TNI);
-        void TNI_to_TI();
-        void Get_Cover(uint *e_C,uint *e_cc,bool *e_incover);
-        void Set_Cover(uint *i_C,uint *i_cc,bool *i_incover);
-
-        uint GetMinkowski(my_double3 *e_M);
-
+        my_double3 GetCollisionPointByObject(SureObject *o,my_double3 i_vector,double *dist);
+        uint GetFarestVertexByObj(SureObject *o,my_double3 i_vector);
     protected:
 
     private:
         SureData *EngineData;
 
-        SurePhysCollision Collision;
-        bool collision_found = false;
+        void TNI_to_TI();
 
         bool exit_no_collision = false;
         bool exit_collision = false;
@@ -474,6 +479,8 @@ class SureGJK{
         uint iter = 0; // подсчет итерраций - гарантия от зацикливаний
         uint TI[4] = {0,0,0,0};
         uint TNI[4] = {0,0,0,0};
+
+        uint CollisionFace;
 
         double L1;
         double L2;

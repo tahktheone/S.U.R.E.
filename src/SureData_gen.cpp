@@ -582,7 +582,7 @@ TemplateObject.ParentID = -1;
     TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
     TemplateObject.drawable.map_id = GetTexture("earth");
     TemplateObject.drawable.advmap_id = GetTexture("earth_adv");
-    MapTexture(TemplateObject.ModelID_drawable,SURE_MAPPING_SPHERICAL);
+    //MapTexture(TemplateObject.ModelID_drawable,SURE_MAPPING_SPHERICAL);
     TemplateObject.drawable.transp = 1.1f;
     TemplateObject.drawable.transp_i = 0.002f;
     TemplateObject.drawable.refr = 1.02;
