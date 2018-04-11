@@ -86,6 +86,7 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     if(o1->movable)o1->push(pp,pd,pl*0.5);
     if(!o2->movable)o1->push(pp,pd,pl*0.5);
 
+
     if(o1->movable)v1 = o1->velbypp(pp);
     if(o2->movable)v2 = o2->velbypp(pp);
     my_double3 oz = __NORMALIZE(pd);
@@ -96,8 +97,8 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     my_double3 v2z = oz*l_v2z;
     my_double3 v2xy = v2-v2z;
 
-    if(o2->movable)o2->push(pp,v2xy,-1.0); // трение
-    if(o1->movable)o1->push(pp,v1xy,-1.0); // трение
+    if(o2->movable)o2->push(pp,v2xy,-0.5); // трение
+    if(o1->movable)o1->push(pp,v1xy,-0.5); // трение
 
  }
 
@@ -439,58 +440,25 @@ bool PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData,Sur
     return false;
 }
 
-bool PhysCollideCreaturePlane(SureObject* o1,SureObject* o2,SurePhysCollision* Collision)
-{
-    return false;
-}
-
 bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision* Collision)
 {
-    // ============================================================================================
-    // ====  Алгоритм Гилберта-Джонсона-Кёрти =====================================================
-    // ============================================================================================
+    bool CollisionFound = false;
     SureGJK LocalGJK;
     LocalGJK.SetEngine(EngineData);
-    // 1. Составляем разность минковского.
     LocalGJK.SetupMinkowski(o1,o2);
     LocalGJK.InitiateLoop();
     while(!LocalGJK.LoopExit()){
         if(!LocalGJK.TIContains00()){
-            // тэтраэдр не содержит 0,0
             LocalGJK.LoopNextStep();
         }else{
-            // тэттраэдр содержит 0,0
             LocalGJK.ExitLoop_Collision();
-            LocalGJK.InitiateCoverLoop();
-            while(!LocalGJK.CoverExpanded()){
-                LocalGJK.ClearNewCover();
-                LocalGJK.SetCollisionByCover();
-                uint fndi = 0;
-                if(LocalGJK.FindFarestMinkowskiByVector(LocalGJK.Collision.CollisionVector,&fndi)){
-                    // cover нужно расширить добавив точку M[fndi]
-                    LocalGJK.ExpandCover(fndi);
-                    LocalGJK.SwitchCover();
-                    LocalGJK.CheckCoverIterration();
-                }else{
-                    LocalGJK.SetCoverExpanded();
-                }; // поиск расширения для cover
-            }; // while (!cover_expanded
-
-            double dist1;
-            double dist2;
-            my_double3 CollisionPoint1 = LocalGJK.GetCollisionPointByObject(o1,-LocalGJK.Collision.CollisionVector,&dist1);
-            my_double3 CollisionPoint2 = LocalGJK.GetCollisionPointByObject(o2,LocalGJK.Collision.CollisionVector,&dist2);
-            if(dist1<dist2){
-                LocalGJK.Collision.CollisionPoint = CollisionPoint1;
-            }else{
-                LocalGJK.Collision.CollisionPoint = CollisionPoint2;
-            };
-
+            LocalGJK.ExpandCoverLoop();
             if(LocalGJK.CollisionFound()){
                 *Collision = LocalGJK.Collision;
-                return true;
+                CollisionFound = true;
             };
         };  // тэттраэдр содержит 0,0
     };// while(!exit)
-    return false;
+    LocalGJK.Clear();
+    return CollisionFound;
 }

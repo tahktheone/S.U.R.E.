@@ -10,18 +10,68 @@ SureWidget::~SureWidget()
     delete rgbmatrix;
 }
 
+void SureWidget::PlaceMatrixToImage()
+{
+    int mx = image->rect().right()/SURE_SCALE;
+    int my = image->rect().bottom()/SURE_SCALE;
+    float lv_max = 0;
+    float lv_med = 0;
+    for(int y=0;y<my;++y)for(int x=0;x<mx;++x){
+        int k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
+        lv_max = rgbmatrix[k] > lv_max ? rgbmatrix[k] : lv_max;
+        lv_max = rgbmatrix[k+1] > lv_max ? rgbmatrix[k+1] : lv_max;
+        lv_max = rgbmatrix[k+2] > lv_max ? rgbmatrix[k+2] : lv_max;
+        lv_med += rgbmatrix[k] + rgbmatrix[k+1] + rgbmatrix[k+2];
+    };
+    lv_med /= mx*my*3;
+    lv_max /= (lv_max/lv_med)*150.0;
+
+    #pragma omp parallel for schedule(static,8)
+    for(int y=0;y<my;++y){
+        uint32_t* scanLine = (uint32_t*)image->scanLine(y*SURE_SCALE);
+        for(int x=0;x<mx;++x){
+            int k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
+            float r = rgbmatrix[k]/lv_max;
+            float g = rgbmatrix[++k]/lv_max;
+            float b = rgbmatrix[++k]/lv_max;
+            if(r>255)r=255;if(r<0)r=0;
+            if(g>255)g=255;if(g<0)g=0;
+            if(b>255)b=255;if(b<0)b=0;
+            uchar *CurrentPixel = (uchar*)scanLine;
+            *CurrentPixel = (uchar)b;++CurrentPixel;
+            *CurrentPixel = (uchar)g;++CurrentPixel;
+            *CurrentPixel = (uchar)r;++CurrentPixel;
+            *CurrentPixel = 255;
+            for(int i=0;i<SURE_SCALE;++i)
+                ++scanLine;
+        }; //X
+    }; //Y
+}
+
 void SureWidget::paintEvent(QPaintEvent * event)
 {
-    int x = rect().right();
-    int y = rect().bottom();
-    uchar* lv_pixel;
+    // набор указателей, необходимых для работы инклюда с трассировкой:
+    SureDrawable* Drawables = GPUData->Drawables;
+    cl_uchar* Textures = EngineData->TexturesData; // Текстуры
+    cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
+    cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
+    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
+    cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+
+    // засекаем время начала отрисовки
+    clock_gettime(CLOCK_MONOTONIC,&framestart);
+    // пересоздаем картинку
     delete image;
-    image = new QImage(x,y,QImage::Format_ARGB32);
+    int mx = rect().right();
+    int my = rect().bottom();
+    image = new QImage(mx,my,QImage::Format_ARGB32);
+    // обновляем границы отрисовки (на случай если изменился размер окна)
     EngineData->CameraInfo.m_amx = rect().right()/SURE_SCALE;
     EngineData->CameraInfo.m_amy = rect().bottom()/SURE_SCALE;
-    clock_gettime(CLOCK_MONOTONIC,&framestart);
-    double lv_max = 0;
-    double lv_med = 0;
+
+
+
+
 
                     QPoint P1;
                     QPoint P2;
@@ -39,12 +89,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
                         };
 
                 //float* rgbmatrix = widget->rgbmatrix;
-                SureDrawable* Drawables = GPUData->Drawables;
-                cl_uchar* Textures = EngineData->TexturesData; // Текстуры
-                cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
-                cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
-                cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-                cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
+
 
 
             my_double3 CameraDX;
@@ -57,8 +102,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
             my_double3 LocalPoint2;
             my_double3 LocalPoint3;
             my_double3 LocalPoint4;
-            int my = image->rect().bottom();
-            int mx = image->rect().right();
+
 
             #define CONVERT_TO_CAMERA_XY(I_GLOBAL_POINT,E_LOCAL_POINT,I_VISIBLE) \
             CameraDY = -EngineData->CameraInfo.cam_upvec; \
@@ -74,111 +118,104 @@ void SureWidget::paintEvent(QPaintEvent * event)
                 I_VISIBLE = false; \
             };
 
-    for(y=0;y<my;++y)for(x=0;x<mx;++x)
-    {
-        double l_m = lv_max;
-        double lv_mm = lv_med;
-        int k = y*3*SURE_MAXRES_X+x*3;
-        lv_max = rgbmatrix[k] > lv_max ? rgbmatrix[k] : lv_max;
-        lv_max = rgbmatrix[k+1] > lv_max ? rgbmatrix[k+1] : lv_max;
-        lv_max = rgbmatrix[k+2] > lv_max ? rgbmatrix[k+2] : lv_max;
-        lv_med += rgbmatrix[k] + rgbmatrix[k+1] + rgbmatrix[k+2];
-        if(isnan(lv_max))
-        {
-            lv_max=l_m;
-        };
-        if(isnan(lv_med))
-        {
-            lv_med=lv_mm;
-        };
-    };
-    lv_med /= mx*my*3;
-    lv_max /= (lv_max/lv_med)*150.0;
-    //lv_max /= 255.0;
-    #pragma omp parallel for schedule(static,8) private (lv_pixel,x,y)
-    for(y=0;y<my;++y){
-        uint32_t* scanLine = (uint32_t*)image->scanLine(y);
-        for(x=0;x<mx;++x){
-            float r = rgbmatrix[y*3*SURE_MAXRES_X+x*3]/lv_max;
-            float g = rgbmatrix[y*3*SURE_MAXRES_X+x*3+1]/lv_max;
-            float b = rgbmatrix[y*3*SURE_MAXRES_X+x*3+2]/lv_max;
-            if(r>255)r=255;
-            if(g>255)g=255;
-            if(b>255)b=255;
-            if(r<0)r=0;
-            if(g<0)g=0;
-            if(b<0)b=0;
-            lv_pixel = (uchar*)scanLine;
-            *lv_pixel = (uchar)b;
-            ++lv_pixel;
-            *lv_pixel = (uchar)g;
-            ++lv_pixel;
-            *lv_pixel = (uchar)r;
-            ++lv_pixel;
-            *lv_pixel = 255;
-            ++scanLine;
-        }; //X
-    }; //Y
+    PlaceMatrixToImage();
+
     uint32_t* l_img;
     l_img = (uint32_t*)image->bits();
-    bool shift = true;
-    bool shiftp = true;
-    for(int sm=0;sm<SURE_SMOOTH;++sm)
-    {
-        if(shiftp)
-        {
-            shift=true;
-            shiftp=false;
-        }
-        else
-        {
-            shift = false;
-            shiftp = true;
-        };
-        #pragma omp parallel for schedule(dynamic,1) private (shift,lv_pixel,x,y)
-        for(y=1;y<(my-1);++y)
-        {
-            if(sm%2==1)
-            {
-                shift = false;
-            }
-            else
-            {
-                shift = true;
+    for(int y=0;y<my;y=y+SURE_SCALE){// для каждой строки, в которой есть "живой" пиксель
+        for(int x = 0;x<mx;x=x+SURE_SCALE){ // для каждого "живого" пикселя
+            uchar *CurrentPixel = (uchar*)(&l_img[y*mx+x]);
+            uchar CurrentRGB[3];
+            CurrentRGB[0] = *CurrentPixel;++CurrentPixel;
+            CurrentRGB[1] = *CurrentPixel;++CurrentPixel;
+            CurrentRGB[2] = *CurrentPixel;
+            uchar *NextPixel = (uchar*)(&l_img[y*mx+x+SURE_SCALE]);
+            uchar NextRGB[3];
+            NextRGB[0] = *NextPixel;++NextPixel;
+            NextRGB[1] = *NextPixel;++NextPixel;
+            NextRGB[2] = *NextPixel;
+            for(int i = 1;i<SURE_SCALE;++i){
+                uchar *SetPixel = (uchar*)(&l_img[y*mx+x+i]);
+                *SetPixel = (CurrentRGB[0]*(SURE_SCALE-i) + NextRGB[0]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = (CurrentRGB[1]*(SURE_SCALE-i) + NextRGB[1]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = (CurrentRGB[2]*(SURE_SCALE-i) + NextRGB[2]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = 255;
+            }; // Scale
+        }; // для каждого "живого" пикселя
+    };// для каждой строки, в которой есть "живой" пиксель
+
+    for(int y=0;y<(my-SURE_SCALE);y=y+SURE_SCALE){// для каждой строки, в которой нет "живых" пикселей
+        for(int x = 0;x<mx;++x){ // для каждого пикселя в строке
+            uchar *CurrentPixel = (uchar*)(&l_img[y*mx+x]);
+            uchar CurrentRGB[3];
+            CurrentRGB[0] = *CurrentPixel;++CurrentPixel;
+            CurrentRGB[1] = *CurrentPixel;++CurrentPixel;
+            CurrentRGB[2] = *CurrentPixel;
+            uchar *NextPixel = (uchar*)(&l_img[(y+SURE_SCALE)*mx+x]);
+            uchar NextRGB[3];
+            NextRGB[0] = *NextPixel;++NextPixel;
+            NextRGB[1] = *NextPixel;++NextPixel;
+            NextRGB[2] = *NextPixel;
+            for(int i = 1;i<SURE_SCALE;++i){
+                uchar *SetPixel = (uchar*)(&l_img[(y+i)*mx+x]);
+                *SetPixel = (CurrentRGB[0]*(SURE_SCALE-i) + NextRGB[0]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = (CurrentRGB[1]*(SURE_SCALE-i) + NextRGB[1]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = (CurrentRGB[2]*(SURE_SCALE-i) + NextRGB[2]*i)/SURE_SCALE;++SetPixel;
+                *SetPixel = 255;
+            }; // Scale
+        }; // для каждого "живого" пикселя
+    };// для каждой строки, в которой есть "живой" пиксель
+
+    /*
+    uint32_t* l_img;
+    l_img = (uint32_t*)image->bits();
+    int scaled_mx = mx / SURE_SCALE;
+    int scaled_my = my / SURE_SCALE;
+    for(int sm=0;sm<SURE_SMOOTH;++sm){
+        #pragma omp parallel for schedule(static,8)
+        for(int y=1;y<(scaled_my-1);++y){
+            bool shift = false;
+            if(sm%2==1){
+                shift = y%2==1 ? false : true;
+            }else{
+                shift = y%2==1 ? true : false;
             };
-            for(x=shift?2:1;x<(mx-1);++x)
-            {
+            int picture_y = y * SURE_SCALE;
+            for(int x=shift?2:1;x<(scaled_mx-1);x=x+2){
                 int r=0;
                 int g=0;
                 int b=0;
-                lv_pixel = (uchar*)(&l_img[y*(mx+1)+x]);
-                b += *lv_pixel;++lv_pixel;
-                g += *lv_pixel;++lv_pixel;
-                r += *lv_pixel;++lv_pixel;
-                lv_pixel = (uchar*)(&l_img[(y-1)*(mx+1)+x]);
-                b += *lv_pixel;++lv_pixel;
-                g += *lv_pixel;++lv_pixel;
-                r += *lv_pixel;++lv_pixel;
-                lv_pixel = (uchar*)(&l_img[(y+1)*(mx+1)+x]);
-                b += *lv_pixel;++lv_pixel;
-                g += *lv_pixel;++lv_pixel;
-                r += *lv_pixel;++lv_pixel;
-                lv_pixel = (uchar*)(&l_img[y*(mx+1)+(x-1)]);
-                b += *lv_pixel;++lv_pixel;
-                g += *lv_pixel;++lv_pixel;
-                r += *lv_pixel;++lv_pixel;
-                lv_pixel = (uchar*)(&l_img[y*(mx+1)+(x+1)]);
-                b += *lv_pixel;++lv_pixel;
-                g += *lv_pixel;++lv_pixel;
-                r += *lv_pixel;++lv_pixel;
-                lv_pixel = (uchar*)(&l_img[y*(mx+1)+x]);
-                r /= 5; g /=5; b /=5;
-                *lv_pixel = (uchar)b;++lv_pixel;
-                *lv_pixel = (uchar)g;++lv_pixel;
-                *lv_pixel = (uchar)r;++lv_pixel;
+                int picture_x = x * SURE_SCALE;
+                uchar *CurrentPixel = (uchar*)(&l_img[(picture_y-SURE_SCALE)*mx+picture_x]);
+                b += *CurrentPixel;++CurrentPixel;
+                g += *CurrentPixel;++CurrentPixel;
+                r += *CurrentPixel;++CurrentPixel;
+                CurrentPixel = (uchar*)(&l_img[(picture_y+SURE_SCALE)*mx+picture_x]);
+                b += *CurrentPixel;++CurrentPixel;
+                g += *CurrentPixel;++CurrentPixel;
+                r += *CurrentPixel;++CurrentPixel;
+                CurrentPixel = (uchar*)(&l_img[picture_y*mx+picture_x+SURE_SCALE]);
+                b += *CurrentPixel;++CurrentPixel;
+                g += *CurrentPixel;++CurrentPixel;
+                r += *CurrentPixel;++CurrentPixel;
+                CurrentPixel = (uchar*)(&l_img[picture_y*mx+picture_x-SURE_SCALE]);
+                b += *CurrentPixel;++CurrentPixel;
+                g += *CurrentPixel;++CurrentPixel;
+                r += *CurrentPixel;++CurrentPixel;
+                r /= 4; g /=4; b /=4;
+                for(int sx=0;sx<SURE_SCALE;++sx)
+                for(int sy=0;sy<SURE_SCALE;++sy)
+                {
+                    CurrentPixel = (uchar*)(&l_img[(picture_y+sy)*mx+(picture_x+sx)]);
+                    *CurrentPixel = (uchar)b;++CurrentPixel;
+                    *CurrentPixel = (uchar)g;++CurrentPixel;
+                    *CurrentPixel = (uchar)r;++CurrentPixel;
+                };// scale
             };  //X
         }; //Y
     };//SMOOTH
+    */
+
     clock_gettime(CLOCK_MONOTONIC,&frametime);
     posttime = frametime.tv_sec * 1000.0 + (float) frametime.tv_nsec / 1000000.0 - (  framestart.tv_sec*1000.0 + (float) framestart.tv_nsec / 1000000.0 );
     painter.begin(this);
@@ -243,8 +280,8 @@ void SureWidget::paintEvent(QPaintEvent * event)
             p.setX(5);
             sprintf(s,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
             painter.drawText(p,s);
-            x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-            y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
+            int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+            int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
             __VTYPE3 tv = DetermineTraceVector(x,y,&EngineData->CameraInfo);
             //__VTYPE3 tp = EngineData->CameraInfo.cam_x;
             p.setY(rect().bottom()-15);

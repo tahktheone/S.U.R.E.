@@ -435,6 +435,7 @@ void SureData::ObjCoordsToDrawable(int i)
 
 void SureData::DeleteObject(uint i_object)
 {
+    if(i_object>=(uint)m_objects)return;
     m_objects--;
     objects[i_object] = objects[m_objects];
 }
@@ -493,8 +494,12 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
     };
 
     objects[i].ParentID = TemplateObject.ParentID;
-    if(objects[i].ParentID<0)
-        objects[i].initp4();
+    if(objects[i].ParentID<0){
+        if(objects[i].movable){
+            objects[i].initp4();
+            objects[i].movebyp4();
+        };
+    };
     if(objects[i].ParentID>=0)
         objects[i].align_byparent(ObjByID(objects[i].ParentID));
     objects[i].external_id = m_ObjExternID;

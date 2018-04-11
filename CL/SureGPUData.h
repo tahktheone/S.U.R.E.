@@ -90,7 +90,7 @@ struct SureGPUData {
     cl_uchar r_maxiters = 20; // глубина анализа рендера
     cl_uchar r_rechecks = 20; // качество рендера
     cl_float r_backlight = 0.5;
-    cl_int SAA = 4; // Количество субпикселей на пиксель
+    cl_int SAA = 8; // Количество субпикселей на пиксель
     SureDrawable* Drawables; // Для CPU -- указатель на массив с объектами сцены
 #endif // GPU
 };

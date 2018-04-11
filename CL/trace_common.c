@@ -625,20 +625,15 @@
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
     // если точка черная -- освещаем ее "глобальным" холодным светом -- это дает подсветку теней
-    if((TraceColor.x+TraceColor.y+TraceColor.z)==0)
-    {
+    if((TraceColor.x+TraceColor.y+TraceColor.z)==0){
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
     };
 
-    uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
-    for(int sx=0;sx<SURE_SCALE;++sx)
-    for(int sy=0;sy<SURE_SCALE;++sy)
-    {
-        uint d = k+sy*SURE_MAXRES_X*3+sx*3;
-        rgbmatrix[d++] += TraceColor.x;
-        rgbmatrix[d++] += TraceColor.y;
-        rgbmatrix[d++] += TraceColor.z;
-    };
+    uint d = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
+    rgbmatrix[d++] += TraceColor.x;
+    rgbmatrix[d++] += TraceColor.y;
+    rgbmatrix[d++] += TraceColor.z;
+
     #ifdef GPU
     }; // SAAIter
     #endif

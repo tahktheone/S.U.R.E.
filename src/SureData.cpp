@@ -302,6 +302,18 @@ SureGJK::~SureGJK()
 
 }
 
+void SureGJK::Clear()
+{
+    free(M);
+}
+
+void SureGJK::ClearCover()
+{
+    free(C);
+    free(C_N);
+    free(incover);
+}
+
 void SureGJK::SetupMinkowski(SureObject *o1,SureObject *o2)
 {
     cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
@@ -316,9 +328,13 @@ void SureGJK::SetupMinkowski(SureObject *o1,SureObject *o2)
     uint l2_limit = EngineData->ModelsInfo[o2->ModelID_collider].vertex_count;
     uint l2_start = EngineData->ModelsInfo[o2->ModelID_collider].vertex_start;
 
+    M = (my_double3 *)malloc(sizeof(my_double3)*l1_limit*l2_limit);
+
+    my_double3 M_min = {SURE_R_MAXDISTANCE,SURE_R_MAXDISTANCE,SURE_R_MAXDISTANCE};
+    my_double3 M_max = {-SURE_R_MAXDISTANCE,-SURE_R_MAXDISTANCE,-SURE_R_MAXDISTANCE};
+
     // для каждой точки
-    for(uint i1 = 0;i1<l1_limit;++i1)
-    {
+    for(uint i1 = 0;i1<l1_limit;++i1){
         uint cv1 = l1_start + i1;
         __GET_VERTEX(p1,cv1);
         p1.x = p1.x * o1->lx;
@@ -334,9 +350,22 @@ void SureGJK::SetupMinkowski(SureObject *o1,SureObject *o2)
             p2.z = p2.z * o2->lz;
             gp2 = o2->ox*p2.x + o2->oy*p2.y+o2->oz*p2.z + o2->X;
             M[mc]=gp2-gp1;
+            if(M[mc].x<M_min.x)M_min.x=M[mc].x;
+            if(M[mc].y<M_min.y)M_min.y=M[mc].y;
+            if(M[mc].z<M_min.z)M_min.z=M[mc].z;
+            if(M[mc].x>M_max.x)M_max.x=M[mc].x;
+            if(M[mc].y>M_max.y)M_max.y=M[mc].y;
+            if(M[mc].z>M_max.z)M_max.z=M[mc].z;
             ++mc;
         };// каждая точка с каждой точкой
     };
+
+    exit_no_collision = false;
+    exit_collision = false;
+    if(M_min.x>0||M_min.y>0||M_min.z>0)
+        exit_no_collision = true;
+    if(M_max.x<0||M_max.y<0||M_max.z<0)
+        exit_no_collision = true;
 }
 
 void SureGJK::InitiateLoop()
@@ -353,8 +382,6 @@ void SureGJK::InitiateLoop()
         TI[2] = TI[1];
         TI[1] = TTI;
     };
-    exit_no_collision = false;
-    exit_collision = false;
     iter = 0; // подсчет итерраций - гарантия от зацикливаний
 }
 
@@ -386,6 +413,9 @@ void SureGJK::SetCoverExpanded()
 
 void SureGJK::InitiateCoverLoop()
 {
+    C = (uint *)malloc(sizeof(uint)*mc*2);
+    C_N = (uint *)malloc(sizeof(uint)*mc*2);
+    incover = (bool *)malloc(sizeof(bool)*mc);
 
     for(uint incb=0;incb<mc;++incb)
         incover[incb]=false;
@@ -667,7 +697,7 @@ my_double3 SureGJK::GetCollisionPointByObject(SureObject *o,my_double3 i_gvector
             // строим грань
             my_double3 Face = __NORMALIZE(FarestVertex - LocalVertex);
             // cross(грань,i_vector) > 0.99 ?
-            if(__LENGTH(cross(Face,i_vector)) > 0.99999){
+            if(__LENGTH(cross(Face,i_vector)) > 0.999999){
                 // добавляем vertex к расчету средней точки
                 CumulatedVertex = CumulatedVertex + LocalVertex;
                 FoundVertexes = FoundVertexes + 1.0;
@@ -694,7 +724,7 @@ my_double3 SureGJK::GetCollisionPointByObject(SureObject *o,my_double3 i_gvector
         };// if(CommonMeshExist;
     }; // Для каждого vertex'а
 
-    // седняя точка = CumulatedVertex/FoundVertexes
+    // средняя точка = CumulatedVertex/FoundVertexes
     my_double3 result = CumulatedVertex * ( 1.0 / FoundVertexes );
 
     if(VertexesInFace==3){
@@ -724,8 +754,8 @@ my_double3 SureGJK::GetCollisionPointByObject(SureObject *o,my_double3 i_gvector
     };
 
     result = o->X +  result.x * o->ox * o->lx +
-                     result.y * o->oy * o->ly +
-                     result.z * o->oz * o->lz;
+         result.y * o->oy * o->ly +
+         result.z * o->oz * o->lz;
     return result;
 }
 
@@ -752,6 +782,39 @@ void SureGJK::ClearNewCover()
 my_double3 SureGJK::GetCoverFaceNormal(uint face)
 {
     return __NORMALIZE(cross(M[C[face*3+1]]-M[C[face*3+0]],M[C[face*3+2]]-M[C[face*3+0]]));
+}
+
+void SureGJK::ExpandCoverLoop()
+{
+    InitiateCoverLoop();
+    while(!CoverExpanded()){
+        ClearNewCover();
+        SetCollisionByCover();
+        uint fndi = 0;
+        if(FindFarestMinkowskiByVector(Collision.CollisionVector,&fndi)){
+            // cover нужно расширить добавив точку M[fndi]
+            ExpandCover(fndi);
+            SwitchCover();
+            CheckCoverIterration();
+        }else{
+            SetCoverExpanded();
+        }; // поиск расширения для cover
+    }; // while (!cover_expanded
+    SetCollisionPoint();
+    ClearCover();
+}
+
+void SureGJK::SetCollisionPoint()
+{
+    double dist1;
+    double dist2;
+    my_double3 CollisionPoint1 = GetCollisionPointByObject(Collision.Object1,-Collision.CollisionVector,&dist1);
+    my_double3 CollisionPoint2 = GetCollisionPointByObject(Collision.Object2,Collision.CollisionVector,&dist2);
+    if(dist1<dist2){
+        Collision.CollisionPoint = CollisionPoint1;
+    }else{
+        Collision.CollisionPoint = CollisionPoint2;
+    };
 }
 
 #include <func_common.c>

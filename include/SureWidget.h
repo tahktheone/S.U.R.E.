@@ -38,6 +38,8 @@ class SureWidget : public QWidget
     private:
         QImage *image;
         QPainter painter;
+
+        void PlaceMatrixToImage();
 };
 
 #endif // SUREWIDGET_H

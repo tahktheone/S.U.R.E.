@@ -480,7 +480,6 @@ __VTYPE3 X;
 
 void SureData::Scene_Polygon()
 {
-
     CameraInfo.cam_x.s[0] = 573;
     CameraInfo.cam_x.s[1] = -534;
     CameraInfo.cam_x.s[2] = 400;
@@ -824,7 +823,7 @@ void SureData::Scene_Polygon()
     TemplateObject.movable = true;
     X.x = 360;
     X.y = -130;
-    X.z = 170;
+    X.z = 100+200+20+50+10;
     uint ParentCup = CreateObjectFromTemplate(&X);
 
     SetTemplate_RegularPandus();
@@ -883,4 +882,93 @@ void SureData::Scene_Polygon()
     TemplateObject.X_byparent.z = 0;
     TemplateObject.ParentID = ParentCup;
     CreateObjectFromTemplate(&X);
+
+    // 360, -128
+    // Тут будет стол
+    SetTemplate_RegularCube();
+    TemplateObject.lx = 200;
+    TemplateObject.ly = 200;
+    TemplateObject.lz = 200;
+    TemplateObject.lp = 450;
+    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
+    TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
+    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
+    TemplateObject.oy = __NORMALIZE(TemplateObject.oy);
+    TemplateObject.ox = __NORMALIZE(cross(TemplateObject.oz,TemplateObject.oy));
+    TemplateObject.type = SURE_OBJ_NONE;
+    TemplateObject.drawable.type = SURE_DR_NONE;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    X.x = 360;
+    X.y = -130;
+    X.z = 100+100+10;
+    uint ParentTable = CreateObjectFromTemplate(&X);
+
+    SetTemplate_RegularCube();
+
+    TemplateObject.lx = 160;
+    TemplateObject.ly = 160;
+    TemplateObject.lz = 10;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 0;
+    TemplateObject.X_byparent.y = 0;
+    TemplateObject.X_byparent.z = 95;
+    TemplateObject.ParentID = ParentTable;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 20;
+    TemplateObject.ly = 20;
+    TemplateObject.lz = 100;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = -130;
+    TemplateObject.X_byparent.y = -130;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentTable;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 20;
+    TemplateObject.ly = 20;
+    TemplateObject.lz = 100;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = -130;
+    TemplateObject.X_byparent.y = 130;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentTable;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 20;
+    TemplateObject.ly = 20;
+    TemplateObject.lz = 100;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 130;
+    TemplateObject.X_byparent.y = 130;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentTable;
+    CreateObjectFromTemplate(&X);
+
+    TemplateObject.lx = 20;
+    TemplateObject.ly = 20;
+    TemplateObject.lz = 100;
+    TemplateObject.collidable = true;
+    TemplateObject.movable = true;
+    TemplateObject.ox_byparent.x = 1; TemplateObject.ox_byparent.y = 0; TemplateObject.ox_byparent.z = 0;
+    TemplateObject.oy_byparent.x = 0; TemplateObject.oy_byparent.y = 1; TemplateObject.oy_byparent.z = 0;
+    TemplateObject.X_byparent.x = 130;
+    TemplateObject.X_byparent.y = -130;
+    TemplateObject.X_byparent.z = 0;
+    TemplateObject.ParentID = ParentTable;
+    CreateObjectFromTemplate(&X);
+
 }

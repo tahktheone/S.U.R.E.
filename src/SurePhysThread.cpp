@@ -107,23 +107,9 @@ void SurePhysThread::run()
                                 };
                             }; // mesh с плоскостью
 
-                            if((lv_o1->type==SURE_OBJ_CREAT&&lv_o2->type==SURE_OBJ_PLANE)||
-                               (lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE)){   // сложный объект с плоскостью
-                                if(lv_o2->type==SURE_OBJ_CREAT&&lv_o1->type==SURE_OBJ_PLANE)
-                                {
-                                    CollisionFound = PhysCollideCreaturePlane(lv_o2,lv_o1,&Collision);
-                                }else{
-                                    CollisionFound = PhysCollideCreaturePlane(lv_o1,lv_o2,&Collision);
-                                };
-                            };
-
                             if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH){ // mesh'ы
                                 CollisionFound = PhysCollideMeshMesh(lv_o1,lv_o2,EngineData,&Collision);
                             };// mesh'ы
-
-                            if(lv_o1->type==SURE_OBJ_PLANE&&lv_o2->type==SURE_OBJ_PLANE){ // квадратик с квадратиком
-                                // Нет. Квадратики у нас -- стены и полы. Им не нужно между собой сталкиваться
-                            }; // квадратик с квадратиком
 
                             if(CollisionFound){
                                 Collisions[++CollisionsCounter] = Collision;
@@ -134,7 +120,17 @@ void SurePhysThread::run()
                 }; // if(lv_o1->movable&&lv_o1->collidable)
             };//  for(int i = 0;i<EngineData->m_objects;++i)
 
+            int *RandomSequence = (int *)malloc(sizeof(int)*(CollisionsCounter + 1));
+            for(int i = 0;i<=CollisionsCounter;++i){RandomSequence[i]=i;};
             for(int i = 0;i<=CollisionsCounter;++i){
+                int RandomNumber = int(0.5f + (float)CollisionsCounter*((float)rand()/(float)RAND_MAX));
+                int LocalBuffer = RandomSequence[i];
+                RandomSequence[i]=RandomSequence[RandomNumber];
+                RandomSequence[RandomNumber]=LocalBuffer;
+            };
+
+            for(int ri = 0;ri<=CollisionsCounter;++ri){
+                int i = RandomSequence[ri];
                 SureObject *o1;
                 if(Collisions[i].Object1->ParentID<0){
                     o1 = Collisions[i].Object1;
@@ -153,6 +149,7 @@ void SurePhysThread::run()
                            Collisions[i].CollisionVector,
                            Collisions[i].CollisionLength);
             };
+            free(RandomSequence);
 
             EngineData->reset = true;
         }; // !paused

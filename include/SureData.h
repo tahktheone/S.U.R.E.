@@ -58,7 +58,12 @@ struct SureObject
                                     + oy_byparent.z*parent->oz);
                     oz = __NORMALIZE(cross(ox,oy));
     }
-    void initp4(){p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
+    void initp4(){
+                  // тэтраэдр создается чуть ниже чем нужно, поэтому при первом же выравнивании объект "проваливается" вниз
+                  // чтобы этого не было -- костыль:
+                  X=X+0.1*lp*oz;
+
+                  p1 = X+ox*(SURE_P4_X*lp)-oz*(SURE_P4_Y*lp);
                   p2 = X-ox*(SURE_P4_Y*lp)+oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p3 = X-ox*(SURE_P4_Y*lp)-oy*(0.5*lp)-oz*(SURE_P4_Y*lp);
                   p4 = X+oz*(SURE_P4_Z*lp-SURE_P4_Y*lp);
@@ -133,16 +138,28 @@ struct SureObject
     void next_tick()
     {
         v1 = p1-p1o; v2 = p2-p2o; v3 = p3-p3o; v4 = p4-p4o;
-        p1o=p1;p2o=p2;p3o=p3;p4o=p4;
-        p1+=v1; p2+=v2; p3+=v3; p4+=v4;
+        // Затухание
+        v1 = v1 - v1*0.001;
+        v2 = v2 - v2*0.001;
+        v3 = v3 - v3*0.001;
+        v4 = v4 - v4*0.001;
+        double dv = fabs(v1.x)+fabs(v1.y)+fabs(v1.z)+
+                    fabs(v2.x)+fabs(v2.y)+fabs(v2.z)+
+                    fabs(v3.x)+fabs(v3.y)+fabs(v3.z)+
+                    fabs(v4.x)+fabs(v4.y)+fabs(v4.z);
+        dv = dv * lp;
+        if(dv > 0.5){
+            p1o=p1;p2o=p2;p3o=p3;p4o=p4;
+            p1+=v1; p2+=v2; p3+=v3; p4+=v4;
+        }else{
+            p1=p1o;p2=p2o;p3=p3o;p4=p4o;
+        };
         movebyp4();
     }
     void align_p4()
     {
-
             double d;
             my_double3 pd;
-
             #define __ITER(A,B,C,D) \
             pd = A-B; \
             d = (lp-__LENGTH(pd))*rig; \
@@ -175,14 +192,10 @@ struct SureObject
         ox=__NORMALIZE(ox);
         oy=__NORMALIZE(oy);
         oz=__NORMALIZE(oz);
-        __VTYPE3 OX = X;
         X=(p1+p2+p3+p4)*0.25;
-        __VTYPE3 DX = OX-X;
-        if(__LENGTH(DX)<SURE_R_DELTA)X=OX;
     }
     my_double3 velbypp(my_double3 pp)
     {
-
         my_double3 vp1 = pp-p1o;
         double lp1 = __LENGTH(vp1);
         my_double3 vp2 = pp-p2o;
@@ -417,7 +430,6 @@ bool PhysCollideSphereSphere(SureObject* o1,SureObject* o2,SurePhysCollision *Co
 bool PhysCollideSpherePlane(SureObject* o1,SureObject* o2,SurePhysCollision *Collision);
 bool PhysCollideSphereMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
 bool PhysCollideMeshPlane(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
-bool PhysCollideCreaturePlane(SureObject* o1,SureObject* o2,SurePhysCollision *Collision);
 bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,SurePhysCollision *Collision);
 
 class SureGJK{
@@ -427,23 +439,30 @@ class SureGJK{
         virtual ~SureGJK();
 
         SurePhysCollision Collision;
-        bool collision_found = false;
 
         void SetEngine(SureData *i_Engine);
         void SetupMinkowski(SureObject *o1,SureObject *o2);
         void InitiateLoop();
-        void InitiateCoverLoop();
-        void ExitLoop_Collision();
-        void ExitLoop_NoCollision();
         bool LoopExit();
+        bool TIContains00();
         void LoopNextStep();
-
+        void ExitLoop_Collision();
+        void ExpandCoverLoop();
         bool CollisionFound();
+        void Clear();
+
+    protected:
+
+    private:
+        SureData *EngineData;
+
+        void ExitLoop_NoCollision();
+        void InitiateCoverLoop();
         bool CoverExpanded();
         void SetCoverExpanded();
         void CheckCoverIterration();
-
-        bool TIContains00();
+        void ClearCover();
+        void SetCollisionPoint();
         double GetMaximumDistanceTo00();
         bool FindNextTNI();
         bool FindFarestMinkowskiByVector(my_double3 Vector,uint *e_result);
@@ -458,37 +477,30 @@ class SureGJK{
         void ClearNewCover();
         void SetCollisionByCover();
         my_double3 GetCoverFaceNormal(uint face);
-
         my_double3 GetCollisionPointByObject(SureObject *o,my_double3 i_vector,double *dist);
         uint GetFarestVertexByObj(SureObject *o,my_double3 i_vector);
-    protected:
-
-    private:
-        SureData *EngineData;
-
-        void TNI_to_TI();
-
-        bool exit_no_collision = false;
-        bool exit_collision = false;
-        bool cover_expanded = false;
-        bool incover[SURE_MINKOWSKI_MAX];
-        uint C[SURE_MINKOWSKI_MAX];
-        uint cc = 0;
-        uint C_N[SURE_MINKOWSKI_MAX];
-        uint cc_n = 0;
-        uint iter = 0; // подсчет итерраций - гарантия от зацикливаний
-        uint TI[4] = {0,0,0,0};
-        uint TNI[4] = {0,0,0,0};
-
-        uint CollisionFace;
 
         double L1;
         double L2;
         double L3;
         double L4;
+        bool exit_no_collision = false;
+        bool exit_collision = false;
+        bool cover_expanded = false;
+        bool collision_found = false;
 
+        my_double3 *M; // разность минкосвского
+        bool *incover;
+        uint *C;
+        uint *C_N;
         uint mc = 0; // количество точек в разности минковского
-        my_double3 M[SURE_MINKOWSKI_MAX];  // разность минкосвского
+        uint cc = 0;
+        uint cc_n = 0;
+        uint iter = 0; // подсчет итерраций - гарантия от зацикливаний
+        uint CollisionFace; // номер грани cover'а, ближайшей к 0,0
+        uint TI[4] = {0,0,0,0};
+        uint TNI[4] = {0,0,0,0};
+        void TNI_to_TI();
 };
 
 // Работа с OpenCL из CPU-части:
