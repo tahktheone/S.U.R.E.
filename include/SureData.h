@@ -135,25 +135,15 @@ struct SureObject
 
         movebyp4();
     }
-    void next_tick()
-    {
+    void next_tick(){
         v1 = p1-p1o; v2 = p2-p2o; v3 = p3-p3o; v4 = p4-p4o;
         // Затухание
         v1 = v1 - v1*0.001;
         v2 = v2 - v2*0.001;
         v3 = v3 - v3*0.001;
         v4 = v4 - v4*0.001;
-        double dv = fabs(v1.x)+fabs(v1.y)+fabs(v1.z)+
-                    fabs(v2.x)+fabs(v2.y)+fabs(v2.z)+
-                    fabs(v3.x)+fabs(v3.y)+fabs(v3.z)+
-                    fabs(v4.x)+fabs(v4.y)+fabs(v4.z);
-        dv = dv * lp;
-        if(dv > 0.5){
-            p1o=p1;p2o=p2;p3o=p3;p4o=p4;
-            p1+=v1; p2+=v2; p3+=v3; p4+=v4;
-        }else{
-            p1=p1o;p2=p2o;p3=p3o;p4=p4o;
-        };
+        p1o=p1;p2o=p2;p3o=p3;p4o=p4;
+        p1+=v1; p2+=v2; p3+=v3; p4+=v4;
         movebyp4();
     }
     void align_p4()
@@ -321,6 +311,9 @@ class SureData
         int GenModel(const char*,int type);
 
         SureObject TemplateObject; // шаблонный объект
+        void SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float *Randomf);
+        void AddTraceLog(int x,int y,SureGPUData *GPUData,float *Randomf,bool OnlyVisible);
+        void SinglePointTrace(int x,int y,SureGPUData *GPUData,float *Randomf,float *rgbmatrix);
         uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
         void DeleteObject(uint);
         SureObject *ObjByID(uint i_id); // Объект по внешнему айдишнику
@@ -352,7 +345,6 @@ class SureData
         void SetTemplate_FogPlane();
         void SetTemplate_RegularCube();
         void SetTemplate_RegularPandus();
-
 
         void ObjCoordsToDrawable(int); // не забыть вернуть в private
         void Mesh_GenerateTetr(int i_model,int norm_type); // не забыть вернуть в private

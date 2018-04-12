@@ -37,6 +37,10 @@ class SureThread : public QThread
         int SourceFromFile(const char* i_fname,char* e_source);
         SureWidget* parent;
         SureLog* Log;
+
+        void SwitchKernel();
+        void WriteModelToGPU(SureModelData *i_model);
+        void WriteTextureToGPU(int TextureID);
 };
 
 #endif // SURETHREAD_H

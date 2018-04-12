@@ -40,10 +40,8 @@ void SureThread::oclInit()
     char devname[500];
     size_t ret_size;
     OCL_RUN_("clGetDeviceIDs",clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 5, devices, &dev_num));
-    if(ret==CL_SUCCESS)
-    {
-        for(cl_uint i = 0;i<dev_num;++i)
-        {
+    if(ret==CL_SUCCESS){
+        for(cl_uint i = 0;i<dev_num;++i){
             sprintf(LogLine,"Устройство №%i:",i); Log->AddLine(LogLine);
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_NAME,300,(void*)devname,&ret_size));
             if(ret==CL_SUCCESS){ sprintf(LogLine,"Имя - %s",devname); Log->AddLine(LogLine); };
@@ -86,7 +84,7 @@ void SureThread::oclInit()
             cl_uint dims = 0;
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_GROUP_SIZE,300,(void*)&grps,&ret_size));
-            // пока убираем автоматическое определение размера группы. Пока не ясно помогает ли это
+            // пока убираем автоматическое определение размера группы. Похоже, это не очень помогает
             // if(ret==CL_SUCCESS){ OCLData->g_workgroup_size = sqrt(grps)/2; };
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,300,(void*)&dims,&ret_size));
 
@@ -98,8 +96,7 @@ void SureThread::oclInit()
             Log->AddLine("Размерности:");
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_MAX_WORK_ITEM_SIZES,300,(void*)l_szs,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                 for(uint i=0;i<dims;++i){
                     sprintf(LogLine,"Измерение %i размер %i",i,(int)l_szs[i]);
                     Log->AddLine(LogLine);
@@ -107,36 +104,31 @@ void SureThread::oclInit()
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_EXTENSIONS,500,(void*)devname,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                Log->AddBigText("Доступные расширения:",devname);
             };
 
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE,300,(void*)&cores,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                     sprintf(LogLine,"Макс. разрядность вектора double: %i",cores);
                     Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_OPENCL_C_VERSION,500,(void*)devname,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                     sprintf(LogLine,"Поддерживается версия OpenCL: %s",devname);
                     Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DEVICE_VERSION,500,(void*)devname,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                     sprintf(LogLine,"Версия устройства: %s",devname);
                     Log->AddLine(LogLine);
             };
 
             OCL_RUN_("clGetDeviceInfo",clGetDeviceInfo(devices[i],CL_DRIVER_VERSION,500,(void*)devname,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
+            if(ret==CL_SUCCESS){
                     sprintf(LogLine,"Версия драйвера: %s",devname);
                     Log->AddLine(LogLine);
             };
@@ -144,17 +136,15 @@ void SureThread::oclInit()
             bool img_supp;
 
             OCL_RUN_("clGetDeviceInfo(CL_DEVICE_IMAGE_SUPPORT)",clGetDeviceInfo(devices[i],CL_DEVICE_IMAGE_SUPPORT,500,(void*)&img_supp,&ret_size));
-            if(ret==CL_SUCCESS)
-            {
-                if(img_supp)
-                {
+            if(ret==CL_SUCCESS){
+                if(img_supp){
                     Log->AddLine("Аппаратная поддержка изображений есть");
                 }else{
                     Log->AddLine("Аппаратной поддержки изображений нет");
                 };
             };
 
-        };
+        }; // Цикл по устройствам
     };
     device = devices[0];
     Log->AddLine("Используется устройство №0.");
@@ -181,31 +171,24 @@ void SureThread::oclInit()
         100,
         formats,
         &formats_c));
-    if(ret==CL_SUCCESS)
-    {
-
+    if(ret==CL_SUCCESS){
         Log->AddLine("Поддерживаемые форматы изображений:");
         for(cl_uint u = 0;u<formats_c;++u)
         {
             if((formats[u].image_channel_order==cif_vertex.image_channel_order)&&
-              (formats[u].image_channel_data_type==cif_vertex.image_channel_data_type))
-            {
+              (formats[u].image_channel_data_type==cif_vertex.image_channel_data_type)){
                 Log->AddLine("CL_RGBA/CL_FLOAT(vertex image) -- поддерживается");
             };
             if((formats[u].image_channel_order==cif_mesh.image_channel_order)&&
-              (formats[u].image_channel_data_type==cif_mesh.image_channel_data_type))
-            {
+              (formats[u].image_channel_data_type==cif_mesh.image_channel_data_type)){
                 Log->AddLine("CL_RGBA/CL_SIGNED_INT32(mesh image) -- поддерживается");
             };
             if((formats[u].image_channel_order==cif_textures.image_channel_order)&&
-              (formats[u].image_channel_data_type==cif_textures.image_channel_data_type))
-            {
+              (formats[u].image_channel_data_type==cif_textures.image_channel_data_type)){
                 Log->AddLine("CL_BGRA/CL_UNSIGNED_INT8(textures image) -- поддерживается");
             };
-
         };
     };
-
 
     // создаем очередь команд
     OCL_GET_("clCreateCommandQueue",OCLData->cqCommandQue,clCreateCommandQueue(context, device, 0,&ret));
@@ -248,10 +231,10 @@ void SureThread::oclInit()
     // -cl-opt-disable -- выключить оптимизацию, всю
     // -Werror -- все предупреждения = ошибки. -w -- подавлять предупреждения
 
-    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=99"); //99
-    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=65"); //65
-    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=45"); //45
-    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION3 -D SURE_RLEVEL=10"); //10
+    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=99"); //99
+    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=65"); //65
+    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=45"); //45
+    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=10"); //10
     OCL_GET_("clCreateKernel",OCLData->kernel_t,clCreateKernel(program_t,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_f,clCreateKernel(program_f,"Trace",NULL));
     OCL_GET_("clCreateKernel",OCLData->kernel_d,clCreateKernel(program_d,"Trace",NULL));
@@ -322,6 +305,140 @@ void SureThread::oclDelete()
     OCL_RUN_("clReleaseContext",clReleaseContext(context));
 }
 
+void SureThread::SwitchKernel()
+{
+    if(EngineData->r_type==SURE_RT_D) OCLData->kernel = &OCLData->kernel_d;
+    if(EngineData->r_type==SURE_RT_T) OCLData->kernel = &OCLData->kernel_t;
+    if(EngineData->r_type==SURE_RT_F) OCLData->kernel = &OCLData->kernel_f;
+    if(EngineData->r_type==SURE_RT_N) OCLData->kernel = &OCLData->kernel_n;
+}
+
+void SureThread::WriteModelToGPU(SureModelData *i_model)
+{
+    size_t origin[3];
+    size_t region[3];
+    int ymin = i_model->mesh_start>>CLSIZE_VERTEX_SHF;
+    int ymax = (i_model->mesh_start+i_model->mesh_count)>>CLSIZE_VERTEX_SHF;
+
+    origin[0] = 0;
+    origin[1] = ymin;
+    origin[2] = 0;
+
+    region[0] = CLSIZE_VERTEX_DIV;
+    region[1] = ymax+1;
+    region[2] = 1;
+
+    OCL_RUN_("clEnqueueWriteImage(meshIm)",
+              clEnqueueWriteImage(OCLData->cqCommandQue,
+              OCLData->cmMeshImage,
+              CL_TRUE,
+              origin,
+              region,
+              sizeof(cl_int)*CLSIZE_VERTEX_PTCH,
+              0,
+              (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
+              0,NULL,NULL));
+
+    ymin = i_model->mesh_start>>CLSIZE_VERTEX_SHF;
+    ymax = (i_model->mesh_start+i_model->mesh_count)>>CLSIZE_VERTEX_SHF;
+
+    origin[0] = 0;
+    origin[1] = ymin;
+    origin[2] = 0;
+
+    region[0] = CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM;
+    region[1] = ymax+1;
+    region[2] = 1;
+
+    OCL_RUN_("clEnqueueWriteImage(UVMap)",
+              clEnqueueWriteImage(OCLData->cqCommandQue,
+              OCLData->cmUVMap,
+              CL_TRUE,
+              origin,
+              region,
+              sizeof(cl_float)*CLSIZE_MESH_PTCH,
+              0,
+              (void*)&EngineData->UVMap[origin[1]*CLSIZE_MESH_PTCH],
+              0,NULL,NULL));
+
+    OCL_RUN_("clEnqueueWriteImage(Normals)",
+              clEnqueueWriteImage(OCLData->cqCommandQue,
+              OCLData->cmNormals,
+              CL_TRUE,
+              origin,
+              region,
+              sizeof(cl_float)*CLSIZE_MESH_PTCH,
+              0,
+              (void*)&EngineData->Normals[origin[1]*CLSIZE_MESH_PTCH],
+              0,NULL,NULL));
+
+    int v_min = SURE_R_MAXVERTEX;
+    int v_max = 0;
+    int* MeshCLImg = EngineData->MeshCLImg;
+    for(cl_uint m = 0;m<i_model->mesh_count;++m){
+        int k = i_model->mesh_start+m;
+        if(v_min>__MESH_V1(k))v_min = __MESH_V1(k);
+        if(v_max<__MESH_V1(k))v_max = __MESH_V1(k);
+        if(v_min>__MESH_V2(k))v_min = __MESH_V2(k);
+        if(v_max<__MESH_V2(k))v_max = __MESH_V2(k);
+        if(v_min>__MESH_V3(k))v_min = __MESH_V3(k);
+        if(v_max<__MESH_V3(k))v_max = __MESH_V3(k);
+    };
+    if(v_min<v_max){
+        size_t origin[3];
+        size_t region[3];
+        int ymin = v_min>>CLSIZE_VERTEX_SHF;
+        int ymax = v_max>>CLSIZE_VERTEX_SHF;
+
+        origin[0] = 0;
+        origin[1] = ymin;
+        origin[2] = 0;
+
+        region[0] = CLSIZE_VERTEX_DIV;
+        region[1] = ymax+1;
+        region[2] = 1;
+
+        OCL_RUN_("clEnqueueWriteImage(vertIm)",
+                  clEnqueueWriteImage(OCLData->cqCommandQue,
+                  OCLData->cmVertexImage,
+                  CL_TRUE,
+                  origin,
+                  region,
+                  sizeof(cl_float)*CLSIZE_VERTEX_PTCH,
+                  0,
+                  (void*)&EngineData->VrtxCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
+                  0,NULL,NULL));
+    };
+    i_model->toupdate = false;
+}
+
+void SureThread::WriteTextureToGPU(int TextureID)
+{
+    size_t origin[3];
+    size_t region[3];
+
+    origin[0] = 0;
+    origin[1] = TextureID*SURE_R_TEXRES;
+    origin[2] = 0;
+
+    region[0] = SURE_R_TEXRES;
+    region[1] = SURE_R_TEXRES;
+    region[2] = 1;
+
+    OCL_RUN_("clEnqueueWriteImage(Textures)",
+              clEnqueueWriteImage(OCLData->cqCommandQue,
+              OCLData->cmTextures,
+              CL_TRUE,
+              origin,
+              region,
+              sizeof(cl_uchar)*SURE_R_TEXRES*4,
+              0,
+              (void*)&EngineData->TexturesData[TextureID*SURE_R_TEXRES*SURE_R_TEXRES*4],
+              0,NULL,NULL));
+
+    EngineData->TexturesInfo[TextureID].toupdate = false;
+}
+
 void SureThread::run()
 {
     // Данные отладки:
@@ -340,31 +457,20 @@ void SureThread::run()
 
     clock_gettime(CLOCK_MONOTONIC,&lframestart);
 
-    while(m_running&&widget!=nullptr)
-    {
+    while(m_running&&widget!=nullptr){
         clock_gettime(CLOCK_MONOTONIC,&framestart);
-        cl_float* r = Randomf;
-        for(int i = 0;i<SURE_R_RNDSIZE;++i)
-        {
-            *r = (float)rand()/(float)RAND_MAX;
-            ++r;
-        };
-        OCL_RUN_("clEnqueueWriteBuffer",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRandom,CL_FALSE,0,sizeof(cl_float)*SURE_R_RNDSIZE,(void*)Randomf,0,NULL,NULL));
 
-        //clock_gettime(CLOCK_MONOTONIC,&frametime);
+        // Генерируем набор случайных чисел от 0 до 1
+        // чтобы не изобретать генератор случайных чисел на GPU
+        for(int i = 0;i<SURE_R_RNDSIZE;++i) Randomf[i] = (float)rand()/(float)RAND_MAX;
 
-        if(OCLData->OpenCL)
-        {
-            if(EngineData->r_type==SURE_RT_D)
-                OCLData->kernel = &OCLData->kernel_d;
-            if(EngineData->r_type==SURE_RT_T)
-                OCLData->kernel = &OCLData->kernel_t;
-            if(EngineData->r_type==SURE_RT_F)
-                OCLData->kernel = &OCLData->kernel_f;
-            if(EngineData->r_type==SURE_RT_N)
-                OCLData->kernel = &OCLData->kernel_n;
-            OCLData->sizes[0] = GPUData->CameraInfo.m_amx; //widget->rect().right()*SURE_FAA/SURE_SCALE;
-            OCLData->sizes[1] = GPUData->CameraInfo.m_amy;//widget->rect().bottom()*SURE_FAA/SURE_SCALE;
+        OCL_RUN_("clEnqueueWriteBuffer(Randomf)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmRandom,CL_FALSE,0,sizeof(cl_float)*SURE_R_RNDSIZE,(void*)Randomf,0,NULL,NULL));
+
+        if(OCLData->OpenCL){
+            SwitchKernel();
+            OCLData->sizes[0] = GPUData->CameraInfo.m_amx;
+            OCLData->sizes[1] = GPUData->CameraInfo.m_amy;
+            // Выравниваем размер области по размеру локальной рабочей группы
             OCLData->sizes[0] /= OCLData->g_workgroup_size;
             OCLData->sizes[0] *= OCLData->g_workgroup_size;
             OCLData->sizes[0] += OCLData->g_workgroup_size;
@@ -373,138 +479,15 @@ void SureThread::run()
             OCLData->sizes[1] += OCLData->g_workgroup_size;
             OCL_RUN_("clEnqueueWriteBuffer(GPUData)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmGPUData,CL_TRUE,0,sizeof(SureGPUData),(void*)GPUData,0,NULL,NULL));
             OCL_RUN_("clEnqueueWriteBuffer(Drawables)",clEnqueueWriteBuffer(OCLData->cqCommandQue,OCLData->cmDrawables,CL_TRUE,0,sizeof(SureDrawable)*GPUData->m_drawables,(void*)GPUData->Drawables,0,NULL,NULL));
+
             for(uint ModelID = 0;ModelID<EngineData->cur_models;++ModelID)
-            {
-                if (EngineData->ModelsInfo[ModelID].toupdate)
-                {
-                    size_t origin[3];
-                    size_t region[3];
-                    int ymin = EngineData->ModelsInfo[ModelID].mesh_start>>CLSIZE_VERTEX_SHF;
-                    int ymax = (EngineData->ModelsInfo[ModelID].mesh_start
-                               +EngineData->ModelsInfo[ModelID].mesh_count)>>CLSIZE_VERTEX_SHF;
+            if (EngineData->ModelsInfo[ModelID].toupdate)
+                WriteModelToGPU(&EngineData->ModelsInfo[ModelID]);
 
-                    origin[0] = 0;
-                    origin[1] = ymin;
-                    origin[2] = 0;
-
-                    region[0] = CLSIZE_VERTEX_DIV;
-                    region[1] = ymax+1;
-                    region[2] = 1;
-
-                    OCL_RUN_("clEnqueueWriteImage(meshIm)",
-                              clEnqueueWriteImage(OCLData->cqCommandQue,
-                                                  OCLData->cmMeshImage,
-                                                  CL_TRUE,
-                                                  origin,
-                                                  region,
-                                                  sizeof(cl_int)*CLSIZE_VERTEX_PTCH,
-                                                  0,
-                                                  (void*)&EngineData->MeshCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
-                                                  0,NULL,NULL));
-
-                    ymin = EngineData->ModelsInfo[ModelID].mesh_start>>CLSIZE_VERTEX_SHF;
-                    ymax = (EngineData->ModelsInfo[ModelID].mesh_start
-                               +EngineData->ModelsInfo[ModelID].mesh_count)>>CLSIZE_VERTEX_SHF;
-
-                    origin[0] = 0;
-                    origin[1] = ymin;
-                    origin[2] = 0;
-
-                    region[0] = CLSIZE_VERTEX_DIV*CLSIZE_MESH_DIM;
-                    region[1] = ymax+1;
-                    region[2] = 1;
-
-                    OCL_RUN_("clEnqueueWriteImage(UVMap)",
-                              clEnqueueWriteImage(OCLData->cqCommandQue,
-                                                  OCLData->cmUVMap,
-                                                  CL_TRUE,
-                                                  origin,
-                                                  region,
-                                                  sizeof(cl_float)*CLSIZE_MESH_PTCH,
-                                                  0,
-                                                  (void*)&EngineData->UVMap[origin[1]*CLSIZE_MESH_PTCH],
-                                                  0,NULL,NULL));
-
-                    OCL_RUN_("clEnqueueWriteImage(Normals)",
-                              clEnqueueWriteImage(OCLData->cqCommandQue,
-                                                  OCLData->cmNormals,
-                                                  CL_TRUE,
-                                                  origin,
-                                                  region,
-                                                  sizeof(cl_float)*CLSIZE_MESH_PTCH,
-                                                  0,
-                                                  (void*)&EngineData->Normals[origin[1]*CLSIZE_MESH_PTCH],
-                                                  0,NULL,NULL));
-
-
-                    int v_min = SURE_R_MAXVERTEX;
-                    int v_max = 0;
-                    int* MeshCLImg = EngineData->MeshCLImg;
-                    for(cl_uint m = 0;m<EngineData->ModelsInfo[ModelID].mesh_count;++m)
-                    {
-                        int k = EngineData->ModelsInfo[ModelID].mesh_start+m;
-                        if(v_min>__MESH_V1(k))v_min = __MESH_V1(k);
-                        if(v_max<__MESH_V1(k))v_max = __MESH_V1(k);
-                        if(v_min>__MESH_V2(k))v_min = __MESH_V2(k);
-                        if(v_max<__MESH_V2(k))v_max = __MESH_V2(k);
-                        if(v_min>__MESH_V3(k))v_min = __MESH_V3(k);
-                        if(v_max<__MESH_V3(k))v_max = __MESH_V3(k);
-                    };
-                    if(v_min<v_max)
-                    {
-                    size_t origin[3];
-                    size_t region[3];
-                    int ymin = v_min>>CLSIZE_VERTEX_SHF;
-                    int ymax = v_max>>CLSIZE_VERTEX_SHF;
-
-                    origin[0] = 0;
-                    origin[1] = ymin;
-                    origin[2] = 0;
-
-                    region[0] = CLSIZE_VERTEX_DIV;
-                    region[1] = ymax+1;
-                    region[2] = 1;
-
-                    OCL_RUN_("clEnqueueWriteImage(vertIm)",
-                              clEnqueueWriteImage(OCLData->cqCommandQue,
-                                                  OCLData->cmVertexImage,
-                                                  CL_TRUE,
-                                                  origin,
-                                                  region,
-                                                  sizeof(cl_float)*CLSIZE_VERTEX_PTCH,
-                                                  0,
-                                                  (void*)&EngineData->VrtxCLImg[origin[1]*CLSIZE_VERTEX_PTCH],
-                                                  0,NULL,NULL));
-                   };
-                   EngineData->ModelsInfo[ModelID].toupdate = false;
-                };
-            };
             for(cl_uint t = 0;t<EngineData->cur_textures;++t)
             if(EngineData->TexturesInfo[t].toupdate)
-            {
-                    size_t origin[3];
-                    size_t region[3];
+                WriteTextureToGPU(t);
 
-                    origin[0] = 0;
-                    origin[1] = t*SURE_R_TEXRES;
-                    origin[2] = 0;
-
-                    region[0] = SURE_R_TEXRES;
-                    region[1] = SURE_R_TEXRES;
-                    region[2] = 1;
-
-                    OCL_RUN_("clEnqueueWriteImage(Textures)",
-                              clEnqueueWriteImage(OCLData->cqCommandQue,
-                                                  OCLData->cmTextures,
-                                                  CL_TRUE,
-                                                  origin,
-                                                  region,
-                                                  sizeof(cl_uchar)*SURE_R_TEXRES*4,
-                                                  0,
-                                                  (void*)&EngineData->TexturesData[t*SURE_R_TEXRES*SURE_R_TEXRES*4],
-                                                  0,NULL,NULL));
-                EngineData->TexturesInfo[t].toupdate = false;
-            };
             size_t l_lws[3];
             l_lws[0] = OCLData->g_workgroup_size;
             l_lws[1] = OCLData->g_workgroup_size;
@@ -519,7 +502,7 @@ void SureThread::run()
             for(uint i_y_gr=0;i_y_gr<OCLData->sizes[1];i_y_gr+=h_gr){
                 l_start[0]=i_x_gr;
                 l_start[1]=i_y_gr;
-                OCL_RUN_("Running kernel",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь
+                OCL_RUN_("Running kernel (raytrace)",clEnqueueNDRangeKernel(OCLData->cqCommandQue, // Очередь
                                                                 *OCLData->kernel, // Программа
                                                                 2, // 2 измерения для ID потока (X * Y)
                                                                 l_start, // стартовые координаты (тип size_t[измерения])
@@ -541,8 +524,7 @@ void SureThread::run()
 
         clock_gettime(CLOCK_MONOTONIC,&lframetime);
         tick = (float)lframetime.tv_sec * 1000.0 + (float) lframetime.tv_nsec / 1000000.0 - (  (float)lframestart.tv_sec*1000.0 + (float) lframestart.tv_nsec / 1000000.0 );
-        if(tick>SURE_R_DELAY)
-        {
+        if(tick>SURE_R_DELAY){
             if(widget!=nullptr)
                 OCL_RUN_("clEnqueueReadBuffer",clEnqueueReadBuffer(OCLData->cqCommandQue,OCLData->cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3,widget->rgbmatrix,0,NULL,NULL));
             widget->update();
@@ -561,24 +543,10 @@ void SureThread::run()
 
 void SureThread::raytrace()
 {
-
-    float* rgbmatrix = widget->rgbmatrix;
-    SureDrawable* Drawables = GPUData->Drawables;
-    cl_uchar* Textures = EngineData->TexturesData; // Текстуры
-    cl_float* UVMap = EngineData->UVMap; // мэппинг мешей на текстуры
-    cl_float* Normals = EngineData->Normals; // мэппинг мешей на текстуры
-    cl_float* VrtxCLImg = EngineData->VrtxCLImg;// Набор vertexов
-    cl_int* MeshCLImg = EngineData->MeshCLImg;// Набор mesh'ей
-
     int amx = GPUData->CameraInfo.m_amx;
     int amy = GPUData->CameraInfo.m_amy;
-    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(static,8)
     for(int y=0;y<amy;++y)
-        {
-        for(int x=0;x<amx;++x)
-        {
-           #define SURE_RLEVEL 100
-           #include <trace_common.c>
-        };//X
-    };//Y ; parallel
+    for(int x=0;x<amx;++x)
+        EngineData->SinglePointTrace(x,y,GPUData,Randomf,widget->rgbmatrix);
 }

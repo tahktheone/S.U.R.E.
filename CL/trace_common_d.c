@@ -4,22 +4,34 @@
     // drawable, с которым встретился луч (для хранения параметров изменения траектории)
     __SURE_STRUCT SureDrawable DrawableCollided;
 
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *lv_cur; // drawable в котором находимся на начало шага трассировки
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *cur; // drawable в котором находимся на конец шага трассировки
-    //__SURE_GLOBAL __SURE_STRUCT SureDrawable *col; // drwable который обнаружен на пути трассировки
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableIter; // drawable который сейчас анализируется
     // Это нужно, чтобы корректно отслеживать переход луча между средами разной плотности:
     // (для корректного отражения преломления, например, в стеклянном шаре в воде)
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableCurrent;
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableNext;
 
+    // Инициализируем рандом
+    uint r = mad24(x,mad24(x+y,x,y),x+y);
+    while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
+
+    #ifndef __LOGGING
+    #ifndef __SELECT_OBJECT
+    if(GPUData->reset){
+        uint k = y*SURE_MAXRES_X*3+x*3;
+        rgbmatrix[k++] = 0;
+        rgbmatrix[k++] = 0;
+        rgbmatrix[k++] = 0;
+    };
+    #ifdef GPU
+    for(int SAAIter = 0;SAAIter<GPUData->SAA;++SAAIter){
+    #endif // GPU
+    #endif // __SELECT_OBJECT
+    #endif // ifndef __LOGGING
+
     //Основные переменные с информацией о трассировке
     __VTYPE  TraceLength = 0; // общий путь трассировки -- до SURE_R_MAXLENGTH
     __VTYPE3 TraceFade   = {1.0,1.0,1.0};
     __VTYPE3 TraceColor  = {0,0,0};
-
-    // Инициализируем рандом
-    uint r = InitRandom(&x,&y);
 
     __VTYPE3 TracePoint = CameraInfo.cam_x;
     __VTYPE3 TraceVector;
@@ -28,8 +40,6 @@
     }else{
         TraceVector = DetermineTraceVector(x,y,&CameraInfo);
     };
-
-    //cur = &Drawables[0];
 
     uint MaximumIterrations = GPUData->r_maxiters;
     #if SURE_RLEVEL>20
@@ -40,13 +50,12 @@
     #endif // SURE_RLEVEL
 
     #ifdef __LOGGING
-        SureTraceLog *TraceLog = &EngineData->TraceLogs[EngineData->TraceLogsCount];
+        SureTraceLog *TraceLog = &TraceLogs[TraceLogsCount];
         TraceLog->ItemsCount = 0;
     #endif // __LOGGING
 
     for(uint Iterration = 0;Iterration<MaximumIterrations;Iterration++)
     {
-
         if(TraceLength > SURE_R_MAXDISTANCE)continue;
         if((TraceFade.x+TraceFade.y+TraceFade.z) < SURE_R_FADELIMIT)continue;
 
@@ -315,11 +324,26 @@
                         // Главное -- он работает, и говорят, что это самый быстрый вариант решения
                         // для поиска пересечения луча и треугольника.
 
-                        // Сзади, слишком близко или дальше чем уже найденное пересечение -- выходим:
-                        if(TraceDistance<LocalRenderDelta||TraceDistance>intersect_dist)continue;
+                        //__VTYPE GlobalTraceDistance = TraceDistance * ResizingKoeff;
+
+                        // Сзади или слишком близко -- выходим:
+                        if(TraceDistance<LocalRenderDelta)continue;
+
+                        __VTYPE3 LocalTrueNormal = __NORMALIZE(cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1));
+
+                        bool CollisionIsInner = (dot(LocalTraceVector,LocalTrueNormal)>0.0f);
+
+                        if(CollisionIsInner){
+                            if(TraceDistance<FirstOut)FirstOut=TraceDistance;
+                        }else{
+                            if(TraceDistance<FirstIn)FirstIn=TraceDistance;
+                        };
+
+                        // Дальше чем уже найденная точка пересечения
+                        if(TraceDistance>intersect_dist)continue;
 
                         // точка пересечения
-                        collision_point = __MAD(TraceVector,TraceDistance,TracePoint);
+                        __VTYPE3 LocalCollisionPoint = __MAD(LocalTraceVector,__DIVIDE(TraceDistance,ResizingKoeff),LocalTracePoint);
 
                         // читаем нормали по vertex'ам
                         __VTYPE3 n1; __VTYPE3 n2; __VTYPE3 n3;
@@ -332,28 +356,21 @@
                         LocalNormal = __NORMALIZE(LocalNormal);
 
                         // переводим нормаль в глобальные координаты
-                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*DrawableIter->oz,DrawableIter->lz,
-                                                             __MAD(LocalNormal.y*DrawableIter->oy,DrawableIter->ly,
-                                                                   LocalNormal.x*DrawableIter->ox*DrawableIter->lx)));
+                        collision_normal = __NORMALIZE(__MAD(LocalNormal.z*DrawableIter->oz,__INV(DrawableIter->lz),
+                                                             __MAD(LocalNormal.y*DrawableIter->oy,__INV(DrawableIter->ly),
+                                                                   LocalNormal.x*DrawableIter->ox*__INV(DrawableIter->lx))));
 
-                        __VTYPE3 LocalTrueNormal = cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1);
-                        __VTYPE3 GlobalTrueNormal = __NORMALIZE(__MAD(LocalTrueNormal.z*DrawableIter->oz,DrawableIter->lz,
-                                                                  __MAD(LocalTrueNormal.y*DrawableIter->oy,DrawableIter->ly,
-                                                                        LocalTrueNormal.x*DrawableIter->ox*DrawableIter->lx)));
-
-                        // точка на плоскости -- одна из вершин грани, с которой произошло пересечение:
-                        __VTYPE3 CollisionCheckPoint = __MAD(LocalVertex1.z*DrawableIter->oz,DrawableIter->lz,
-                                                       __MAD(LocalVertex1.y*DrawableIter->oy,DrawableIter->ly,
-                                                       __MAD(LocalVertex1.x*DrawableIter->ox,DrawableIter->lx,
-                                                             DrawableIter->X)));
                         // Корректируем точку пересечения:
                         // смешаем ее к плоскости (вдоль нормали) на расстояние от нее до плоскости
                         // (проекция на нормаль вектора от точки на плоскости до точки пересечения)
-                        collision_point = __MAD(-GlobalTrueNormal,dot(collision_point-CollisionCheckPoint,GlobalTrueNormal),collision_point);
+                        //LocalCollisionPoint = __MAD(-LocalTrueNormal,dot(LocalCollisionPoint-LocalVertex1,LocalTrueNormal),LocalCollisionPoint);
+                        collision_point = __MAD(LocalCollisionPoint.z*DrawableIter->oz,DrawableIter->lz,
+                                                __MAD(LocalCollisionPoint.y*DrawableIter->oy,DrawableIter->ly,
+                                                      __MAD(LocalCollisionPoint.x*DrawableIter->ox,DrawableIter->lx,
+                                                             DrawableIter->X)));
 
-                        if(dot(LocalTraceVector,cross(LocalVertex2-LocalVertex1,LocalVertex3-LocalVertex1))>0.0f)
+                        if(CollisionIsInner)
                         { // с внутренней стороны
-                            if(TraceDistance<FirstOut)FirstOut=TraceDistance;
                             if(DrawableIter->sided)
                             { // материал двухсторонний
                                 SET_COLLISION_OUTSIDE;
@@ -363,7 +380,6 @@
                             collision_normal = -collision_normal;
                             SET_COLLISION_MESH;
                         }else{ // с внешней стороны
-                            if(TraceDistance<FirstIn)FirstIn=TraceDistance;
                             SET_COLLISION_OUTSIDE
                             SET_COLLISION_MESH;
                         };
@@ -402,20 +418,21 @@
             TraceLog->Items[TraceLog->ItemsCount].IntersectDistance = intersect_dist;
             TraceLog->Items[TraceLog->ItemsCount].iter = Iterration;
             TraceLog->Items[TraceLog->ItemsCount].transp_i = DrawableCurrent->transp_i;
+            TraceLog->Items[TraceLog->ItemsCount].rgb_current = DrawableCurrent->rgb;
         #endif // __LOGGING
 
          // луч улетел в никуда -- выходим из цикла
         if(!collision_found)break;
 
         #ifdef __SELECT_OBJECT
-        if((EngineData->SelectedObject<0)&&(FoundDrawable>=0)){
+        if((SelectedObject<0)&&(FoundDrawable>=0)){
             int FoundID = -1;
-            for(int oid = 0;oid<EngineData->m_objects;++oid){
-                if(EngineData->objects[oid].DrawableGPUID==FoundDrawable){
+            for(int oid = 0;oid<m_objects;++oid){
+                if(objects[oid].DrawableGPUID==FoundDrawable){
                     FoundID = oid;
                 };
             };
-            EngineData->SelectedObject = FoundID;
+            SelectedObject = FoundID;
         };
         break;
         #endif // __SELECT_OBJECT
@@ -603,26 +620,17 @@
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
     // если точка черная -- освещаем ее "глобальным" холодным светом -- это дает подсветку теней
-    if((TraceColor.x+TraceColor.y+TraceColor.z)==0)
-    {
+    if((TraceColor.x+TraceColor.y+TraceColor.z)==0){
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
     };
 
-    uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
-    for(int sx=0;sx<SURE_SCALE;++sx)
-    for(int sy=0;sy<SURE_SCALE;++sy)
-    {
-        uint d = k+sy*SURE_MAXRES_X*3+sx*3;
-        if(GPUData->reset)
-        {
-            rgbmatrix[d++] = TraceColor.x;
-            rgbmatrix[d++] = TraceColor.y;
-            rgbmatrix[d++] = TraceColor.z;
-        }else{
-            rgbmatrix[d++] += TraceColor.x;
-            rgbmatrix[d++] += TraceColor.y;
-            rgbmatrix[d++] += TraceColor.z;
-        };
-    };
+    uint d = y*SURE_MAXRES_X*3+x*3;
+    rgbmatrix[d++] += TraceColor.x;
+    rgbmatrix[d++] += TraceColor.y;
+    rgbmatrix[d++] += TraceColor.z;
+
+    #ifdef GPU
+    }; // SAAIter
+    #endif
     #endif // __SELECT_OBJECT
     #endif // ifndef __LOGGING

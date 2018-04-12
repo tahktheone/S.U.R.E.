@@ -17,15 +17,10 @@
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
     if(GPUData->reset){
-        uint k = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
-        for(int sx=0;sx<SURE_SCALE;++sx)
-        for(int sy=0;sy<SURE_SCALE;++sy)
-        {
-            uint d = k+sy*SURE_MAXRES_X*3+sx*3;
-            rgbmatrix[d++] = 0;
-            rgbmatrix[d++] = 0;
-            rgbmatrix[d++] = 0;
-        };
+        uint k = y*SURE_MAXRES_X*3+x*3;
+        rgbmatrix[k++] = 0;
+        rgbmatrix[k++] = 0;
+        rgbmatrix[k++] = 0;
     };
     #ifdef GPU
     for(int SAAIter = 0;SAAIter<GPUData->SAA;++SAAIter){
@@ -55,7 +50,7 @@
     #endif // SURE_RLEVEL
 
     #ifdef __LOGGING
-        SureTraceLog *TraceLog = &EngineData->TraceLogs[EngineData->TraceLogsCount];
+        SureTraceLog *TraceLog = &TraceLogs[TraceLogsCount];
         TraceLog->ItemsCount = 0;
     #endif // __LOGGING
 
@@ -430,14 +425,14 @@
         if(!collision_found)break;
 
         #ifdef __SELECT_OBJECT
-        if((EngineData->SelectedObject<0)&&(FoundDrawable>=0)){
+        if((SelectedObject<0)&&(FoundDrawable>=0)){
             int FoundID = -1;
-            for(int oid = 0;oid<EngineData->m_objects;++oid){
-                if(EngineData->objects[oid].DrawableGPUID==FoundDrawable){
+            for(int oid = 0;oid<m_objects;++oid){
+                if(objects[oid].DrawableGPUID==FoundDrawable){
                     FoundID = oid;
                 };
             };
-            EngineData->SelectedObject = FoundID;
+            SelectedObject = FoundID;
         };
         break;
         #endif // __SELECT_OBJECT
@@ -629,7 +624,7 @@
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
     };
 
-    uint d = y*SURE_MAXRES_X*3*SURE_SCALE+x*3*SURE_SCALE;
+    uint d = y*SURE_MAXRES_X*3+x*3;
     rgbmatrix[d++] += TraceColor.x;
     rgbmatrix[d++] += TraceColor.y;
     rgbmatrix[d++] += TraceColor.z;

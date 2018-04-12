@@ -97,8 +97,8 @@ void ObjCollide(SureObject* o1,SureObject* o2,my_double3 pp,my_double3 pd,double
     my_double3 v2z = oz*l_v2z;
     my_double3 v2xy = v2-v2z;
 
-    if(o2->movable)o2->push(pp,v2xy,-0.5); // трение
-    if(o1->movable)o1->push(pp,v1xy,-0.5); // трение
+    if(o2->movable)o2->push(pp,v2xy,-1.0); // трение
+    if(o1->movable)o1->push(pp,v1xy,-1.0); // трение
 
  }
 

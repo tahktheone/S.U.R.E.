@@ -13,20 +13,27 @@ void SurePhysThread::run()
     {
         clock_gettime(CLOCK_MONOTONIC,&framestart);
 
-        if(!EngineData->paused)
-        {
+        if(!EngineData->paused){
+
+            // Выравниваем инериоиды (новое положение после коллизий)
             for(int i = 0;i<EngineData->m_objects;++i)
-            {
-                SureObject* lv_o = &EngineData->objects[i];
-                if((lv_o->ParentID<0)&&(lv_o->movable))
-                {
-                    lv_o->next_tick();
-                    lv_o->push(lv_o->X,my_double3{0,0,-1},0.03);
-                };
+            if((EngineData->objects[i].movable)&&(EngineData->objects[i].ParentID<0))
+                    EngineData->objects[i].align_p4();
+
+            // Переключаем точки инерциоида в новое положение
+            // и тянем все объекты вниз гравитацией
+            for(int i = 0;i<EngineData->m_objects;++i)
+            if((EngineData->objects[i].ParentID<0)&&(EngineData->objects[i].movable)){
+                EngineData->objects[i].next_tick();
+                EngineData->objects[i].push(EngineData->objects[i].X,my_double3{0,0,-1},0.03);
             };
 
-            for(int i = 0;i<EngineData->m_links;++i)
-            {
+            // Составные объекты -- наследуют координаты от родителей
+            for(int i = 0;i<EngineData->m_objects;++i)
+            if(EngineData->objects[i].ParentID>=0)
+                EngineData->objects[i].align_byparent(EngineData->ObjByID(EngineData->objects[i].ParentID));
+
+            for(int i = 0;i<EngineData->m_links;++i){
                 SureObject* o1 = EngineData->links[i].o1;
                 SureObject* o2 = EngineData->links[i].o2;
                 my_double3 pd = o1->X-o2->X;
@@ -42,18 +49,6 @@ void SurePhysThread::run()
                     o1->push(o1->X,pd,d*0.5);
                     o2->push(o2->X,pd,-d*0.5);
                 }; // проверка на movable
-            };
-
-            for(int i = 0;i<EngineData->m_objects;++i)
-            {
-                SureObject* lv_o = &EngineData->objects[i];
-                if((lv_o->movable)&&(lv_o->ParentID<0)){
-                    lv_o->align_p4();
-                };
-                if(lv_o->ParentID>=0){
-                    SureObject *lv_parent = EngineData->ObjByID(lv_o->ParentID);
-                    lv_o->align_byparent(lv_parent);
-                };
             };
 
             SurePhysCollision Collisions[1000];

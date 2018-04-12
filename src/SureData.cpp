@@ -282,6 +282,47 @@ void SureData::LoadState(const char *name)
     Log->AddLine(LogLine);
 }
 
+void SureData::SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float *Randomf)
+{
+    SureDrawable* Drawables = GPUData->Drawables;
+    cl_uchar* Textures = TexturesData;
+    SelectedObject = -1;
+    #define __SELECT_OBJECT
+    #define SURE_RLEVEL 10
+    #include <trace_common.c>
+    #undef __SELECT_OBJECT
+}
+
+void SureData::AddTraceLog(int x,int y,SureGPUData *GPUData,float *Randomf,bool OnlyVisible)
+{
+    SureDrawable* Drawables = GPUData->Drawables;
+    cl_uchar* Textures = TexturesData;
+    int Iters = OnlyVisible?50000:1;
+
+    for(int iter=0;iter<Iters;++iter){
+        #define __LOGGING
+        #define SURE_RLEVEL 100
+        #include <trace_common.c>
+        #undef __LOGGING
+        if(TraceLogs[TraceLogsCount].ItemsCount>0)
+        if((TraceLogs[TraceLogsCount].Items[TraceLogs[TraceLogsCount].ItemsCount-1].Color.x
+            + TraceLogs[TraceLogsCount].Items[TraceLogs[TraceLogsCount].ItemsCount-1].Color.y
+            + TraceLogs[TraceLogsCount].Items[TraceLogs[TraceLogsCount].ItemsCount-1].Color.z)
+            > 50) // Если точка достаточно освещен -- выходим из цикла
+            iter = Iters;
+    };
+    if(++TraceLogsCount>45)
+        TraceLogsCount=0;
+}
+
+void SureData::SinglePointTrace(int x,int y,SureGPUData *GPUData,float *Randomf,float *rgbmatrix)
+{
+    SureDrawable* Drawables = GPUData->Drawables;
+    cl_uchar* Textures = TexturesData;
+    #define SURE_RLEVEL 100
+    #include <trace_common.c>
+}
+
 SureGJK::SureGJK(SureData *i_engine)
 {
     EngineData = i_engine;
