@@ -9,142 +9,142 @@ SurePhysThread::~SurePhysThread()
 
 void SurePhysThread::run()
 {
+    SurePhysCollision Collisions[1000];
+    int CollisionsCounter;
+
     while(m_running)
     {
         clock_gettime(CLOCK_MONOTONIC,&framestart);
 
         if(!EngineData->paused){
 
-            // Выравниваем инериоиды (новое положение после коллизий)
-            for(int i = 0;i<EngineData->m_objects;++i)
-            if((EngineData->objects[i].movable)&&(EngineData->objects[i].ParentID<0))
-                    EngineData->objects[i].align_p4();
-
             // Переключаем точки инерциоида в новое положение
             // и тянем все объекты вниз гравитацией
             for(int i = 0;i<EngineData->m_objects;++i)
             if((EngineData->objects[i].ParentID<0)&&(EngineData->objects[i].movable)){
                 EngineData->objects[i].next_tick();
-                EngineData->objects[i].push(EngineData->objects[i].X,my_double3{0,0,-1},0.03);
+                EngineData->objects[i].push(EngineData->objects[i].X,my_double3{0,0,-1},0.3);
             };
 
-            // Составные объекты -- наследуют координаты от родителей
-            for(int i = 0;i<EngineData->m_objects;++i)
-            if(EngineData->objects[i].ParentID>=0)
-                EngineData->objects[i].align_byparent(EngineData->ObjByID(EngineData->objects[i].ParentID));
+            for(int Iters = 0;Iters < 3;++Iters){
+                CollisionsCounter = -1;
+                int TotalObjects = EngineData->m_objects;
 
-            for(int i = 0;i<EngineData->m_links;++i){
-                SureObject* o1 = EngineData->links[i].o1;
-                SureObject* o2 = EngineData->links[i].o2;
-                my_double3 pd = o1->X-o2->X;
-                double d = (EngineData->links[i].l-__LENGTH(pd))*EngineData->links[i].k;
-                pd = __NORMALIZE(pd);
-                if(!o1->movable){
-                    o2->push(o2->X,pd,-d);
-                }
-                else if(!o2->movable){
-                    o1->push(o1->X,pd,d);
-                }
-                else{
-                    o1->push(o1->X,pd,d*0.5);
-                    o2->push(o2->X,pd,-d*0.5);
-                }; // проверка на movable
-            };
-
-            SurePhysCollision Collisions[1000];
-            int CollisionsCounter = -1;
-            int TotalObjects = EngineData->m_objects;
-
-            #pragma omp parallel for schedule(dynamic,3)
-            for(int i = 0;i<TotalObjects;++i){
-                SurePhysCollision Collision;
-                bool CollisionFound = false;
-                SureObject* lv_o1 = &EngineData->objects[i];
-                if(lv_o1->collidable){
-                    for(int j = i+1;j<TotalObjects;++j){
-                        SureObject* lv_o2 = &EngineData->objects[j];
-
-                        if(  (lv_o2->ParentID!=lv_o1->ParentID)
-                           ||((lv_o2->ParentID<0)&&(lv_o1->ParentID<0)) )
-                        // не должно срабатывать внутри одного составного объекта
-                        if((lv_o2->collidable)&&(lv_o2->movable||lv_o1->movable)){
-                            if(lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_SPHERE){ // шарик с шариком
-                                CollisionFound = PhysCollideSphereSphere(lv_o1,lv_o2,&Collision);
-                            };  // шарик с шариком
-
-                            if((lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_PLANE)||
-                               (lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE)){   // шарик с плоскостью
-                                if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE){
-                                    CollisionFound = PhysCollideSpherePlane(lv_o2,lv_o1,&Collision);
-                                }else{
-                                    CollisionFound = PhysCollideSpherePlane(lv_o1,lv_o2,&Collision);
-                                };
-                            }; // шарик с плоскостью
-
-                            if((lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_SPHERE)||
-                               (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_SPHERE)){   // mesh с шариком
-                                if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_MESH)
-                                {
-                                    CollisionFound = PhysCollideSphereMesh(lv_o2,lv_o1,EngineData,&Collision);
-                                }else{
-                                    CollisionFound = PhysCollideSphereMesh(lv_o1,lv_o2,EngineData,&Collision);
-                                };
-
-                            }; // mesh сталкивается с шаром
-
-                            if((lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_PLANE)||
-                               (lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)){   // mesh с плоскостью
-                                if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)
-                                {
-                                    CollisionFound = PhysCollideMeshPlane(lv_o2,lv_o1,EngineData,&Collision);
-                                }else{
-                                    CollisionFound = PhysCollideMeshPlane(lv_o1,lv_o2,EngineData,&Collision);
-                                };
-                            }; // mesh с плоскостью
-
-                            if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH){ // mesh'ы
-                                CollisionFound = PhysCollideMeshMesh(lv_o1,lv_o2,EngineData,&Collision);
-                            };// mesh'ы
-
-                            if(CollisionFound){
-                                Collisions[++CollisionsCounter] = Collision;
-                            };
-
-                        }; // if(lv_o2->collidable&&lv_o2!=lv_o1)
-                    }; //for(int j = 0;j<EngineData->m_objects;++j)
-                }; // if(lv_o1->movable&&lv_o1->collidable)
-            };//  for(int i = 0;i<EngineData->m_objects;++i)
-
-            int *RandomSequence = (int *)malloc(sizeof(int)*(CollisionsCounter + 1));
-            for(int i = 0;i<=CollisionsCounter;++i){RandomSequence[i]=i;};
-            for(int i = 0;i<=CollisionsCounter;++i){
-                int RandomNumber = int(0.5f + (float)CollisionsCounter*((float)rand()/(float)RAND_MAX));
-                int LocalBuffer = RandomSequence[i];
-                RandomSequence[i]=RandomSequence[RandomNumber];
-                RandomSequence[RandomNumber]=LocalBuffer;
-            };
-
-            for(int ri = 0;ri<=CollisionsCounter;++ri){
-                int i = RandomSequence[ri];
-                SureObject *o1;
-                if(Collisions[i].Object1->ParentID<0){
-                    o1 = Collisions[i].Object1;
-                }else{
-                    o1 = EngineData->ObjByID(Collisions[i].Object1->ParentID);
+                // Выравниваем инерциоиды (новое положение после коллизий)
+                for(int i = 0;i<TotalObjects;++i)
+                if((EngineData->objects[i].movable)&&(EngineData->objects[i].ParentID<0)){
+                        EngineData->objects[i].align_p4();
+                        EngineData->objects[i].movebyp4();
                 };
-                SureObject *o2;
-                if(Collisions[i].Object2->ParentID<0){
-                    o2 = Collisions[i].Object2;
-                }else{
-                    o2 = EngineData->ObjByID(Collisions[i].Object2->ParentID);
+
+                // Составные объекты -- наследуют координаты от родителей
+                for(int i = 0;i<EngineData->m_objects;++i)
+                if(EngineData->objects[i].ParentID>=0)
+                    EngineData->objects[i].align_byparent(EngineData->ObjByID(EngineData->objects[i].ParentID));
+
+                // Оработка связей -- пока не используется
+                /*
+                for(int i = 0;i<EngineData->m_links;++i){
+                    SureObject* o1 = EngineData->links[i].o1;
+                    SureObject* o2 = EngineData->links[i].o2;
+                    my_double3 pd = o1->X-o2->X;
+                    double d = (EngineData->links[i].l-__LENGTH(pd))*EngineData->links[i].k;
+                    pd = __NORMALIZE(pd);
+                    if(!o1->movable){
+                        o2->push(o2->X,pd,-d);
+                    }
+                    else if(!o2->movable){
+                        o1->push(o1->X,pd,d);
+                    }
+                    else{
+                        o1->push(o1->X,pd,d*0.5);
+                        o2->push(o2->X,pd,-d*0.5);
+                    }; // проверка на movable
                 };
-                ObjCollide(o1,
-                           o2,
-                           Collisions[i].CollisionPoint,
-                           Collisions[i].CollisionVector,
-                           Collisions[i].CollisionLength);
-            };
-            free(RandomSequence);
+                */
+
+                #pragma omp parallel for schedule(dynamic)
+                for(int i = 0;i<TotalObjects;++i) // для всех объектов
+                if(EngineData->objects[i].collidable) // которые могут коллайдится
+                for(int j = i+1;j<TotalObjects;++j) // с каждым объектом начиная со следующего по номеру
+                if(EngineData->objects[j].collidable) // если он тоже может коллайдится
+                // при этом хотя бы один из них может двигаться
+                if(EngineData->objects[i].movable||EngineData->objects[j].movable)
+                // только сли объекты не принадлежат к одному составному :
+                if(  (EngineData->objects[j].ParentID!=EngineData->objects[i].ParentID)
+                   ||((EngineData->objects[j].ParentID<0)&&(EngineData->objects[i].ParentID<0)))
+                {   // главный цикл обработки коллизий
+                    // объект i, объект j, оба collidable,
+                    // оба либо не являются частью составных,
+                    // либо являются частями разных составных
+                    SurePhysCollision Collision;
+                    bool CollisionFound = false;
+                    SureObject* lv_o1 = &EngineData->objects[i];
+                    SureObject* lv_o2 = &EngineData->objects[j];
+
+                     // шарик с шариком
+                    if(lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_SPHERE)
+                        CollisionFound = PhysCollideSphereSphere(lv_o1,lv_o2,&Collision);
+
+                    // шарик с плоскостью
+                    if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_PLANE)
+                        CollisionFound = PhysCollideSpherePlane(lv_o2,lv_o1,&Collision);
+                    if(lv_o2->type==SURE_OBJ_PLANE&&lv_o1->type==SURE_OBJ_SPHERE)
+                        CollisionFound = PhysCollideSpherePlane(lv_o1,lv_o2,&Collision);
+
+                    // шарик с mesh
+                    if(lv_o2->type==SURE_OBJ_SPHERE&&lv_o1->type==SURE_OBJ_MESH)
+                        CollisionFound = PhysCollideSphereMesh(lv_o2,lv_o1,EngineData,&Collision);
+                    if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_SPHERE)
+                        CollisionFound = PhysCollideSphereMesh(lv_o1,lv_o2,EngineData,&Collision);
+
+                    // mesh и плоскость
+                    if(lv_o2->type==SURE_OBJ_MESH&&lv_o1->type==SURE_OBJ_PLANE)
+                        CollisionFound = PhysCollideMeshPlane(lv_o2,lv_o1,EngineData,&Collision);
+                    if(lv_o2->type==SURE_OBJ_PLANE&&lv_o1->type==SURE_OBJ_MESH)
+                        CollisionFound = PhysCollideMeshPlane(lv_o1,lv_o2,EngineData,&Collision);
+
+                    // две mesh'ы
+                    if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH)
+                        CollisionFound = PhysCollideMeshMesh(lv_o1,lv_o2,EngineData,&Collision);
+
+                    if(CollisionFound)
+                        Collisions[++CollisionsCounter] = Collision;
+                }; // Главный цикл обработки коллизий
+
+                // Перемешаем найденные коллизии в случайном порядке
+                // Если этого не сделать, все будет "плыть" в сторону объектов с более низкими ID
+                int *RandomSequence = (int *)malloc(sizeof(int)*(CollisionsCounter + 1));
+                for(int i = 0;i<=CollisionsCounter;++i){RandomSequence[i]=i;};
+                for(int i = 0;i<=CollisionsCounter;++i){
+                    int RandomNumber = int(0.5f + (float)CollisionsCounter*((float)rand()/(float)RAND_MAX));
+                    int LocalBuffer = RandomSequence[i];
+                    RandomSequence[i]=RandomSequence[RandomNumber];
+                    RandomSequence[RandomNumber]=LocalBuffer;
+                };
+
+                for(int ri = 0;ri<=CollisionsCounter;++ri){
+                    int i = RandomSequence[ri];
+                    SureObject *o1;
+                    if(Collisions[i].Object1->ParentID<0){
+                        o1 = Collisions[i].Object1;
+                    }else{
+                        o1 = EngineData->ObjByID(Collisions[i].Object1->ParentID);
+                    };
+                    SureObject *o2;
+                    if(Collisions[i].Object2->ParentID<0){
+                        o2 = Collisions[i].Object2;
+                    }else{
+                        o2 = EngineData->ObjByID(Collisions[i].Object2->ParentID);
+                    };
+                    ObjCollide(o1,
+                               o2,
+                               Collisions[i].CollisionPoint,
+                               Collisions[i].CollisionVector,
+                               Collisions[i].CollisionLength);
+                };
+                free(RandomSequence);
+            }; // Iters
 
             EngineData->reset = true;
         }; // !paused

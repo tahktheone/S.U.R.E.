@@ -680,7 +680,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
             __VTYPE3 X = EngineData->CameraInfo.cam_x;
             uint o = EngineData->CreateObjectFromTemplate(&X);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,1.2);
+            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,3.0);
         };
         if (event->button() == Qt::RightButton) {
             EngineData->SetNextTemplate();

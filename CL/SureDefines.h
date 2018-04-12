@@ -72,8 +72,8 @@
 #define SURE_P4_Y 0.288675135f
 #define SURE_P4_Z 0.816496581f
 
-#define SURE_R_DELAY 20 // время между кадрами -- рендер
-#define SURE_P_DELAY 8  // время между кадрами -- физика
+#define SURE_R_DELAY 30 // время между кадрами -- рендер (32ms = 30FPS)
+#define SURE_P_DELAY 16 // время между кадрами -- физика (16ms = 60 FPS)
 
 #define SURE_P_DELTA       (1.0/10000.0)
 
