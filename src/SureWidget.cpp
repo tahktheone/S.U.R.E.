@@ -1,75 +1,20 @@
 #include "SureWidget.h"
 
-SureWidget::SureWidget()
+SureWidget::SureWidget(SureData* i_engine)
 {
+    EngineData = i_engine;
     int mx = rect().right();
     int my = rect().bottom();
     image = new QImage(mx,my,QImage::Format_ARGB32);
     CursorImage.load("./maps/cursor.png");
+    LoadingScreen.load("./maps/loading.png");
+    setMouseTracking(true);
+    setCursor(QCursor(Qt::BlankCursor));
     this->update();
 }
 
-SureWidget::~SureWidget()
-{
-    delete rgbmatrix;
+SureWidget::~SureWidget(){
     delete image;
-}
-
-void SureWidget::PlaceMatrixToImage()
-{
-    int mx_scaled = rect().right()/SURE_SCALE;
-    int my_scaled = rect().bottom()/SURE_SCALE;
-    int mx = rect().right();
-    float lv_max = 0;
-    float lv_med = 0;
-    for(int y=0;y<my_scaled;++y)
-    for(int x=0;x<mx_scaled;++x){
-        int k = y*SURE_MAXRES_X*3+x*3;
-        lv_max = rgbmatrix[k] > lv_max ? rgbmatrix[k] : lv_max;
-        lv_max = rgbmatrix[k+1] > lv_max ? rgbmatrix[k+1] : lv_max;
-        lv_max = rgbmatrix[k+2] > lv_max ? rgbmatrix[k+2] : lv_max;
-        lv_med += rgbmatrix[k] + rgbmatrix[k+1] + rgbmatrix[k+2];
-    };
-    lv_med /= mx_scaled*my_scaled*3;
-    lv_max /= (lv_max/lv_med)*150.0;
-
-    uint32_t *l_img = (uint32_t*)image->bits();
-
-    #pragma omp parallel for schedule(static,8)
-    for(int y=0;y<my_scaled;++y)
-    for(int x=0;x<mx_scaled;++x){
-        int k = y*SURE_MAXRES_X*3+x*3;
-        float CurrentRGB[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
-        if(x<(mx_scaled-1)){k = y*SURE_MAXRES_X*3+(x+1)*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_X[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
-        if(y<(my_scaled-1)){k = (y+1)*SURE_MAXRES_X*3+x*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_Y[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
-        if((x<(mx_scaled-1))&&(y<(my_scaled-1))){k = (y+1)*SURE_MAXRES_X*3+(x+1)*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_XY[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
-        for(int sy = 0;sy<SURE_SCALE;++sy)
-        for(int sx = 0;sx<SURE_SCALE;++sx){
-            float SetRGB[3] = {  (CurrentRGB[0]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[0]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[0]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[0]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE), //+2*SURE_SCALE
-                                 (CurrentRGB[1]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[1]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[1]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[1]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE),
-                                 (CurrentRGB[2]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[2]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[2]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[2]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE)};
-            if(SetRGB[0]>255){SetRGB[0]=255;}if(SetRGB[0]<0){SetRGB[0]=0;};
-            if(SetRGB[1]>255){SetRGB[1]=255;}if(SetRGB[1]<0){SetRGB[1]=0;};
-            if(SetRGB[2]>255){SetRGB[2]=255;}if(SetRGB[2]<0){SetRGB[2]=0;};
-            uchar *SetPixel = (uchar*)(&l_img[(y*SURE_SCALE+sy)*mx+(x*SURE_SCALE+sx)]);
-            *SetPixel = (uchar)SetRGB[2];++SetPixel;
-            *SetPixel = (uchar)SetRGB[1];++SetPixel;
-            *SetPixel = (uchar)SetRGB[0];++SetPixel;
-            *SetPixel = 255;
-        };//Scale
-    };// for x y
 }
 
 my_double3 SureWidget::ConvertCoordinatesGlobalToCamera(my_double3 GlobalPoint,my_double3 *CameraBasis,bool *VisibleIndicator)
@@ -199,9 +144,9 @@ void SureWidget::DrawMeshLines(SureDrawable *lv_dr)
     };
 }
 
-void SureWidget::DrawLinesDrawable(SureDrawable *lv_dr)
+void SureWidget::DrawDebugSelectedObject(SureObject *o)
 {
-
+    SureDrawable *lv_dr = &o->drawable;
     my_double3 CameraBasis[3];
     CameraBasis[1] = -EngineData->CameraInfo.cam_upvec;
     CameraBasis[2] = EngineData->CameraInfo.cam_vec;
@@ -211,86 +156,90 @@ void SureWidget::DrawLinesDrawable(SureDrawable *lv_dr)
         QPoint DrawPoint2;
         QPoint DrawPoint3;
         painter.setPen(Qt::white);
-        switch (lv_dr->type){
-            case SURE_DR_MESH:
-            {
-                if(lv_dr->mesh_count>50){
-                    DrawOABB(lv_dr); // если граней больше 50 рисуем OABB
-                }else{
-                    DrawMeshLines(lv_dr); // рисуем все mesh'ы
+        if(o->type == SURE_OBJ_PS){
+            DrawOABB(lv_dr);
+        }else{
+            switch (lv_dr->type){
+                case SURE_DR_MESH:
+                {
+                    if(lv_dr->mesh_count>50){
+                        DrawOABB(lv_dr); // если граней больше 50 рисуем OABB
+                    }else{
+                        DrawMeshLines(lv_dr); // рисуем все mesh'ы
+                    };
                 };
-            };
-            break;
-            case SURE_DR_SQUARE:
-            {
-                    __VTYPE3 OABB_1;
-                    __VTYPE3 OABB_2;
-                    __VTYPE3 OABB_3;
-                    __VTYPE3 OABB_4;
+                break;
+                case SURE_DR_SQUARE:
+                {
+                        __VTYPE3 OABB_1;
+                        __VTYPE3 OABB_2;
+                        __VTYPE3 OABB_3;
+                        __VTYPE3 OABB_4;
 
-                    OABB_1 = lv_dr->X
-                             -lv_dr->ox*lv_dr->lx
-                             -lv_dr->oy*lv_dr->ly
-                             -lv_dr->oz*lv_dr->lz;
-                    OABB_2 = lv_dr->X
-                             -lv_dr->ox*lv_dr->lx
-                             +lv_dr->oy*lv_dr->ly
-                             -lv_dr->oz*lv_dr->lz;
-                    OABB_3 = lv_dr->X
-                             +lv_dr->ox*lv_dr->lx
-                             +lv_dr->oy*lv_dr->ly
-                             -lv_dr->oz*lv_dr->lz;
-                    OABB_4 = lv_dr->X
-                             +lv_dr->ox*lv_dr->lx
-                             -lv_dr->oy*lv_dr->ly
-                             -lv_dr->oz*lv_dr->lz;
+                        OABB_1 = lv_dr->X
+                                 -lv_dr->ox*lv_dr->lx
+                                 -lv_dr->oy*lv_dr->ly
+                                 -lv_dr->oz*lv_dr->lz;
+                        OABB_2 = lv_dr->X
+                                 -lv_dr->ox*lv_dr->lx
+                                 +lv_dr->oy*lv_dr->ly
+                                 -lv_dr->oz*lv_dr->lz;
+                        OABB_3 = lv_dr->X
+                                 +lv_dr->ox*lv_dr->lx
+                                 +lv_dr->oy*lv_dr->ly
+                                 -lv_dr->oz*lv_dr->lz;
+                        OABB_4 = lv_dr->X
+                                 +lv_dr->ox*lv_dr->lx
+                                 -lv_dr->oy*lv_dr->ly
+                                 -lv_dr->oz*lv_dr->lz;
 
-                    DrawLineInGlobalCoordinates(OABB_1,OABB_2,CameraBasis);
-                    DrawLineInGlobalCoordinates(OABB_2,OABB_3,CameraBasis);
-                    DrawLineInGlobalCoordinates(OABB_3,OABB_4,CameraBasis);
-                    DrawLineInGlobalCoordinates(OABB_4,OABB_1,CameraBasis);
-            };
-            break;
-            case SURE_DR_SPHERE:
-            {
-                QPoint DrawPoint;
-                bool DrawPointVisible;
-
-                __VTYPE3 GlobalPoint;
-                for(float Angle=0.0;Angle<2*M_PI;Angle+=0.01){
-                    GlobalPoint = lv_dr->X
-                                 +lv_dr->ox*cos(Angle)*lv_dr->lx
-                                 +lv_dr->oy*sin(Angle)*lv_dr->lx;
-                    my_double3 LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
-                        if(DrawPointVisible){
-                            DrawPoint.setX(LocalPoint.x);
-                            DrawPoint.setY(LocalPoint.y);
-                            painter.drawPoint(DrawPoint);
-                        };
-                    GlobalPoint = lv_dr->X
-                                 +lv_dr->ox*cos(Angle)*lv_dr->lx
-                                 +lv_dr->oz*sin(Angle)*lv_dr->lx;
-                    LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
-                        if(DrawPointVisible){
-                            DrawPoint.setX(LocalPoint.x);
-                            DrawPoint.setY(LocalPoint.y);
-                            painter.drawPoint(DrawPoint);
-                        };
-                    GlobalPoint = lv_dr->X
-                                 +lv_dr->oy*cos(Angle)*lv_dr->lx
-                                 +lv_dr->oz*sin(Angle)*lv_dr->lx;
-                    LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
-                        if(DrawPointVisible){
-                            DrawPoint.setX(LocalPoint.x);
-                            DrawPoint.setY(LocalPoint.y);
-                            painter.drawPoint(DrawPoint);
-                        };
+                        DrawLineInGlobalCoordinates(OABB_1,OABB_2,CameraBasis);
+                        DrawLineInGlobalCoordinates(OABB_2,OABB_3,CameraBasis);
+                        DrawLineInGlobalCoordinates(OABB_3,OABB_4,CameraBasis);
+                        DrawLineInGlobalCoordinates(OABB_4,OABB_1,CameraBasis);
                 };
-            };
-            break;
-            default:
-            break;
-        }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
+                break;
+                case SURE_DR_SPHERE:
+                {
+                    QPoint DrawPoint;
+                    bool DrawPointVisible;
+
+                    __VTYPE3 GlobalPoint;
+                    for(float Angle=0.0;Angle<2*M_PI;Angle+=0.01){
+                        GlobalPoint = lv_dr->X
+                                     +lv_dr->ox*cos(Angle)*lv_dr->lx
+                                     +lv_dr->oy*sin(Angle)*lv_dr->lx;
+                        my_double3 LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
+                            if(DrawPointVisible){
+                                DrawPoint.setX(LocalPoint.x);
+                                DrawPoint.setY(LocalPoint.y);
+                                painter.drawPoint(DrawPoint);
+                            };
+                        GlobalPoint = lv_dr->X
+                                     +lv_dr->ox*cos(Angle)*lv_dr->lx
+                                     +lv_dr->oz*sin(Angle)*lv_dr->lx;
+                        LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
+                            if(DrawPointVisible){
+                                DrawPoint.setX(LocalPoint.x);
+                                DrawPoint.setY(LocalPoint.y);
+                                painter.drawPoint(DrawPoint);
+                            };
+                        GlobalPoint = lv_dr->X
+                                     +lv_dr->oy*cos(Angle)*lv_dr->lx
+                                     +lv_dr->oz*sin(Angle)*lv_dr->lx;
+                        LocalPoint = ConvertCoordinatesGlobalToCamera(GlobalPoint,CameraBasis,&DrawPointVisible);
+                            if(DrawPointVisible){
+                                DrawPoint.setX(LocalPoint.x);
+                                DrawPoint.setY(LocalPoint.y);
+                                painter.drawPoint(DrawPoint);
+                            };
+                    };
+                };
+                break;
+                default:
+                break;
+            }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
+        }; // объект -- не SURE_OBJ_PS
 }
 
 void SureWidget::DrawTraceLog(SureTraceLog *i_tl)
@@ -352,7 +301,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     CameraBasis[2] = EngineData->CameraInfo.cam_vec;
     CameraBasis[0] = cross(CameraBasis[2],CameraBasis[1]);
 
-    PlaceMatrixToImage();
+    SureMatrixToImage(rgbmatrix,image,rect().right(),rect().bottom());
 
     char TextString[100];
 
@@ -378,10 +327,9 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.drawText(rect().right()-100,45,TextString);
     };
 
-    // Рисуем курсор
-    if(!mousemove) painter.drawImage(QWidget::mapFromGlobal(QCursor::pos()),CursorImage);
     // Информация о курсоре -- направление, кординаты, выбранный объект
-    if((EngineData->r_drawdebug>=50)&&(!mousemove)){
+    if((EngineData->r_drawdebug>=50)&&(!EngineData->mousemove))
+    if(EngineData->MenuWindowsCounter==0){
         painter.setPen(Qt::blue);
         sprintf(TextString,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
         painter.drawText(5,rect().bottom()-25,TextString);
@@ -399,7 +347,7 @@ void SureWidget::paintEvent(QPaintEvent * event)
     if((EngineData->r_drawdebug>=50)
        &&(EngineData->SelectedObject>=0)
        &&(EngineData->SelectedObject<EngineData->m_objects)){
-       DrawLinesDrawable(&EngineData->objects[EngineData->SelectedObject].drawable);
+       DrawDebugSelectedObject(&EngineData->objects[EngineData->SelectedObject]);
     };
 
     // Рисуем иннерциоиды
@@ -429,210 +377,119 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.drawText(QPoint(5,15),TextString);
     };
 
+    DrawMenu();
+    // Рисуем курсор
+    if(!EngineData->mousemove) painter.drawImage(QWidget::mapFromGlobal(QCursor::pos()),CursorImage);
+
     painter.end();
 }
 
+void SureWidget::DrawMenu(){
+    for(int i = 0;i<EngineData->MenuWindowsCounter;++i){
+      SureMenuWindow* LocalWindow = EngineData->MenuWindows[i];
+      QColor LocalColor;
+      LocalColor.setAlpha(155);
+      LocalColor.setRed(150);
+      LocalColor.setGreen(150);
+      LocalColor.setBlue(150);
+      QRect LocalRect;
+      LocalRect.setRect(LocalWindow->x,LocalWindow->y,LocalWindow->width,LocalWindow->height);
+      painter.fillRect(LocalRect,LocalColor);
+      painter.setPen(Qt::white);
+      int MaximumBottom = LocalWindow->height;
+      int MaximumRight = LocalWindow->width;
+      for(int j = 0;j<EngineData->MenuWindows[i]->ElementsCounter;++j){
+        SureMenuElement* LocalElement = EngineData->MenuWindows[i]->Elements[j];
+        if((LocalWindow->x+LocalElement->x)>MaximumRight)MaximumRight = LocalWindow->x+LocalElement->x;
+        if((LocalWindow->y+LocalElement->y)>MaximumBottom)MaximumBottom = LocalWindow->y+LocalElement->y;
+        LocalRect.setRect(  LocalWindow->x+LocalElement->x,
+                            LocalWindow->y+LocalElement->y-LocalWindow->ScrollPosition,
+                            LocalElement->width,
+                            LocalElement->height);
+        if((LocalRect.top()>10)&&(LocalRect.bottom()<(LocalWindow->height-10)))
+        if((LocalRect.left()>10)&&(LocalRect.right()<(LocalWindow->width-10))){ // видимый
+            painter.fillRect(LocalRect,LocalColor);
+            painter.drawText(LocalRect.left()+5,LocalRect.bottom()-5,QString::fromWCharArray(LocalElement->text));
+            if(LocalElement->selected)
+                painter.drawRect(LocalRect);
+        };// Элемент видимый
+      }; // Рисуем все элементы
+      if(MaximumBottom>LocalWindow->height){ // если элементы вылезли за нижнюю границу окна
+        float VisibleAreaPercent = (float)LocalWindow->height / (float)MaximumBottom;
+        float ScrollPositionPercent = (float)LocalWindow->ScrollPosition / (float)MaximumBottom;
+        LocalRect.setRect(LocalWindow->x+LocalWindow->width - 10,
+                          LocalWindow->y+5,
+                          5,
+                          LocalWindow->height-10);
+        painter.fillRect(LocalRect,Qt::darkGray);
+        int Lheight = VisibleAreaPercent*(LocalWindow->height-10);
+        int BottomCandidate = LocalWindow->y+5+ScrollPositionPercent*(LocalWindow->height-10) + Lheight;
+        int BottomLimit = LocalWindow->y+5 + LocalWindow->height-10;
+        if(BottomCandidate>BottomLimit)
+            Lheight -= (BottomCandidate-BottomLimit);
+        LocalRect.setRect(LocalWindow->x+LocalWindow->width-10,
+                          LocalWindow->y+5+ScrollPositionPercent*(LocalWindow->height-10),
+                          5,
+                          Lheight);
+        painter.fillRect(LocalRect,Qt::white);
+      };// если элементы вылезли за нижнюю границу окна
+    };
+}
+
 void SureWidget::keyPressEvent(QKeyEvent *event){
-    if(event->key()==Qt::Key_Plus){
-        EngineData->CameraInfo.xy_h /= 1.1;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_Minus){
-        EngineData->CameraInfo.xy_h *= 1.1;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_W){
-        EngineData->cam_dx.x = 0.5;
-    };
-    if(event->key()==Qt::Key_S){
-        EngineData->cam_dx.x = -0.5;
-    };
-    if(event->key()==Qt::Key_R){
-        EngineData->cam_dx.z = 0.5;
-    };
-    if(event->key()==Qt::Key_F){
-        EngineData->cam_dx.z = -0.5;
-    };
-    if(event->key()==Qt::Key_A){
-        EngineData->cam_dx.y = -0.5;
-    };
-    if(event->key()==Qt::Key_D){
-        EngineData->cam_dx.y = 0.5;
-    };
-    if(event->key()==Qt::Key_Q){
-        EngineData->cam_dw.x = -0.01;
-    };
-    if(event->key()==Qt::Key_E){
-        EngineData->cam_dw.x = 0.01;
-    };
-    if(event->key()==Qt::Key_Up){
-        EngineData->cam_dw.y = 0.5;
-    };
-    if(event->key()==Qt::Key_Down){
-        EngineData->cam_dw.y = -0.5;
-    };
-    if(event->key()==Qt::Key_Left){
-        EngineData->cam_dw.z = -0.5;
-    };
-    if(event->key()==Qt::Key_Right){
-        EngineData->cam_dw.z = 0.5;
-    };
-    if(event->key()==Qt::Key_8){
-        EngineData->r_iters -= 2;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_9){
-        EngineData->r_iters += 2;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_5){
-        EngineData->r_rechecks -= 2;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_6){
-        EngineData->r_rechecks += 2;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_2){
-        EngineData->r_backlight -= 0.5;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_3){
-        EngineData->r_backlight += 0.5;
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_0){
-        EngineData->r_drawdebug-=30;
-        if(EngineData->r_drawdebug<30)EngineData->r_drawdebug=99;
-    };
-    if(event->key()==Qt::Key_O){
-        QString Fname = "./screenshots/";
-        char FileName[100];
-        time_t seconds = time(NULL);
-        tm* timeinfo = localtime(&seconds);
-        strftime (FileName,100,"shot%y%m%d_%H%M%S.png",timeinfo);
-        Fname += FileName;
-        image->save(Fname);
-    };
-    if(event->key()==Qt::Key_M){
-        if(mousemove){
-            mousemove = false;
-        }else{
-            mousemove = true;
-        };
-    };
-    if(event->key()==Qt::Key_P){
-        if(EngineData->paused){
-            EngineData->paused = false;
-        }else{
+
+    SureControllerAction Action;
+    SureControllerInput Input;
+    Input.type = SUREINPUT_KEYDOWN;
+    Input.key = event->key();
+    Input.x = 1.0;
+
+    EngineData->HandleInput(&Input);
+
+    if(event->key()==Qt::Key_Escape){
+        if(EngineData->MenuWindowsCounter>0){ // есть окна меню
+            delete EngineData->MenuWindows[--EngineData->MenuWindowsCounter];
+            if(EngineData->MenuWindowsCounter==0){
+                EngineData->paused = false;
+                EngineData->mousemove = true;
+            };
+        }else{ // нет окон меню
             EngineData->paused = true;
-        };
-    };
-    if(event->key()==Qt::Key_F5){
-        EngineData->SaveState("initial");
-    };
-    if(event->key()==Qt::Key_F9){
-        EngineData->LoadState("initial");
-    };
-    if(event->key()==Qt::Key_Backspace){
-        EngineData->DeleteObject(EngineData->SelectedObject);
-        EngineData->reset = true;
-    };
-    if(event->key()==Qt::Key_L){
-        EngineData->reset = true;
-        switch(EngineData->r_type)
-        {
-            case SURE_RT_NOCL:
-            {
-                EngineData->r_type = SURE_RT_D;
-                OCLData->OpenCL = true;
-                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 1");
-                break;
-            };
-            case SURE_RT_D:
-            {
-                EngineData->r_type = SURE_RT_T;
-                OCLData->OpenCL = true;
-                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 2");
-                break;
-            };
-            case SURE_RT_T:
-            {
-                EngineData->r_type = SURE_RT_F;
-                OCLData->OpenCL = true;
-                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 3");
-                break;
-            };
-            case SURE_RT_F:
-            {
-                EngineData->r_type = SURE_RT_N;
-                OCLData->OpenCL = true;
-                EngineData->Log->AddLine("Переключились на GPU-рендер вариант 4");
-                break;
-            };
-            case SURE_RT_N:
-            {
-                EngineData->r_type = SURE_RT_NOCL;
-                OCLData->OpenCL = false;
-                EngineData->Log->AddLine("Переключились на СPU-рендер");
-                break;
-            };
-            default:
-            break;
-        }; //SWITCH
-        EngineData->reset = true;
-    }; // Qt::Key_L
+            EngineData->mousemove = false;
+            EngineData->MenuWindows[EngineData->MenuWindowsCounter] = new SureControlsWindow(EngineData);
+            SureControlsWindow* NewWindow = (SureControlsWindow*)EngineData->MenuWindows[EngineData->MenuWindowsCounter++];
+            NewWindow->x = rect().width()*0.05;
+            NewWindow->y = rect().height()*0.05;
+            NewWindow->width = rect().width()*0.9;
+            NewWindow->height = rect().height()*0.9;
+            NewWindow->Rebuild();
+        };// если нет открытых окон
+    };// Escape
 }
 
 void SureWidget::keyReleaseEvent(QKeyEvent *event){
-    if(event->key()==Qt::Key_Up){
-        EngineData->cam_dx.y = 0;
-    };
-    if(event->key()==Qt::Key_Down){
-        EngineData->cam_dx.y = 0;
-    };
-    if(event->key()==Qt::Key_Left){
-        EngineData->cam_dx.x = 0;
-    };
-    if(event->key()==Qt::Key_Right){
-        EngineData->cam_dx.x = 0;
-    };
-    if(event->key()==Qt::Key_Q){
-        EngineData->cam_dw.x = 0;
-    };
-    if(event->key()==Qt::Key_E){
-        EngineData->cam_dw.x = 0;
-    };
-   if(event->key()==Qt::Key_W){
-        EngineData->cam_dx.x = 0;
-    };
-    if(event->key()==Qt::Key_S){
-        EngineData->cam_dx.x = 0;
-    };
-    if(event->key()==Qt::Key_R){
-        EngineData->cam_dx.z = 0;
-    };
-    if(event->key()==Qt::Key_F){
-        EngineData->cam_dx.z = 0;
-    };
-    if(event->key()==Qt::Key_A){
-        EngineData->cam_dx.y = 0;
-    };
-    if(event->key()==Qt::Key_D){
-        EngineData->cam_dx.y = 0;
-    };
-    if(event->key()==Qt::Key_Z){
-        if(EngineData->CameraInfo.subp_rnd) {
-            EngineData->CameraInfo.subp_rnd = false;
-        } else {
-            EngineData->CameraInfo.subp_rnd = true;
-        };
-    };
+    SureControllerAction Action;
+    SureControllerInput Input;
+    Input.type = SUREINPUT_KEYUP;
+    Input.key = event->key();
+    EngineData->HandleInput(&Input);
 }
 
-void SureWidget::mouseMoveEvent(QMouseEvent *event)
-{
-    if(!mousemove)return;
+void SureWidget::mouseMoveEvent(QMouseEvent *event){
+    if(EngineData->MenuWindowsCounter>0){
+        SureMenuWindow* CurrentWindow = EngineData->MenuWindows[EngineData->MenuWindowsCounter-1];
+        for(int i = 0;i<CurrentWindow->ElementsCounter;++i){
+            SureMenuElement* CurrentElement = CurrentWindow->Elements[i];
+            CurrentElement->selected = false;
+            int Lleft = CurrentWindow->x + CurrentElement->x;
+            int Ltop = CurrentWindow->y + CurrentElement->y - CurrentWindow->ScrollPosition;
+            int Lright = Lleft + CurrentElement->width;
+            int Lbottom = Ltop + CurrentElement->height;
+            if(event->x()>Lleft&&event->x()<Lright&&event->y()>Ltop&&event->y()<Lbottom)
+                CurrentElement->selected = true;
+        };
+    };
+    if(!EngineData->mousemove)return;
     QRect lv_rect = rect();
     if(last_x==0){
         last_x = event->x();
@@ -651,7 +508,7 @@ void SureWidget::mouseMoveEvent(QMouseEvent *event)
 
 void SureWidget::leaveEvent(QEvent *event)
 {
-    if(!mousemove)return;
+    if(!EngineData->mousemove)return;
     QRect lv_rect = rect();
     if(last_x==0){
         last_x = QCursor::pos().x();
@@ -671,31 +528,59 @@ void SureWidget::leaveEvent(QEvent *event)
 
 }
 
+void SureWidget::wheelEvent(QWheelEvent *event)
+{
+    SureControllerAction a;
+    SureControllerInput i;
+    i.key = 0;
+
+    if(event->delta()<0){
+        i.type = SUREINPUT_SCROLLDOWN;
+        a.type = SUREACTION_MENUSCROLLDOWN;
+        EngineData->AssignControl(&i,&a);
+        i.x = -event->delta();
+        EngineData->ExecuteAction(&a,&i);
+    }else if(event->delta()>0){
+        i.type = SUREINPUT_SCROLLUP;
+        a.type = SUREACTION_MENUSCROLLUP;
+        EngineData->AssignControl(&i,&a);
+        i.x = event->delta();
+        EngineData->ExecuteAction(&a,&i);
+    };
+}
+
 void SureWidget::mousePressEvent(QMouseEvent *event)
 {
-    if(mousemove){
-        if (event->button() == Qt::LeftButton) {
-            EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
-            EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
-            EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
-            __VTYPE3 X = EngineData->CameraInfo.cam_x;
-            uint o = EngineData->CreateObjectFromTemplate(&X);
-            EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,3.0);
-        };
-        if (event->button() == Qt::RightButton) {
-            EngineData->SetNextTemplate();
-            EngineData->reset = true;
-        };
-    }else{ // if mousemove
-        if (event->button() == Qt::LeftButton) {
-            int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-            int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
-            EngineData->AddTraceLog(x,y,GPUData,Randomf,true);
-        }; // (event->button() == Qt::LeftButton)
-        if (event->button() == Qt::RightButton) {
-            int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-            int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
-            EngineData->AddTraceLog(x,y,GPUData,Randomf,false);
-        }; // (event->button() == Qt::LeftButton)
-    }; // if !mousemove
+    if(EngineData->MenuWindowsCounter>0){ // Открыто меню
+        SureMenuWindow* CurrentWindow = EngineData->MenuWindows[EngineData->MenuWindowsCounter - 1];
+        for(int i = 0;i< CurrentWindow->ElementsCounter;++i)
+        if(CurrentWindow->Elements[i]->selected)
+            CurrentWindow->Elements[i]->OnClick();
+    }else{
+        if(EngineData->mousemove){
+            if (event->button() == Qt::LeftButton) {
+                EngineData->TemplateObject.ox = EngineData->CameraInfo.cam_vec;
+                EngineData->TemplateObject.oz = EngineData->CameraInfo.cam_upvec;
+                EngineData->TemplateObject.oy = cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec);
+                __VTYPE3 X = EngineData->CameraInfo.cam_x;
+                uint o = EngineData->CreateObjectFromTemplate(&X);
+                EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->CameraInfo.cam_vec,3.0);
+            };
+            if (event->button() == Qt::RightButton) {
+                EngineData->SetNextTemplate();
+                EngineData->reset = true;
+            };
+        }else{ // if mousemove
+            if (event->button() == Qt::LeftButton) {
+                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
+                EngineData->AddTraceLog(x,y,GPUData,Randomf,true);
+            }; // (event->button() == Qt::LeftButton)
+            if (event->button() == Qt::RightButton) {
+                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
+                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
+                EngineData->AddTraceLog(x,y,GPUData,Randomf,false);
+            }; // (event->button() == Qt::LeftButton)
+        }; // if !mousemove
+    }; // Меню не открыто
 } // mousePressEvent

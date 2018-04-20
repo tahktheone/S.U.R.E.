@@ -26,6 +26,7 @@
 #define SURE_OBJ_PLANE   3
 #define SURE_OBJ_MESH    4
 #define SURE_OBJ_CREAT   5
+#define SURE_OBJ_PS      6
 
 #define SURE_DR_MAX     5000
 #define SURE_DR_NONE    0

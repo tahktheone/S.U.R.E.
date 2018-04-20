@@ -5,10 +5,17 @@
 // * Исправлены баги с обзором изнутри тумана и пересечением стекла с туманом
 //   (добавлена логика определения того, внутри какого объекта находится точка трассровки)
 // Физика
-// * Распараллеливание расчетов столкновений
+// * Распараллеливание и оптимизация расчетов столкновений
 // * Составные объекты
+// * Теперь у объектов есть масса
+// * Системы частиц
+// * Удалять отвалившиеся объекты
 // Другое
-// * (в работе) Наведен порядок в коде widget'а
+// * Наведен порядок в коде widget'а
+// * Загрузка/сохранение объектов в файл
+// * Настраиваемое управление
+// * (в работе) Экран загрузки
+// * (в работе) порядок в архитектуре
 
 // 23.03.2018 - Версия 0.0003:
 // Иитерфейс:
@@ -54,57 +61,26 @@ int main(int argc, char* argv[]) {
     #endif // _WIN32
 
     QApplication app(argc, argv);
-    SureWidget widget;
-    SureGPUData GPUData;
-    SureData EngineData;
-    SureOCLData OCLData;
-
-    std::wcout << SURE_TITLE << "/" << SURE_VERSION << "\n";
-
-    SureThread Render;
-    SurePhysThread Physics;
-    SureDrawable Drawables[SURE_DR_MAX];
-    cl_float Randomf[SURE_R_RNDSIZE];
-
     app.setApplicationName(SURE_TITLE);
     app.setApplicationVersion(SURE_VERSION);
 
-    widget.setMouseTracking(true);
-    widget.setCursor(QCursor(Qt::BlankCursor));
+    // Объект со всеми данными движка:
+    SureData EngineData;
+    // Главное окно:
+    SureWidget widget(&EngineData);
+    // Поток рендера
+    SureThread Render(&EngineData);
+    // Поток физики
+    SurePhysThread Physics(&EngineData);
 
-    widget.rgbmatrix = new float[SURE_MAXRES_X*SURE_MAXRES_Y*3];
-
-    for(int i = 0;i<SURE_MAXRES_Y;++i)
-        for(int j = 0;j<SURE_MAXRES_X;++j)
-        {
-            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3] = 0;
-            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3+1] = 0;
-            widget.rgbmatrix[SURE_MAXRES_X*i*3+j*3+2] = 0;
-        };
-
-    GPUData.Drawables = Drawables;
-    widget.EngineData = &EngineData;
-    widget.OCLData = &OCLData;
-    widget.GPUData = &GPUData;
-    widget.Randomf = Randomf;
-    Render.Randomf = Randomf;
-    Render.EngineData = &EngineData;
-    Render.GPUData = &GPUData;
-    Render.OCLData = &OCLData;
-    Render.widget = &widget;
-    Physics.GPUData = &GPUData;
-    Physics.EngineData = &EngineData;
-    Physics.start();
+    // запускаемся
+    Physics.start(); // <- Тут запускается основная загрузка EngideData->LoadEngine()
     Render.start(QThread::IdlePriority);
-
     widget.show();
+    // Открываем окно
     app.exec();
-    Render.StopRender();
-    Render.wait();
-    Physics.StopPhysics();
-    Physics.wait();
-
-    EngineData.SureClear(); // чистим память
-
+    // Окно приложения закрыто - закругляемся:
+    Render.StopRender(); Render.wait();
+    Physics.StopPhysics(); Physics.wait();
     return 0;
 }

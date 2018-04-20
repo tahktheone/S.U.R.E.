@@ -6,6 +6,7 @@
 class SurePhysThread : public QThread
 {
     public:
+        SurePhysThread(SureData* i_engine);
         virtual ~SurePhysThread();
         SureData* EngineData;
         SureGPUData* GPUData;

@@ -149,35 +149,55 @@
 		<Unit filename="README.md" />
 		<Unit filename="TODO.txt" />
 		<Unit filename="include/SureData.h" />
+		<Unit filename="include/SureData/Collisions.h" />
+		<Unit filename="include/SureData/Defines.h" />
+		<Unit filename="include/SureData/Menu.h" />
+		<Unit filename="include/SureData/Object.h" />
+		<Unit filename="include/SureData/Struct.h" />
 		<Unit filename="include/SureDefinesCPU.h" />
 		<Unit filename="include/SureLog.h" />
 		<Unit filename="include/SurePhysThread.h" />
 		<Unit filename="include/SureThread.h" />
 		<Unit filename="include/SureWidget.h" />
 		<Unit filename="src/SureData.cpp" />
-		<Unit filename="src/SureData_gen.cpp">
+		<Unit filename="src/SureData/Controls.cpp">
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/SureData_load.cpp">
+		<Unit filename="src/SureData/GJK.cpp">
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/SureData_scene.cpp">
+		<Unit filename="src/SureData/Generate.cpp">
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/SureData/Load.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="src/SureData/Menu.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="src/SureData/Object.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="src/SureData/Scene.cpp">
+			<Option compile="0" />
+			<Option link="0" />
 		</Unit>
 		<Unit filename="src/SureLog.cpp" />
 		<Unit filename="src/SurePhysThread.cpp" />
 		<Unit filename="src/SureThread.cpp" />
 		<Unit filename="src/SureWidget.cpp" />
-		<Unit filename="src/func_CPU.c">
-			<Option compilerVar="CC" />
+		<Unit filename="src/func_CPU.cpp">
 			<Option compile="0" />
 			<Option link="0" />
+		</Unit>
+		<Unit filename="src/func_CPU.cзз">
+			<Option compilerVar="CC" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/main.cpp" />

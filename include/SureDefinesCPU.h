@@ -255,7 +255,6 @@ __GET_ADVMAP(map_px,map_py,id);
    operator cl_int4() const { cl_int4 d; d.s[0] = x;d.s[1] = y;d.s[2] = z; d.s[3] = w; return d;};
 };
 
-
  struct my_double2 {
    double x=0, y=0;
    my_double2(double x_=0, double y_=0){ x=x_; y=y_;}
@@ -280,3 +279,5 @@ my_double3 cross(my_double3,my_double3);
 cl_double dot(cl_double3,cl_double3);
 double dot(my_double3,my_double3);
 uint mad24(uint,uint,uint);
+
+void SureMatrixToImage(float*,QImage*,int,int);

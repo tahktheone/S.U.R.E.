@@ -81,7 +81,6 @@ struct SureGPUData {
     uchar r_rechecks;
     float r_backlight;
     int SAA;
-    struct SureDrawable* Drawables; // для GPU -- не имеет смысла, присутствует тут для целостности структуры
 #else
     cl_uchar reset = true; // сброс кадра -- фаза 2
     SureCameraInfo CameraInfo;
@@ -90,8 +89,7 @@ struct SureGPUData {
     cl_uchar r_maxiters = 20; // глубина анализа рендера
     cl_uchar r_rechecks = 20; // качество рендера
     cl_float r_backlight = 0.5;
-    cl_int SAA = 1; // Количество субпикселей на пиксель
-    SureDrawable* Drawables; // Для CPU -- указатель на массив с объектами сцены
+    cl_int SAA = 2; // Количество субпикселей на пиксель
 #endif // GPU
 };
 

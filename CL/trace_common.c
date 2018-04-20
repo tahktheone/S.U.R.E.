@@ -427,10 +427,10 @@
         #ifdef __SELECT_OBJECT
         if((SelectedObject<0)&&(FoundDrawable>=0)){
             int FoundID = -1;
-            for(int oid = 0;oid<m_objects;++oid){
-                if(objects[oid].DrawableGPUID==FoundDrawable){
-                    FoundID = oid;
-                };
+            for(int oid = 0;oid<m_objects;++oid)
+            if(objects[oid].DrawableGPUID>=FoundDrawable){
+                FoundID = oid;
+                oid=m_objects;
             };
             SelectedObject = FoundID;
         };

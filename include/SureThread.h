@@ -7,8 +7,8 @@
 class SureThread : public QThread
 {
     public:
+        SureThread(SureData* i_engine);
         virtual ~SureThread();
-        SureWidget* widget; // окно для вывода на экран
         void run() Q_DECL_OVERRIDE; // основная процедура потока
         bool m_running = true; // запущен ли поток
         void StopRender(){m_running = false;}; // m_running = false
@@ -24,11 +24,7 @@ class SureThread : public QThread
         cl_program program_f;
         cl_program program_n;
 
-        // буффер GPU<->CPU
-        SureGPUData* GPUData;
-        SureOCLData* OCLData;
         SureData* EngineData;
-        cl_float* Randomf;
 
         void raytrace();
 
