@@ -280,4 +280,4 @@ cl_double dot(cl_double3,cl_double3);
 double dot(my_double3,my_double3);
 uint mad24(uint,uint,uint);
 
-void SureMatrixToImage(float*,QImage*,int,int);
+void SureMatrixToImage(float*,QImage*,int,int,int);

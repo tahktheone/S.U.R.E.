@@ -142,13 +142,16 @@ void SurePhysThread::run()
 
                     // две mesh'ы
                     if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_MESH)
+                    if(PhysCollideAABB(lv_o1,lv_o2))
                         CollisionFound = PhysCollideMeshMesh(lv_o1,lv_o2,EngineData,&Collision);
 
                     if(Iters==0){
                         // mesh и система частиц
                         if(lv_o1->type==SURE_OBJ_MESH&&lv_o2->type==SURE_OBJ_PS)
+                        if(PhysCollideAABB(lv_o1,lv_o2))
                             CollisionFound = PhysCollidePSMesh(lv_o2,lv_o1,EngineData,&Collision);
                         if(lv_o1->type==SURE_OBJ_PS&&lv_o2->type==SURE_OBJ_MESH)
+                        if(PhysCollideAABB(lv_o1,lv_o2))
                             CollisionFound = PhysCollidePSMesh(lv_o1,lv_o2,EngineData,&Collision);
 
                         // шар и система частиц

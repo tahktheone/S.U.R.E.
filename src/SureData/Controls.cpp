@@ -240,6 +240,18 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
             if(r_drawdebug<30)r_drawdebug=99;
         break;
         };// Отладочная информация
+        case SUREACTION_PLUSSCALE:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            ImageScale += 1;
+            reset = true;
+        break;
+        };
+        case SUREACTION_MINUSSCALE:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            ImageScale -= 1;
+            reset = true;
+        break;
+        };
         case SUREACTION_SCREENSHOT:{
             if(i_input->type==SUREINPUT_KEYUP)break;
             QString Fname = "./screenshots/";
@@ -248,8 +260,8 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
             tm* timeinfo = localtime(&seconds);
             strftime (FileName,100,"shot%y%m%d_%H%M%S.png",timeinfo);
             Fname += FileName;
-            QImage* image = new QImage(CameraInfo.m_amx*SURE_SCALE,CameraInfo.m_amy*SURE_SCALE,QImage::Format_ARGB32);
-            SureMatrixToImage(rgbmatrix,image,CameraInfo.m_amx*SURE_SCALE,CameraInfo.m_amy*SURE_SCALE);
+            QImage* image = new QImage(CurrentWidth,CurrentHeight,QImage::Format_ARGB32);
+            SureMatrixToImage(rgbmatrix,image,CurrentWidth,CurrentHeight,ImageScale);
             image->save(Fname);
             delete image;
         break;
@@ -404,4 +416,6 @@ void SureData::GetControllerActionName(int i_action,wchar_t *e_name){
     if(i_action==SUREACTION_MENUSCROLLUP)swprintf(e_name,40,L"Меню: листать вверх");
     if(i_action==SUREACTION_MENUSCROLLDOWN)swprintf(e_name,40,L"Меню: листать ввниз");
     if(i_action==SUREACTION_TOGGLESAA)swprintf(e_name,40,L"(Графика) Вкл/выкл SAA");
+    if(i_action==SUREACTION_PLUSSCALE)swprintf(e_name,40,L"(Графика) Разрешение-");
+    if(i_action==SUREACTION_MINUSSCALE)swprintf(e_name,40,L"(Графика) Разрешение+");
 }

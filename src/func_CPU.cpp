@@ -635,9 +635,9 @@ bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,Sure
     return CollisionFound;
 }
 
-void SureMatrixToImage(float* rgbmatrix,QImage* image,int mx,int my){
-    int mx_scaled = mx/SURE_SCALE;
-    int my_scaled = my/SURE_SCALE;
+void SureMatrixToImage(float* rgbmatrix,QImage* image,int mx,int my,int i_scale){
+    int mx_scaled = mx/i_scale;
+    int my_scaled = my/i_scale;
     float lv_max = 0;
     float lv_med = 0;
     for(int y=0;y<my_scaled;++y)
@@ -663,24 +663,24 @@ void SureMatrixToImage(float* rgbmatrix,QImage* image,int mx,int my){
         float NextRGB_Y[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
         if((x<(mx_scaled-1))&&(y<(my_scaled-1))){k = (y+1)*SURE_MAXRES_X*3+(x+1)*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
         float NextRGB_XY[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
-        for(int sy = 0;sy<SURE_SCALE;++sy)
-        for(int sx = 0;sx<SURE_SCALE;++sx){
-            float SetRGB[3] = {  (CurrentRGB[0]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[0]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[0]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[0]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE), //+2*SURE_SCALE
-                                 (CurrentRGB[1]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[1]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[1]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[1]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE),
-                                 (CurrentRGB[2]*(float)(SURE_SCALE-sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_X[2]*(float)(sx)*(float)(SURE_SCALE-sy)
-                                + NextRGB_Y[2]*(float)(SURE_SCALE-sx)*(float)(sy)
-                                + NextRGB_XY[2]*(float)(sx)*(float)(sy)) / (SURE_SCALE*SURE_SCALE)};
+        for(int sy = 0;sy<i_scale;++sy)
+        for(int sx = 0;sx<i_scale;++sx){
+            float SetRGB[3] = {  (CurrentRGB[0]*(float)(i_scale-sx)*(float)(i_scale-sy)
+                                + NextRGB_X[0]*(float)(sx)*(float)(i_scale-sy)
+                                + NextRGB_Y[0]*(float)(i_scale-sx)*(float)(sy)
+                                + NextRGB_XY[0]*(float)(sx)*(float)(sy)) / (i_scale*i_scale), //+2*i_scale
+                                 (CurrentRGB[1]*(float)(i_scale-sx)*(float)(i_scale-sy)
+                                + NextRGB_X[1]*(float)(sx)*(float)(i_scale-sy)
+                                + NextRGB_Y[1]*(float)(i_scale-sx)*(float)(sy)
+                                + NextRGB_XY[1]*(float)(sx)*(float)(sy)) / (i_scale*i_scale),
+                                 (CurrentRGB[2]*(float)(i_scale-sx)*(float)(i_scale-sy)
+                                + NextRGB_X[2]*(float)(sx)*(float)(i_scale-sy)
+                                + NextRGB_Y[2]*(float)(i_scale-sx)*(float)(sy)
+                                + NextRGB_XY[2]*(float)(sx)*(float)(sy)) / (i_scale*i_scale)};
             if(SetRGB[0]>255){SetRGB[0]=255;}if(SetRGB[0]<0){SetRGB[0]=0;};
             if(SetRGB[1]>255){SetRGB[1]=255;}if(SetRGB[1]<0){SetRGB[1]=0;};
             if(SetRGB[2]>255){SetRGB[2]=255;}if(SetRGB[2]<0){SetRGB[2]=0;};
-            uchar *SetPixel = (uchar*)(&l_img[(y*SURE_SCALE+sy)*mx+(x*SURE_SCALE+sx)]);
+            uchar *SetPixel = (uchar*)(&l_img[(y*i_scale+sy)*mx+(x*i_scale+sx)]);
             *SetPixel = (uchar)SetRGB[2];++SetPixel;
             *SetPixel = (uchar)SetRGB[1];++SetPixel;
             *SetPixel = (uchar)SetRGB[0];++SetPixel;

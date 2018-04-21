@@ -463,7 +463,7 @@ void SureThread::run()
 
     while(m_running){
         clock_gettime(CLOCK_MONOTONIC,&framestart);
-        if(!EngineData->Loading)continue;
+        if(EngineData->Loading)continue;
 
         // Генерируем набор случайных чисел от 0 до 1
         // чтобы не изобретать генератор случайных чисел на GPU
@@ -531,12 +531,12 @@ void SureThread::run()
         tick = (float)lframetime.tv_sec * 1000.0 + (float) lframetime.tv_nsec / 1000000.0 - (  (float)lframestart.tv_sec*1000.0 + (float) lframestart.tv_nsec / 1000000.0 );
         if(tick>SURE_R_DELAY){
             OCL_RUN("clEnqueueReadBuffer",clEnqueueReadBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmRGBmatrix,CL_TRUE,0,sizeof(cl_float)*SURE_MAXRES_X*SURE_MAXRES_Y*3,EngineData->rgbmatrix,0,NULL,NULL));
-            widget->update();
+            EngineData->widget->update();
             clock_gettime(CLOCK_MONOTONIC,&lframestart);
 
-            if(GPUData->toreset){
-                GPUData->reset = true;
-                GPUData->toreset = false;
+            if(EngineData->GPUData.toreset){
+                EngineData->GPUData.reset = true;
+                EngineData->GPUData.toreset = false;
             };
         };
     };
@@ -546,10 +546,10 @@ void SureThread::run()
 
 void SureThread::raytrace()
 {
-    int amx = GPUData->CameraInfo.m_amx;
-    int amy = GPUData->CameraInfo.m_amy;
+    int amx = EngineData->GPUData.CameraInfo.m_amx;
+    int amy = EngineData->GPUData.CameraInfo.m_amy;
     #pragma omp parallel for schedule(static,8)
     for(int y=0;y<amy;++y)
     for(int x=0;x<amx;++x)
-        EngineData->SinglePointTrace(x,y,GPUData,Randomf,EngineData->rgbmatrix);
+        EngineData->SinglePointTrace(x,y,&EngineData->GPUData,EngineData->Randomf,EngineData->rgbmatrix);
 }

@@ -4,6 +4,7 @@
 class SureObject;
 class SureMenuWindow;
 class SureData;
+class SureWidget;
 
 #include <SureData/Defines.h>
 #include <SureData/Struct.h>
@@ -26,8 +27,11 @@ class SureData{
         SureGPUData GPUData;
         SureOCLData OCLData;
 
+        int CurrentWidth = 0;
+        int CurrentHeight = 0;
         my_double3 cam_dx = my_double3{0,0,0};
         my_double3 cam_dw = my_double3{0,0,0};
+        int ImageScale = 4;
         cl_uchar r_iters = 10;
         cl_uchar r_rechecks = 10;
         cl_float r_backlight = 0.5;
@@ -47,6 +51,11 @@ class SureData{
         cl_float *Normals; // [SURE_R_MAXTEXMAP * 4]; {n1x, n1y, n1z ...}
         SureModelData* ModelsInfo;
         SureTextureData* TexturesInfo;
+        SureWidget* widget;
+        SureObject objects[SURE_OBJ_MAX];
+        SureLink links[SURE_LIN_MAX];
+        int m_links = 0;
+        int m_objects = 0;
         cl_uint cur_vertexes = 0;
         cl_uint cur_meshes = 0;
         cl_uint cur_models = 0;
@@ -81,10 +90,6 @@ class SureData{
         uint ObjectNumberByID(int);
         SureObject *ObjByID(int); // Объект по внешнему айдишнику
 
-        SureObject objects[SURE_OBJ_MAX];
-        SureLink links[SURE_LIN_MAX];
-        int m_links = 0;
-        int m_objects = 0;
         uint m_ObjExternID = 1;
 
         // меню

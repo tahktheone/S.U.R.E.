@@ -995,7 +995,7 @@ void SureData::Scene_Polygon()
     TemplateObject.mass = 0.1;
     X.x = 200;
     X.y = 200;
-    X.z = 250;
+    X.z = 240;
     uint ps = CreateObjectFromTemplate(&X);
     ObjByID(ps)->type = SURE_OBJ_PS;
     ObjByID(ps)->PSSparks = true;

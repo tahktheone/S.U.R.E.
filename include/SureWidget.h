@@ -22,6 +22,7 @@ class SureWidget : public QWidget
         void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
         void wheelEvent(QWheelEvent* event) Q_DECL_OVERRIDE;
         void leaveEvent(QEvent *event) Q_DECL_OVERRIDE;
+        void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
     private:
         QImage *image;
         QImage CursorImage;

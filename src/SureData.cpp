@@ -52,6 +52,7 @@ void SureData::LoadEngine(){
     //Scene_golem();
     // Шаблонный объект
     SetTemplate_DarkCube(10.0f);
+    Loading = false;
 }
 
 SureData::~SureData()
@@ -180,7 +181,7 @@ void SureData::WriteObjectToFile(FILE *f,SureObject *o)
 
 void SureData::SureFread(void* i_ptr,size_t i_s1,size_t i_s2,FILE* f)
 {
-    if(fread(i_ptr,i_s1,i_s2,f)!=i_s1*i_s2){
+    if(fread(i_ptr,i_s1,i_s2,f)!=i_s2){
         char LogLine[100];
         sprintf(LogLine,"Ошибка чтения файла");
         Log->AddLine(LogLine);

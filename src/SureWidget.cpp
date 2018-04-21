@@ -3,9 +3,16 @@
 SureWidget::SureWidget(SureData* i_engine)
 {
     EngineData = i_engine;
-    int mx = rect().right();
-    int my = rect().bottom();
-    image = new QImage(mx,my,QImage::Format_ARGB32);
+    EngineData->widget = this;
+    //setWindowFlags(Qt::Popup;
+
+    int LWidth = 400;
+    int LHeight = 300;
+    EngineData->CurrentWidth=LWidth;
+    EngineData->CurrentHeight=LHeight;
+    resize(LWidth,LHeight);
+
+    image = new QImage(EngineData->CurrentWidth,EngineData->CurrentHeight,QImage::Format_ARGB32);
     CursorImage.load("./maps/cursor.png");
     LoadingScreen.load("./maps/loading.png");
     setMouseTracking(true);
@@ -17,6 +24,11 @@ SureWidget::~SureWidget(){
     delete image;
 }
 
+void SureWidget::resizeEvent(QResizeEvent* event)
+{
+    EngineData->reset = true;
+}
+
 my_double3 SureWidget::ConvertCoordinatesGlobalToCamera(my_double3 GlobalPoint,my_double3 *CameraBasis,bool *VisibleIndicator)
 {
     my_double3 Result = {0,0,0};
@@ -24,8 +36,8 @@ my_double3 SureWidget::ConvertCoordinatesGlobalToCamera(my_double3 GlobalPoint,m
     double DistanceToPoint = dot(CameraBasis[2],VectorFromPoint);
     if(DistanceToPoint<0.0f){
         *VisibleIndicator = true;
-        Result.x = rect().right()/2 + rect().right()*((dot(CameraBasis[0],VectorFromPoint) / DistanceToPoint) / EngineData->CameraInfo.xy_h);
-        Result.y = rect().bottom()/2 + rect().right()*((dot(CameraBasis[1],VectorFromPoint) / DistanceToPoint) / EngineData->CameraInfo.xy_h);
+        Result.x = EngineData->CurrentWidth/2 + EngineData->CurrentWidth*((dot(CameraBasis[0],VectorFromPoint) / DistanceToPoint) / EngineData->CameraInfo.xy_h);
+        Result.y = EngineData->CurrentHeight/2 + EngineData->CurrentWidth*((dot(CameraBasis[1],VectorFromPoint) / DistanceToPoint) / EngineData->CameraInfo.xy_h);
     }else{
         *VisibleIndicator = false;
     };
@@ -286,22 +298,35 @@ void SureWidget::DrawTraceLog(SureTraceLog *i_tl)
 void SureWidget::paintEvent(QPaintEvent * event)
 {
     // засекаем время начала отрисовки
-    clock_gettime(CLOCK_MONOTONIC,&framestart);
+    clock_gettime(CLOCK_MONOTONIC,&EngineData->framestart);
     // пересоздаем картинку
-    delete image;
-    int mx = rect().right();
-    int my = rect().bottom();
-    image = new QImage(mx,my,QImage::Format_ARGB32);
+
+    int LWidth = rect().width();
+    int LHeight = rect().height();
+    if((EngineData->CurrentWidth!=LWidth)||(EngineData->CurrentHeight!=LHeight)){
+        delete image;
+        EngineData->CurrentWidth=LWidth;
+        EngineData->CurrentHeight=LHeight;
+        image = new QImage(LWidth,LHeight,QImage::Format_ARGB32);
+    }
+
     // обновляем границы отрисовки (на случай если изменился размер окна)
-    EngineData->CameraInfo.m_amx = rect().right()/SURE_SCALE;
-    EngineData->CameraInfo.m_amy = rect().bottom()/SURE_SCALE;
+    EngineData->CameraInfo.m_amx = EngineData->CurrentWidth/EngineData->ImageScale;
+    EngineData->CameraInfo.m_amy = EngineData->CurrentHeight/EngineData->ImageScale;
+
+    if(EngineData->Loading){
+        painter.begin(this);
+        painter.drawImage(0,0,LoadingScreen.scaled(EngineData->CurrentWidth,EngineData->CurrentHeight));
+        painter.end();
+        return;
+    };
 
     my_double3 CameraBasis[3];
     CameraBasis[1] = -EngineData->CameraInfo.cam_upvec;
     CameraBasis[2] = EngineData->CameraInfo.cam_vec;
     CameraBasis[0] = cross(CameraBasis[2],CameraBasis[1]);
 
-    SureMatrixToImage(rgbmatrix,image,rect().right(),rect().bottom());
+    SureMatrixToImage(EngineData->rgbmatrix,image,EngineData->CurrentWidth,EngineData->CurrentHeight,EngineData->ImageScale);
 
     char TextString[100];
 
@@ -313,18 +338,18 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.setPen(Qt::blue);
         sprintf(TextString,"X=%.4f Y=%.4f FOV=%.2f",EngineData->CameraInfo.cam_x.s[0],EngineData->CameraInfo.cam_x.s[1],EngineData->CameraInfo.xy_h);
         painter.drawText(5,30,TextString);
-        if(OCLData->OpenCL){
+        if(EngineData->OCLData.OpenCL){
             sprintf(TextString,"GPU(OpenCL %i)",EngineData->r_type);
         }else{
             sprintf(TextString,"CPU(OpenMP)");
         };
         painter.drawText(5,45,TextString);
         sprintf(TextString,"It=%d R=%d",EngineData->r_iters,EngineData->r_rechecks);
-        painter.drawText(rect().right()-100,15,TextString);
+        painter.drawText(EngineData->CurrentWidth-100,15,TextString);
         sprintf(TextString,"O=%d L=%d",EngineData->m_objects,EngineData->m_links);
-        painter.drawText(rect().right()-100,30,TextString);
+        painter.drawText(EngineData->CurrentWidth-100,30,TextString);
         sprintf(TextString,"Backlight=%.1f",EngineData->r_backlight);
-        painter.drawText(rect().right()-100,45,TextString);
+        painter.drawText(EngineData->CurrentWidth-100,45,TextString);
     };
 
     // Информация о курсоре -- направление, кординаты, выбранный объект
@@ -332,15 +357,15 @@ void SureWidget::paintEvent(QPaintEvent * event)
     if(EngineData->MenuWindowsCounter==0){
         painter.setPen(Qt::blue);
         sprintf(TextString,"Mx=%i My=%i",QWidget::mapFromGlobal(QCursor::pos()).x(),QWidget::mapFromGlobal(QCursor::pos()).y());
-        painter.drawText(5,rect().bottom()-25,TextString);
-        int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-        int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
+        painter.drawText(5,EngineData->CurrentHeight-25,TextString);
+        int x = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
+        int y = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
         my_double3 tv = DetermineTraceVector(x,y,&EngineData->CameraInfo);
         sprintf(TextString,"TV = (%.3f;%.3f;%.3f)",tv.x,tv.y,tv.z);
-        painter.drawText(5,rect().bottom()-15,TextString);
-        EngineData->SelectObjectByScreenTrace(x,y,GPUData,Randomf);
+        painter.drawText(5,EngineData->CurrentHeight-15,TextString);
+        EngineData->SelectObjectByScreenTrace(x,y,&EngineData->GPUData,EngineData->Randomf);
         sprintf(TextString,"SelectedObject = %i",EngineData->SelectedObject);
-        painter.drawText(5,rect().bottom()-5,TextString);
+        painter.drawText(5,EngineData->CurrentHeight-5,TextString);
     };
 
     // Обводим выбранный объект
@@ -369,11 +394,13 @@ void SureWidget::paintEvent(QPaintEvent * event)
         DrawTraceLog(&EngineData->TraceLogs[TraceLogID]);
 
     // отсекаем время отрисовки и выводим информацию о быстродействии
-    clock_gettime(CLOCK_MONOTONIC,&frametime);
-    posttime = frametime.tv_sec * 1000.0 + (float) frametime.tv_nsec / 1000000.0 - (  framestart.tv_sec*1000.0 + (float) framestart.tv_nsec / 1000000.0 );
+    clock_gettime(CLOCK_MONOTONIC,&EngineData->frametime_time);
+    EngineData->posttime = EngineData->frametime_time.tv_sec * 1000.0
+               + (float) EngineData->frametime_time.tv_nsec / 1000000.0
+               - (  EngineData->framestart.tv_sec*1000.0 + (float) EngineData->framestart.tv_nsec / 1000000.0 );
     if(EngineData->r_drawdebug>=40){
         painter.setPen(Qt::blue);
-        sprintf(TextString,"DR:%.2f ms PH:%.2f ms PS:%.2f ms",rendertime,EngineData->frametime,posttime);
+        sprintf(TextString,"DR:%.2f ms PH:%.2f ms PS:%.2f ms",EngineData->rendertime,EngineData->frametime_f,EngineData->posttime);
         painter.drawText(QPoint(5,15),TextString);
     };
 
@@ -572,14 +599,14 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             };
         }else{ // if mousemove
             if (event->button() == Qt::LeftButton) {
-                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
-                EngineData->AddTraceLog(x,y,GPUData,Randomf,true);
+                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
+                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
+                EngineData->AddTraceLog(x,y,&EngineData->GPUData,EngineData->Randomf,true);
             }; // (event->button() == Qt::LeftButton)
             if (event->button() == Qt::RightButton) {
-                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/SURE_SCALE;
-                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/SURE_SCALE;
-                EngineData->AddTraceLog(x,y,GPUData,Randomf,false);
+                int x = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
+                int y = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
+                EngineData->AddTraceLog(x,y,&EngineData->GPUData,EngineData->Randomf,false);
             }; // (event->button() == Qt::LeftButton)
         }; // if !mousemove
     }; // Меню не открыто
