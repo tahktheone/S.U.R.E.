@@ -90,9 +90,6 @@ DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
 
-//DrawableCollided.transp = 1.0f - native_divide((float)col_rgba.w,255.0f);
-
-
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
 int tid = cm; \
@@ -180,23 +177,23 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t MeshCLImg, // Mesh'ы
                    __read_only image2d_t UVMap, // мэппинг мешей на текстуры
                    __read_only image2d_t Normals // нормали
-                   )
+          )
 {
 // координаты обрабатываемой точки
-int x = get_global_id(0);
-int y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 // для чтения изображений:
-const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
-                            CLK_ADDRESS_NONE            |
-                            CLK_FILTER_NEAREST;
-const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
-                         CLK_ADDRESS_NONE            |
-                         CLK_FILTER_LINEAR;
-int2 coords;
-float2 map_uv;
-uint4 col_rgba;
-uint4 advmap;
-if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
+    const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
+                                CLK_ADDRESS_NONE            |
+                                CLK_FILTER_NEAREST;
+    const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
+                             CLK_ADDRESS_NONE            |
+                             CLK_FILTER_LINEAR;
+    int2 coords;
+    float2 map_uv;
+    uint4 col_rgba;
+    uint4 advmap;
+    if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
 #define SET_TRACE_POINT_MINUS \
@@ -205,5 +202,5 @@ TracePoint = collision_point;
 #define SET_TRACE_POINT_PLUS \
 TracePoint = collision_point;
 
-#include <trace_common_d.c>
+#include <trace_common.c>
 }

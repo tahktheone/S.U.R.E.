@@ -248,7 +248,21 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
         };
         case SUREACTION_MINUSSCALE:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            ImageScale -= 1;
+            if(ImageScale>1)
+                ImageScale -= 1;
+            reset = true;
+        break;
+        };
+        case SUREACTION_PLUSRAYS:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            GPUData.SAA += 1;
+            reset = true;
+        break;
+        };
+        case SUREACTION_MINUSRAYS:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            if(GPUData.SAA>1)
+                GPUData.SAA -= 1;
             reset = true;
         break;
         };
@@ -418,4 +432,6 @@ void SureData::GetControllerActionName(int i_action,wchar_t *e_name){
     if(i_action==SUREACTION_TOGGLESAA)swprintf(e_name,40,L"(Графика) Вкл/выкл SAA");
     if(i_action==SUREACTION_PLUSSCALE)swprintf(e_name,40,L"(Графика) Разрешение-");
     if(i_action==SUREACTION_MINUSSCALE)swprintf(e_name,40,L"(Графика) Разрешение+");
+    if(i_action==SUREACTION_PLUSRAYS)swprintf(e_name,40,L"(Графика) Лучи+");
+    if(i_action==SUREACTION_MINUSRAYS)swprintf(e_name,40,L"(Графика) Лучи-");
 }

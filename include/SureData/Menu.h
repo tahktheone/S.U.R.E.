@@ -14,6 +14,27 @@ class SureMenuElement{
         virtual void OnClick();
 };
 
+enum class EditingType {Int,Double,Bool};
+
+class SureMenuNumberEdit: public SureMenuElement{
+    public:
+        SureMenuNumberEdit(void* i_number,EditingType i_type,SureMenuWindow* i_parent);
+        virtual ~SureMenuNumberEdit();
+        void* EditingNumber;
+        EditingType NumberType = EditingType::Int;
+
+        void OnClick(int i_type = 2);
+};
+
+class SureMenuCheckbox: public SureMenuElement{
+    public:
+        SureMenuCheckbox(bool* i_value,SureMenuWindow* i_parent);
+        virtual ~SureMenuCheckbox();
+        bool* EditingValue;
+
+        void OnClick();
+};
+
 class SureActionButton: public SureMenuElement{
     public:
         SureActionButton(SureMenuWindow* i_parent,int i_action);
@@ -32,6 +53,27 @@ class SureControlButton: public SureMenuElement{
         void OnClick();
 };
 
+class SureExitButton: public SureMenuElement{
+    public:
+        SureExitButton(SureMenuWindow* i_parent);
+        virtual ~SureExitButton();
+        void OnClick();
+};
+
+class SureOptionsButton: public SureMenuElement{
+    public:
+        SureOptionsButton(SureMenuWindow* i_parent);
+        virtual ~SureOptionsButton();
+        void OnClick();
+};
+
+class SureContolOptionsButton: public SureMenuElement{
+    public:
+        SureContolOptionsButton(SureMenuWindow* i_parent);
+        virtual ~SureContolOptionsButton();
+        void OnClick();
+};
+
 class SureMenuWindow{
     public:
         SureMenuWindow(SureData* i_engine);
@@ -46,6 +88,15 @@ class SureMenuWindow{
         int ScrollPosition = 0;
 
         virtual void OnKeyPress(int key);
+        virtual void Rebuild();
+};
+
+class SureMainMenuWindow: public SureMenuWindow{
+    public:
+        SureMainMenuWindow(SureData* i_engine);
+        virtual ~SureMainMenuWindow();
+        void OnKeyPress(int key);
+        void Rebuild();
 };
 
 class SureKeyListener: public SureMenuWindow{
@@ -61,6 +112,14 @@ class SureControlsWindow: public SureMenuWindow{
     public:
         SureControlsWindow(SureData* i_engine);
         virtual ~SureControlsWindow();
+
+        void Rebuild();
+};
+
+class SureOptionsWindow: public SureMenuWindow{
+    public:
+        SureOptionsWindow(SureData* i_engine);
+        virtual ~SureOptionsWindow();
 
         void Rebuild();
 };

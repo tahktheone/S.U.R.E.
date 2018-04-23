@@ -6,14 +6,15 @@ SureWidget::SureWidget(SureData* i_engine)
     EngineData->widget = this;
     //setWindowFlags(Qt::Popup;
 
-    int LWidth = 400;
-    int LHeight = 300;
+    int LWidth = 800;
+    int LHeight = 450;
     EngineData->CurrentWidth=LWidth;
     EngineData->CurrentHeight=LHeight;
     resize(LWidth,LHeight);
 
     image = new QImage(EngineData->CurrentWidth,EngineData->CurrentHeight,QImage::Format_ARGB32);
     CursorImage.load("./maps/cursor.png");
+    CheckedImge.load("./maps/checked.png");
     LoadingScreen.load("./maps/loading.png");
     setMouseTracking(true);
     setCursor(QCursor(Qt::BlankCursor));
@@ -435,10 +436,48 @@ void SureWidget::DrawMenu(){
                             LocalElement->height);
         if((LocalRect.top()>10)&&(LocalRect.bottom()<(LocalWindow->height-10)))
         if((LocalRect.left()>10)&&(LocalRect.right()<(LocalWindow->width-10))){ // видимый
-            painter.fillRect(LocalRect,LocalColor);
-            painter.drawText(LocalRect.left()+5,LocalRect.bottom()-5,QString::fromWCharArray(LocalElement->text));
-            if(LocalElement->selected)
-                painter.drawRect(LocalRect);
+            if(LocalElement->type==SUREWINDOW_BUTTON){
+                painter.fillRect(LocalRect,LocalColor);
+                painter.drawText(LocalRect,Qt::AlignCenter,QString::fromWCharArray(LocalElement->text));
+                if(LocalElement->selected)
+                    painter.drawRect(LocalRect);
+            };
+            if(LocalElement->type==SUREWINDOW_CHECKBOX){
+                painter.fillRect(LocalRect,LocalColor);
+                SureMenuCheckbox* LocalCheckbox = (SureMenuCheckbox*)LocalElement;
+                if(*LocalCheckbox->EditingValue){
+                    painter.drawImage(LocalRect.left(),LocalRect.top(),CheckedImge.scaled(LocalRect.width(),LocalRect.height()));
+                };
+                if(LocalElement->selected)
+                    painter.drawRect(LocalRect);
+            };
+            if(LocalElement->type==SUREWINDOW_LABEL){
+                painter.drawText(LocalRect,Qt::AlignLeft||Qt::AlignVCenter,QString::fromWCharArray(LocalElement->text));
+            };
+            if(LocalElement->type==SUREWINDOW_NUMBEREDIT){
+                painter.fillRect(LocalRect,LocalColor);
+                QRect NewLocalRect;
+                NewLocalRect.setRect(LocalRect.left()+5,
+                                     LocalRect.top()+1,
+                                     LocalRect.width()-2*LocalRect.height(),
+                                     LocalRect.height()-2);
+                painter.drawText(NewLocalRect,Qt::AlignLeft||Qt::AlignVCenter,QString::fromWCharArray(LocalElement->text));
+                if(LocalElement->selected)
+                    painter.drawRect(LocalRect);
+                NewLocalRect.setRect(LocalRect.right()-LocalRect.height(),
+                                     LocalRect.top()+1,
+                                     LocalRect.height()-2,
+                                     LocalRect.height()-2);
+                painter.fillRect(NewLocalRect,LocalColor);
+                painter.drawText(NewLocalRect,Qt::AlignCenter,"+");
+
+                NewLocalRect.setRect(LocalRect.right()-2*LocalRect.height(),
+                                     LocalRect.top()+1,
+                                     LocalRect.height()-2,
+                                     LocalRect.height()-2);
+                painter.fillRect(NewLocalRect,LocalColor);
+                painter.drawText(NewLocalRect,Qt::AlignCenter,"-");
+            };
         };// Элемент видимый
       }; // Рисуем все элементы
       if(MaximumBottom>LocalWindow->height){ // если элементы вылезли за нижнюю границу окна
@@ -483,8 +522,8 @@ void SureWidget::keyPressEvent(QKeyEvent *event){
         }else{ // нет окон меню
             EngineData->paused = true;
             EngineData->mousemove = false;
-            EngineData->MenuWindows[EngineData->MenuWindowsCounter] = new SureControlsWindow(EngineData);
-            SureControlsWindow* NewWindow = (SureControlsWindow*)EngineData->MenuWindows[EngineData->MenuWindowsCounter++];
+            EngineData->MenuWindows[EngineData->MenuWindowsCounter] = new SureMainMenuWindow(EngineData);
+            SureMainMenuWindow* NewWindow = (SureMainMenuWindow*)EngineData->MenuWindows[EngineData->MenuWindowsCounter++];
             NewWindow->x = rect().width()*0.05;
             NewWindow->y = rect().height()*0.05;
             NewWindow->width = rect().width()*0.9;
@@ -581,8 +620,29 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
     if(EngineData->MenuWindowsCounter>0){ // Открыто меню
         SureMenuWindow* CurrentWindow = EngineData->MenuWindows[EngineData->MenuWindowsCounter - 1];
         for(int i = 0;i< CurrentWindow->ElementsCounter;++i)
-        if(CurrentWindow->Elements[i]->selected)
-            CurrentWindow->Elements[i]->OnClick();
+        if(CurrentWindow->Elements[i]->selected){
+            if(CurrentWindow->Elements[i]->type==SUREWINDOW_NUMBEREDIT){
+                SureMenuNumberEdit* LocalNumberEdit = (SureMenuNumberEdit*)CurrentWindow->Elements[i];
+                int x = QWidget::mapFromGlobal(QCursor::pos()).x();
+                x-=CurrentWindow->x;
+                //int y = QWidget::mapFromGlobal(QCursor::pos()).y();
+                QRect LocalRect;
+                LocalRect.setRect(LocalNumberEdit->x+LocalNumberEdit->width-LocalNumberEdit->height+1,
+                                  LocalNumberEdit->y+1,
+                                  LocalNumberEdit->height-2,
+                                  LocalNumberEdit->height-2);
+                if(x<LocalRect.right()&&x>LocalRect.left())
+                    LocalNumberEdit->OnClick(1); // плюс
+                LocalRect.setRect(LocalNumberEdit->x+LocalNumberEdit->width-2*LocalNumberEdit->height+1,
+                                  LocalNumberEdit->y+1,
+                                  LocalNumberEdit->height-2,
+                                  LocalNumberEdit->height-2);
+                if(x<LocalRect.right()&&x>LocalRect.left())
+                    LocalNumberEdit->OnClick(0); // минус
+            }else{ // (CurrentWindow->Elements[i]->type!=SUREWINDOW_NUMBEREDIT)
+                CurrentWindow->Elements[i]->OnClick();
+            };
+        };// (CurrentWindow->Elements[i]->selected)
     }else{
         if(EngineData->mousemove){
             if (event->button() == Qt::LeftButton) {

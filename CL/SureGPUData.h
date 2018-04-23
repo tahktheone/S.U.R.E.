@@ -89,7 +89,7 @@ struct SureGPUData {
     cl_uchar r_maxiters = 20; // глубина анализа рендера
     cl_uchar r_rechecks = 20; // качество рендера
     cl_float r_backlight = 0.5;
-    cl_int SAA = 2; // Количество субпикселей на пиксель
+    cl_int SAA = 1; // Количество субпикселей на пиксель
 #endif // GPU
 };
 

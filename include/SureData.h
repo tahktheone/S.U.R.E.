@@ -19,6 +19,7 @@ class SureData{
 
         bool Loading = true;
         void LoadEngine();
+        void Stop();
 
         SureLog *Log;
         char LogLine[255];

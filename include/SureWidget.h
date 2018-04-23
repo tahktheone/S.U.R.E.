@@ -26,6 +26,7 @@ class SureWidget : public QWidget
     private:
         QImage *image;
         QImage CursorImage;
+        QImage CheckedImge;
         QImage LoadingScreen;
         QPainter painter;
 

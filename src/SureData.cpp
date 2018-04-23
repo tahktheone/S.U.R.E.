@@ -442,6 +442,11 @@ void SureData::LoadState(const char *name)
     };
 }
 
+void SureData::Stop()
+{
+    ((QWidget*)widget)->close();
+}
+
 void SureData::SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float *Randomf)
 {
     cl_uchar* Textures = TexturesData;
