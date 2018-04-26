@@ -19,12 +19,13 @@ class SureData{
 
         bool Loading = true;
         void LoadEngine();
+        virtual void onLoading();
+        virtual void onPhysics();
         void Stop();
 
         SureLog *Log;
         char LogLine[255];
-        // камера
-        SureCameraInfo CameraInfo;
+
         SureGPUData GPUData;
         SureOCLData OCLData;
 
@@ -41,9 +42,10 @@ class SureData{
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
         bool mousemove = false;
+        //bool GPULock = false;
 
         SureDrawable *Drawables;
-        cl_float *Randomf;
+        cl_int *RandomSeed;
         cl_float* rgbmatrix;
         cl_float *VrtxCLImg; // [SURE_R_MAXVERTEX*4] -- для OpenCL image2d_t
         cl_int *MeshCLImg;  // [SURE_R_MAXMESH*4] -- для OpenCL image2d_t
@@ -64,14 +66,18 @@ class SureData{
 
         void SaveState(const char *);
         void LoadState(const char *);
+        void SaveScene(const char *,SureObject** i_objects, int i_ObjCounter);
+        void LoadScene(const char *);
+        void SaveOptions(const char *);
+        void LoadOptions(const char *);
         void WriteObjectToFile(FILE *f,SureObject *o);
         int ReadObjectFromFile(FILE *f,int i_parent);
         void SaveObjectToFile(SureObject *o,const char *fname);
         int LoadObjectFromFile(const char *fname);
 
         void SureFread(void*,size_t,size_t,FILE*);
-        void LoadTexture(const char*);
-        void LoadModel(const char*);
+        int LoadTexture(const char*);
+        int LoadModel(const char*);
         int GetTexture(const char*);
         int GenTexture(const char*,int type);
         int GetModel(const char*);
@@ -82,9 +88,9 @@ class SureData{
         void GenerateParticle(SureObject *i_ps,my_double3 i_X,double i_size,my_double3 i_vec);
 
         SureObject TemplateObject; // шаблонный объект
-        void SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float *Randomf);
-        void AddTraceLog(int x,int y,SureGPUData *GPUData,float *Randomf,bool OnlyVisible);
-        void SinglePointTrace(int x,int y,SureGPUData *GPUData,float *Randomf,float *rgbmatrix);
+        void SelectObjectByScreenTrace(int x,int y);
+        void AddTraceLog(int x,int y,bool OnlyVisible);
+        void SinglePointTrace(int x,int y);
         uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
         void DeleteObject(uint);
         void DeleteObjectByID(int);
@@ -101,6 +107,7 @@ class SureData{
         SureControl Controls[300];
         int ControlsCounter = 0;
         void ExecuteAction(SureControllerAction* i_action,SureControllerInput* i_input);
+        virtual void onAction(SureControllerAction* i_action,SureControllerInput* i_input,bool* i_continue);
         void HandleInput(SureControllerInput* i_input);
         void AssignControl(SureControllerInput* i_input,SureControllerAction* i_action);
         void SaveControls(const char* name);
@@ -144,7 +151,16 @@ class SureData{
         struct timespec framestart; // время начала текущего фрейма
         struct timespec frametime_time; // время отсечения
         float frametime_f = 0;
-        int r_drawdebug = 99;
+
+        bool DrawDebugFPS = false;
+        bool DrawDebugTraces = false;
+        bool DrawDebugSelectedObject = false;
+        bool DrawDebugAllObjects = false;
+        bool DrawDebugMode = false;
+        bool DrawDebugPhysicsInfo = false;
+        bool DrawDebugCursorInfo = false;
+        bool DrawDebugPhysicsTetrs = false;
+
         SureTraceLog TraceLogs[50];
         uint TraceLogsCount = 0;
         int SelectedObject = -1;

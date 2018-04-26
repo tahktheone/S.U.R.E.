@@ -39,7 +39,7 @@ __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *Camer
     __VTYPE ky = CameraInfo->xy_h*__DIVIDE(((__VTYPE)y+ry-__DIVIDE(my,2.0f)),mx);
     *rr = r;
     return __NORMALIZE(dZ+kx*dX+ky*dY);
-};
+}
 
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo)
 {
@@ -51,7 +51,7 @@ __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraIn
     __VTYPE kx = __DIVIDE(CameraInfo->xy_h*((__VTYPE)x-__DIVIDE(mx,2.0f)),mx);
     __VTYPE ky = __DIVIDE(CameraInfo->xy_h*((__VTYPE)y-__DIVIDE(my,2.0f)),mx);
     return __NORMALIZE(dZ+kx*dX+ky*dY);
-};
+}
 
 uint InitRandom(int *x,int *y){
     uint xx = *x+*y;
@@ -59,4 +59,4 @@ uint InitRandom(int *x,int *y){
     uint r = mad24(xx,xx+yy,xx+yy);
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
     return r;
-};
+}

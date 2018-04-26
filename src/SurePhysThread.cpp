@@ -64,6 +64,9 @@ void SurePhysThread::run()
                 }; // система частиц
             }; // дял всех подвижных объектов
 
+            // вызываем обработку физики от наследников
+            EngineData->onPhysics();
+
             for(int Iters = 0;Iters < 3;++Iters){
                 CollisionsCounter = -1;
                 int TotalObjects = EngineData->m_objects;
@@ -239,12 +242,12 @@ void SurePhysThread::run()
         }; // !paused
 
         // BEG Поворот и перемещение камеры:
-        my_double3 dx = EngineData->CameraInfo.cam_vec;
-        my_double3 dz = EngineData->CameraInfo.cam_upvec;
+        my_double3 dx = EngineData->GPUData.CameraInfo.cam_vec;
+        my_double3 dz = EngineData->GPUData.CameraInfo.cam_upvec;
         my_double3 dy;
         dy = cross(dz,dx);
 
-        EngineData->CameraInfo.cam_x = EngineData->CameraInfo.cam_x + dx*EngineData->cam_dx.x + dy*EngineData->cam_dx.y+dz*EngineData->cam_dx.z;
+        EngineData->GPUData.CameraInfo.cam_x = EngineData->GPUData.CameraInfo.cam_x + dx*EngineData->cam_dx.x + dy*EngineData->cam_dx.y+dz*EngineData->cam_dx.z;
 
         if(EngineData->cam_dw.z!=0||EngineData->cam_dw.y!=0||EngineData->cam_dw.x!=0)
         {
@@ -264,8 +267,8 @@ void SurePhysThread::run()
 
             dx1 = __NORMALIZE(dx1);
             dz1 = __NORMALIZE(cross(dx1,dy1));
-            EngineData->CameraInfo.cam_upvec = dz1;
-            EngineData->CameraInfo.cam_vec = dx1;
+            EngineData->GPUData.CameraInfo.cam_upvec = dz1;
+            EngineData->GPUData.CameraInfo.cam_vec = dx1;
 
             EngineData->reset = true;
         };
@@ -293,7 +296,9 @@ void SurePhysThread::run()
 
 void SurePhysThread::drawscene()
 {
-    EngineData->GPUData.CameraInfo = EngineData->CameraInfo;
+    //while(EngineData->GPULock){ /* Ждем */};
+    //EngineData->GPULock = true;
+
     EngineData->GPUData.r_maxiters = EngineData->r_iters;
     EngineData->GPUData.r_rechecks = EngineData->r_rechecks;
     EngineData->GPUData.r_backlight = EngineData->r_backlight;
@@ -337,8 +342,8 @@ void SurePhysThread::drawscene()
     if(EngineData->ShowTemplate)
     {
         EngineData->Drawables[++i] = EngineData->TemplateObject.drawable;
-        EngineData->Drawables[i].X = EngineData->CameraInfo.cam_x
-                                + EngineData->CameraInfo.cam_vec*3.0;
+        EngineData->Drawables[i].X = EngineData->GPUData.CameraInfo.cam_x
+                                + EngineData->GPUData.CameraInfo.cam_vec*3.0;
                                 //+ EngineData->CameraInfo.cam_upvec*4.5
                                 //+ cross(EngineData->CameraInfo.cam_vec,EngineData->CameraInfo.cam_upvec)*6.0;
         EngineData->Drawables[i].ox.s[0] = 1; //Локальная ось x
@@ -433,4 +438,5 @@ void SurePhysThread::drawscene()
             break;
         }; // case (type)
     }; // for(int d = 0;d<EngineData->m_objects;++d)
+    //EngineData->GPULock = false;
 } // drawscene()

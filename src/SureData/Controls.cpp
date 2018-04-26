@@ -1,7 +1,6 @@
 void SureData::SaveControls(const char* name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./%s.SureControls",name);
     FILE *f = NULL;
     f = fopen(fname,"wb");
@@ -32,7 +31,6 @@ void SureData::SaveControls(const char* name)
 void SureData::LoadControls(const char* name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./%s.SureControls",name);
     FILE *f = NULL;
     f = fopen(fname,"rb");
@@ -99,8 +97,14 @@ void SureData::HandleInput(SureControllerInput* i_input)
     };
 }
 
+void SureData::onAction(SureControllerAction* i_action,SureControllerInput* i_input,bool* i_cintinue){ }
+
 void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput* i_input)
 {
+    bool LCont = true;
+    onAction(i_action,i_input,&LCont);
+    if(!LCont)return; // пользовательская обработка ?
+
     switch(i_action->type){
         case SUREACTION_MOVEFORVARD:{
             if(i_input->type==SUREINPUT_KEYDOWN)
@@ -132,13 +136,13 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
         };
         case SUREACTION_ZOOMIN:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            CameraInfo.xy_h /= 1.1;
+            GPUData.CameraInfo.xy_h /= 1.1;
             reset = true;
         break;
         };// Увеличение
         case SUREACTION_ZOOMOUT:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            CameraInfo.xy_h *= 1.1;
+            GPUData.CameraInfo.xy_h *= 1.1;
             reset = true;
         break;
         };// Уменьшение
@@ -234,12 +238,6 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
             reset = true;
         break;
         };// (Графика) Подсветка+
-        case SUREACTION_DECRASEDEBUG:{
-            if(i_input->type==SUREINPUT_KEYUP)break;
-            r_drawdebug-=30;
-            if(r_drawdebug<30)r_drawdebug=99;
-        break;
-        };// Отладочная информация
         case SUREACTION_PLUSSCALE:{
             if(i_input->type==SUREINPUT_KEYUP)break;
             ImageScale += 1;
@@ -383,10 +381,10 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
         }; //SUREACTION_SAVECONTROLS
         case SUREACTION_TOGGLESAA:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            if(CameraInfo.subp_rnd) {
-                CameraInfo.subp_rnd = false;
+            if(GPUData.CameraInfo.subp_rnd) {
+                GPUData.CameraInfo.subp_rnd = false;
             } else {
-                CameraInfo.subp_rnd = true;
+                GPUData.CameraInfo.subp_rnd = true;
             };
             reset = true;
             break;
@@ -419,7 +417,7 @@ void SureData::GetControllerActionName(int i_action,wchar_t *e_name){
     if(i_action==SUREACTION_PLUSRECHECKS)swprintf(e_name,40,L"(Графика) Пересчеты+");
     if(i_action==SUREACTION_MINUSBACKLIGHT)swprintf(e_name,40,L"(Графика) Подсветка-");
     if(i_action==SUREACTION_PLUSBACKLIGHT)swprintf(e_name,40,L"(Графика) Подсветка+");
-    if(i_action==SUREACTION_DECRASEDEBUG)swprintf(e_name,40,L"Отладочная информация");
+    //if(i_action==SUREACTION_DECRASEDEBUG)swprintf(e_name,40,L"Отладочная информация");
     if(i_action==SUREACTION_SCREENSHOT)swprintf(e_name,40,L"Скриншот");
     if(i_action==SUREACTION_TOGGLEMOUSEMOVE)swprintf(e_name,40,L"Управление мышью");
     if(i_action==SUREACTION_TOGGLEPAUSE)swprintf(e_name,40,L"Пауза");

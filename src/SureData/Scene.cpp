@@ -262,13 +262,13 @@ TemplateObject.type = SURE_OBJ_SPHERE;
 
     for(float VerticalAngle = 0.2;VerticalAngle<M_PI;VerticalAngle+=0.2)
     for(float HorisontalAngle = 0;HorisontalAngle<(2*M_PI);HorisontalAngle+=0.3){
-        X.x = 130.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 130.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 130.0 * cos(VerticalAngle);// * cos(VerticalAngle);
+        X.x = 200.0 * sin(HorisontalAngle) * sin(VerticalAngle); X.y = 200.0 * cos(HorisontalAngle) * sin(VerticalAngle); X.z = 130.0 * cos(VerticalAngle);// * cos(VerticalAngle);
         __VTYPE3 vec = -X;
         TemplateObject.oz = __NORMALIZE(vec);
         __VTYPE3 Oy = {-TemplateObject.oz.z,0.0f,-TemplateObject.oz.x};
         TemplateObject.ox = __NORMALIZE(Oy);
         TemplateObject.oy = cross(TemplateObject.oz,TemplateObject.ox);
-        TemplateObject.lx = (20.0*(float)rand()/(float)RAND_MAX+3.0)*(sin(VerticalAngle)+0.3);
+        TemplateObject.lx = (20.0*(float)rand()/(float)RAND_MAX+5.0)*(sin(VerticalAngle)+0.3);
         TemplateObject.drawable.rgb.s[0] = 255.0*((float)rand()/(float)RAND_MAX); // цвет
         TemplateObject.drawable.rgb.s[1] = 255.0*((float)rand()/(float)RAND_MAX); // цвет
         TemplateObject.drawable.rgb.s[2] = 255.0*((float)rand()/(float)RAND_MAX); // цвет
@@ -458,13 +458,13 @@ __VTYPE3 X;
     TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 0; TemplateObject.oy.z = 1;
     TemplateObject.oz.x = 1; TemplateObject.oz.y = 0; TemplateObject.oz.z = 0;
-    sprintf(TemplateObject.ModelName_drawable,"ghost_dark");
+    sprintf(TemplateObject.ModelName_drawable,"golem");
     TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
     sprintf(TemplateObject.ModelName_collider,"cube");
     TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
-    TemplateObject.drawable.map_id = GetTexture("ghost_dark");//GetTexture("ghost_dark");//GenTexture("scells",SURE_GENTEX_UNTRANSP);
+    TemplateObject.drawable.map_id = GetTexture("golem");//GetTexture("ghost_dark");//GenTexture("scells",SURE_GENTEX_UNTRANSP);
     //MapTexture(TemplateObject.ModelID_drawable,SURE_MAPPING_SPHERICAL);
-    TemplateObject.drawable.advmap_id = -1;//GetTexture("golem_adv");
+    TemplateObject.drawable.advmap_id = GetTexture("golem_adv");
     TemplateObject.drawable.dist_type = SURE_D_EQUAL;//SURE_D_NORM;
     TemplateObject.drawable.dist_sigma = 0.005f;
     TemplateObject.drawable.rgb.s[0] = 240;
@@ -480,9 +480,9 @@ __VTYPE3 X;
 
 void SureData::Scene_Polygon()
 {
-    CameraInfo.cam_x.s[0] = 573;
-    CameraInfo.cam_x.s[1] = -534;
-    CameraInfo.cam_x.s[2] = 400;
+    GPUData.CameraInfo.cam_x.s[0] = 573;
+    GPUData.CameraInfo.cam_x.s[1] = -534;
+    GPUData.CameraInfo.cam_x.s[2] = 400;
 
     __VTYPE3 cx;
     cx.x = 0.7; cx.y = 0.6; cx.z = 0;
@@ -491,8 +491,8 @@ void SureData::Scene_Polygon()
     cv.x = -0.6; cv.y = 0.7; cv.z = -0.36;
     cv = __NORMALIZE(cv);
 
-    CameraInfo.cam_vec = cv;
-    CameraInfo.cam_upvec = __NORMALIZE(cross(cx,cv));
+    GPUData.CameraInfo.cam_vec = cv;
+    GPUData.CameraInfo.cam_upvec = __NORMALIZE(cross(cx,cv));
 
     uint ScellsMapID = GenTexture("scells",SURE_GENTEX_UNTRANSP);
     __VTYPE3 X;

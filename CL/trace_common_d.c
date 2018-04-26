@@ -11,8 +11,10 @@
     __SURE_GLOBAL __SURE_STRUCT SureDrawable *DrawableNext;
 
     // Инициализируем рандом
-    uint r = mad24(x,mad24(x+y,x,y),x+y);
-    while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
+    uint ri = (SURE_MAXRES_X*y+x);
+    while(ri>=SURE_R_RNDSIZE)ri-=SURE_R_RNDSIZE;
+    uint seed = RandomSeed[ri];
+    uint r = ( (x+y+1) * 16807 + seed ) % 2147483647;
 
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
@@ -36,7 +38,7 @@
     __VTYPE3 TracePoint = CameraInfo.cam_x;
     __VTYPE3 TraceVector;
     if(CameraInfo.subp_rnd){
-        TraceVector = DetermineTraceVectorSAA(x,y,&CameraInfo,Randomf,&r);
+        TraceVector = DetermineTraceVectorSAA_R(x,y,&CameraInfo,&r,&seed);
     }else{
         TraceVector = DetermineTraceVector(x,y,&CameraInfo);
     };
@@ -401,8 +403,7 @@
         // Тут мы прошлись по всем Drawables и нашли (или нет) с чем пересекается луч.
         #if SURE_RLEVEL>90
         // Добавлем рассеивание средой
-        if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-        __VTYPE rr = Randomf[r]*SURE_R_MAXDISTANCE*DrawableCurrent->transp_i;
+        __VTYPE rr = MyRndFloat(&r,&seed)*SURE_R_MAXDISTANCE*DrawableCurrent->transp_i;
         if(rr<intersect_dist){
             DrawableIter = DrawableCurrent;
             SET_COLLISION_OUTSIDE;
@@ -470,14 +471,13 @@
                 #if SURE_RLEVEL<50
                 __VTYPE TransparenceRandomizer = 0.9f;
                 #else
-                if(++r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
-                __VTYPE TransparenceRandomizer = Randomf[r];
+                __VTYPE TransparenceRandomizer = MyRndFloat(&r,&seed);
                 #endif
                 NeedToRecheck = false;
                 if(TransparenceRandomizer<DrawableCollided.transp)
                 { // сработала прозрачность -- считаем преломление
                     __VTYPE3 CollisionNormalRandomized;
-                    SURE_RANDOMIZE(CollisionNormalRandomized);
+                    SURE_RANDOMIZE_R(CollisionNormalRandomized);
                     __VTYPE TraceVecProjection = dot(TraceVector,CollisionNormalRandomized);
                     if( TraceVecProjection > 0.0f){
                             NeedToRecheck = true;
@@ -555,7 +555,7 @@
                     };
                     #endif // SURE_RLEVEL<60
                     __VTYPE3 CollisionNormalRandomized;
-                    SURE_RANDOMIZE(CollisionNormalRandomized);
+                    SURE_RANDOMIZE_R(CollisionNormalRandomized);
                     __VTYPE l = -2.0f*dot(TraceVector,CollisionNormalRandomized);
                     __VTYPE3 ReflectedVector = __MAD(l,CollisionNormalRandomized,TraceVector);
                     if(dot(ReflectedVector,collision_normal)>0.0f)
@@ -583,7 +583,7 @@
                 DrawableCollided.dist_sigma = 1.0f;
                 DrawableCollided.dist_m = 0.0f;
                 __VTYPE3 CollisionNormalRandomized;
-                SURE_RANDOMIZE(CollisionNormalRandomized);
+                SURE_RANDOMIZE_R(CollisionNormalRandomized);
                 __VTYPE l = -2.0f*dot(TraceVector,CollisionNormalRandomized);
                 if(l>=0.0f)
                 {

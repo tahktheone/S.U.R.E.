@@ -26,7 +26,8 @@ class SureThread : public QThread
 
         SureData* EngineData;
 
-        void raytrace();
+        void raytrace(int ix, int iy, int iw, int ih);
+        void RenderToMatrix(int ix, int iy, int iw, int ih);
 
     protected:
     private:

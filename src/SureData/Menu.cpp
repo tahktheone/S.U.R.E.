@@ -281,13 +281,52 @@ void SureOptionsWindow::Rebuild()
     NewElement->width = 200;
     swprintf(NewElement->text,40,L"Анти-алиасинг:");
 
-    Elements[ElementsCounter] = new SureMenuCheckbox((bool*)&Engine->CameraInfo.subp_rnd,(SureMenuWindow*)this);
+    Elements[ElementsCounter] = new SureMenuCheckbox((bool*)&Engine->GPUData.CameraInfo.subp_rnd,(SureMenuWindow*)this);
     NewElement = Elements[ElementsCounter++];
     NewElement->x = 240;
     NewElement->y = h;
     NewElement->height = 20;
     NewElement->width = 20;
     swprintf(NewElement->text,40,L" ");
+
+    h = h + 30;
+
+    Elements[ElementsCounter] = new SureMenuElement(this);
+    NewElement = Elements[ElementsCounter++];
+    NewElement->type = SUREWINDOW_LABEL;
+    NewElement->x = 20;
+    NewElement->y = h;
+    NewElement->height = 20;
+    NewElement->width = 200;
+    swprintf(NewElement->text,40,L"=====Отладочная информация=====");
+
+#define ADD_OPTIONS_CHECKBOX(WTEXT,BOOLPOINTER) \
+    h = h + 30; \
+    Elements[ElementsCounter] = new SureMenuElement(this); \
+    NewElement = Elements[ElementsCounter++]; \
+    NewElement->type = SUREWINDOW_LABEL; \
+    NewElement->x = 20; \
+    NewElement->y = h; \
+    NewElement->height = 20; \
+    NewElement->width = 200; \
+    swprintf(NewElement->text,40,WTEXT); \
+ \
+    Elements[ElementsCounter] = new SureMenuCheckbox(BOOLPOINTER,(SureMenuWindow*)this); \
+    NewElement = Elements[ElementsCounter++]; \
+    NewElement->x = 240; \
+    NewElement->y = h; \
+    NewElement->height = 20; \
+    NewElement->width = 20; \
+    swprintf(NewElement->text,40,L" ");
+
+    ADD_OPTIONS_CHECKBOX(L"FPS:",&Engine->DrawDebugFPS);
+    ADD_OPTIONS_CHECKBOX(L"Трассировки:",&Engine->DrawDebugTraces);
+    ADD_OPTIONS_CHECKBOX(L"Выбранный объект:",&Engine->DrawDebugSelectedObject);
+    ADD_OPTIONS_CHECKBOX(L"Все объекты:",&Engine->DrawDebugAllObjects);
+    ADD_OPTIONS_CHECKBOX(L"Информация о рендере:",&Engine->DrawDebugMode);
+    ADD_OPTIONS_CHECKBOX(L"Физика:",&Engine->DrawDebugPhysicsInfo);
+    ADD_OPTIONS_CHECKBOX(L"Курсор:",&Engine->DrawDebugCursorInfo);
+    ADD_OPTIONS_CHECKBOX(L"Инерциоиды:",&Engine->DrawDebugPhysicsTetrs);
 
 }
 

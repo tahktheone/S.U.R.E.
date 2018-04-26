@@ -12,9 +12,6 @@
 #define SURE_RT_T       3
 #define SURE_RT_N       4
 
-#define SURE_FAA 1
-#define SURE_SCALE 2
-#define SURE_SMOOTH 2
 #define SURE_L_WGRPSIZE 16
 #define SURE_WGRPSIZE 128
 
@@ -25,10 +22,10 @@
 #define SURE_LIN_MAX     5000
 #define SURE_OBJ_NONE    0
 #define SURE_OBJ_SPHERE  1
-//#define SURE_OBJ_CUBE    2 Устарело
 #define SURE_OBJ_PLANE   3
 #define SURE_OBJ_MESH    4
 #define SURE_OBJ_CREAT   5
+#define SURE_OBJ_PS      6
 
 #define SURE_DR_MAX     5000
 #define SURE_DR_NONE    0
@@ -75,8 +72,8 @@
 #define SURE_P4_Y 0.288675135f
 #define SURE_P4_Z 0.816496581f
 
-#define SURE_R_DELAY 20 // время между кадрами -- рендер
-#define SURE_P_DELAY 8  // время между кадрами -- физика
+#define SURE_R_DELAY 30 // время между кадрами -- рендер (32ms = 30FPS)
+#define SURE_P_DELAY 16 // время между кадрами -- физика (16ms = 60 FPS)
 
 #define SURE_P_DELTA       (1.0/10000.0)
 

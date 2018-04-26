@@ -200,7 +200,7 @@ void SureThread::oclInit()
     OCL_GET("clCreateBuffer(RGBmatrix)",EngineData->OCLData.cmRGBmatrix,clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_float) * SURE_MAXRES_X*SURE_MAXRES_Y*3, NULL, &ret));
     OCL_GET("clCreateBuffer(GPUData)",EngineData->OCLData.cmGPUData,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(SureGPUData), NULL, &ret));
     OCL_GET("clCreateBuffer(Drawables)",EngineData->OCLData.cmDrawables,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(SureDrawable) * SURE_DR_MAX, NULL, &ret));
-    OCL_GET("clCreateBuffer(Random)",EngineData->OCLData.cmRandom,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * SURE_R_RNDSIZE, NULL, &ret));
+    OCL_GET("clCreateBuffer(Random)",EngineData->OCLData.cmRandom,clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_int) * SURE_R_RNDSIZE, NULL, &ret));
 
 /*
     cl_image_desc cid_vertex;
@@ -235,10 +235,10 @@ void SureThread::oclInit()
     // -cl-opt-disable -- выключить оптимизацию, всю
     // -Werror -- все предупреждения = ошибки. -w -- подавлять предупреждения
 
-    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=99"); //99
-    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=65"); //65
-    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=45"); //45
-    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0003_1 -D SURE_RLEVEL=10"); //10
+    OCL_PROGRAM(program_d,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0011_9 -D SURE_RLEVEL=99"); //99
+    OCL_PROGRAM(program_t,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0011_9 -D SURE_RLEVEL=65"); //65
+    OCL_PROGRAM(program_f,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0011_9 -D SURE_RLEVEL=45"); //45
+    OCL_PROGRAM(program_n,"./CL/raytrace.cl","-w -cl-fast-relaxed-math -I./CL -D VERSION0_0011_9 -D SURE_RLEVEL=10"); //10
     OCL_GET("clCreateKernel",EngineData->OCLData.kernel_t,clCreateKernel(program_t,"Trace",NULL));
     OCL_GET("clCreateKernel",EngineData->OCLData.kernel_f,clCreateKernel(program_f,"Trace",NULL));
     OCL_GET("clCreateKernel",EngineData->OCLData.kernel_d,clCreateKernel(program_d,"Trace",NULL));
@@ -443,6 +443,49 @@ void SureThread::WriteTextureToGPU(int TextureID)
     EngineData->TexturesInfo[TextureID].toupdate = false;
 }
 
+void SureThread::RenderToMatrix(int ix, int iy, int iw, int ih){
+            int L_x = ix/EngineData->ImageScale;
+            int L_y = iy/EngineData->ImageScale;
+            int L_width = iw/EngineData->ImageScale;
+            int L_height = ih/EngineData->ImageScale;
+
+            EngineData->GPUData.CameraInfo.m_amx = L_width+L_x;
+            EngineData->GPUData.CameraInfo.m_amy = L_height+L_y;
+
+            //while(EngineData->GPULock){ /* Ждем */};
+            //EngineData->GPULock = true;
+            OCL_RUN("clEnqueueWriteBuffer(GPUData)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmGPUData,CL_TRUE,0,sizeof(SureGPUData),(void*)&EngineData->GPUData,0,NULL,NULL));
+            OCL_RUN("clEnqueueWriteBuffer(Drawables)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmDrawables,CL_TRUE,0,sizeof(SureDrawable)*EngineData->GPUData.m_drawables,(void*)EngineData->Drawables,0,NULL,NULL));
+            //EngineData->GPULock = false;
+
+            EngineData->OCLData.sizes[0] = L_width;//;
+            EngineData->OCLData.sizes[1] = L_height;//EngineData->GPUData.CameraInfo.m_amy;
+            // Выравниваем размер области по размеру локальной рабочей группы
+            EngineData->OCLData.sizes[0] /= SURE_GLOBAL_WGRPSIZE;
+            EngineData->OCLData.sizes[0] *= SURE_GLOBAL_WGRPSIZE;
+            EngineData->OCLData.sizes[0] += SURE_GLOBAL_WGRPSIZE;
+            EngineData->OCLData.sizes[1] /= SURE_GLOBAL_WGRPSIZE;
+            EngineData->OCLData.sizes[1] *= SURE_GLOBAL_WGRPSIZE;
+            EngineData->OCLData.sizes[1] += SURE_GLOBAL_WGRPSIZE;
+
+            size_t LocalWorgGroupSize[3] = {SURE_LOCAL_WGRPSIZE,SURE_LOCAL_WGRPSIZE,1};
+            size_t GlobalWorkgroupSize[2] = {SURE_GLOBAL_WGRPSIZE,SURE_GLOBAL_WGRPSIZE};
+
+            for(uint i_x_gr=L_x;i_x_gr<EngineData->OCLData.sizes[0];i_x_gr+=SURE_GLOBAL_WGRPSIZE)
+            for(uint i_y_gr=L_y;i_y_gr<EngineData->OCLData.sizes[1];i_y_gr+=SURE_GLOBAL_WGRPSIZE){
+                size_t LocalStartPoint[2] = {i_x_gr,i_y_gr};
+                OCL_RUN("Running kernel (raytrace)",clEnqueueNDRangeKernel(EngineData->OCLData.cqCommandQue, // Очередь
+                                                                *EngineData->OCLData.kernel, // Программа
+                                                                2, // 2 измерения для ID потока (X * Y)
+                                                                LocalStartPoint, // стартовые координаты (тип size_t[измерения])
+                                                                GlobalWorkgroupSize, // размер области обработки (тип size_t[измерения])
+                                                                LocalWorgGroupSize, // размер локальной области (workgroup)
+                                                                0,NULL, // события, которые нужно дождаться перед запуском
+                                                                NULL)); // событие, которое генерится по завершении работы
+                OCL_RUN("clFinish",clFinish(EngineData->OCLData.cqCommandQue));
+            };
+}
+
 void SureThread::run()
 {
     // Данные отладки:
@@ -467,23 +510,15 @@ void SureThread::run()
 
         // Генерируем набор случайных чисел от 0 до 1
         // чтобы не изобретать генератор случайных чисел на GPU
-        for(int i = 0;i<SURE_R_RNDSIZE;++i) EngineData->Randomf[i] = (float)rand()/(float)RAND_MAX;
+        for(int i = 0;i<SURE_R_RNDSIZE;++i){
+            int r = rand();
+            EngineData->RandomSeed[i] = (r>>1) + 1073741821;
+        };
 
-        OCL_RUN("clEnqueueWriteBuffer(Randomf)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmRandom,CL_FALSE,0,sizeof(cl_float)*SURE_R_RNDSIZE,(void*)EngineData->Randomf,0,NULL,NULL));
+        OCL_RUN("clEnqueueWriteBuffer(Randomf)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmRandom,CL_FALSE,0,sizeof(cl_int)*SURE_R_RNDSIZE,(void*)EngineData->RandomSeed,0,NULL,NULL));
 
         if(EngineData->OCLData.OpenCL){
             SwitchKernel();
-            EngineData->OCLData.sizes[0] = EngineData->GPUData.CameraInfo.m_amx;
-            EngineData->OCLData.sizes[1] = EngineData->GPUData.CameraInfo.m_amy;
-            // Выравниваем размер области по размеру локальной рабочей группы
-            EngineData->OCLData.sizes[0] /= EngineData->OCLData.g_workgroup_size;
-            EngineData->OCLData.sizes[0] *= EngineData->OCLData.g_workgroup_size;
-            EngineData->OCLData.sizes[0] += EngineData->OCLData.g_workgroup_size;
-            EngineData->OCLData.sizes[1] /= EngineData->OCLData.g_workgroup_size;
-            EngineData->OCLData.sizes[1] *= EngineData->OCLData.g_workgroup_size;
-            EngineData->OCLData.sizes[1] += EngineData->OCLData.g_workgroup_size;
-            OCL_RUN("clEnqueueWriteBuffer(GPUData)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmGPUData,CL_TRUE,0,sizeof(SureGPUData),(void*)&EngineData->GPUData,0,NULL,NULL));
-            OCL_RUN("clEnqueueWriteBuffer(Drawables)",clEnqueueWriteBuffer(EngineData->OCLData.cqCommandQue,EngineData->OCLData.cmDrawables,CL_TRUE,0,sizeof(SureDrawable)*EngineData->GPUData.m_drawables,(void*)EngineData->Drawables,0,NULL,NULL));
 
             for(uint ModelID = 0;ModelID<EngineData->cur_models;++ModelID)
             if (EngineData->ModelsInfo[ModelID].toupdate)
@@ -493,33 +528,9 @@ void SureThread::run()
             if(EngineData->TexturesInfo[t].toupdate)
                 WriteTextureToGPU(t);
 
-            size_t l_lws[3];
-            l_lws[0] = EngineData->OCLData.g_workgroup_size;
-            l_lws[1] = EngineData->OCLData.g_workgroup_size;
-            l_lws[2] = 1;
-            int h_gr = SURE_WGRPSIZE; //EngineData->OCLData.g_workgroup_size*16;
-            size_t l_start[2];
-            size_t l_gws[2];
-            l_gws[0] = h_gr;
-            l_gws[1] = h_gr;
-
-            for(uint i_x_gr=0;i_x_gr<EngineData->OCLData.sizes[0];i_x_gr+=h_gr)
-            for(uint i_y_gr=0;i_y_gr<EngineData->OCLData.sizes[1];i_y_gr+=h_gr){
-                l_start[0]=i_x_gr;
-                l_start[1]=i_y_gr;
-                OCL_RUN("Running kernel (raytrace)",clEnqueueNDRangeKernel(EngineData->OCLData.cqCommandQue, // Очередь
-                                                                *EngineData->OCLData.kernel, // Программа
-                                                                2, // 2 измерения для ID потока (X * Y)
-                                                                l_start, // стартовые координаты (тип size_t[измерения])
-                                                                l_gws, // размер области обработки (тип size_t[измерения])
-                                                                l_lws, // размер локальной области (workgroup)
-                                                                0,NULL, // события, которые нужно дождаться перед запуском
-                                                                NULL)); // событие, которое генерится по завершении работы
-                OCL_RUN("clFinish",clFinish(EngineData->OCLData.cqCommandQue));
-            };
-
+            RenderToMatrix(0,0,EngineData->CurrentWidth,EngineData->CurrentHeight);
         }else{
-            raytrace();
+            raytrace(0,0,EngineData->CurrentWidth,EngineData->CurrentHeight);
         };
 
         EngineData->GPUData.reset = false;
@@ -544,12 +555,14 @@ void SureThread::run()
     delete Log;
 } // run()
 
-void SureThread::raytrace()
-{
-    int amx = EngineData->GPUData.CameraInfo.m_amx;
-    int amy = EngineData->GPUData.CameraInfo.m_amy;
-    #pragma omp parallel for schedule(static,8)
-    for(int y=0;y<amy;++y)
-    for(int x=0;x<amx;++x)
-        EngineData->SinglePointTrace(x,y,&EngineData->GPUData,EngineData->Randomf,EngineData->rgbmatrix);
+void SureThread::raytrace(int ix, int iy, int iw, int ih){
+    int L_x = ix/EngineData->ImageScale;
+    int L_y = iy/EngineData->ImageScale;
+    int L_mx = iw/EngineData->ImageScale+L_x;
+    int L_my = ih/EngineData->ImageScale+L_y;
+
+    #pragma omp parallel for schedule(static,2)
+    for(int y=L_y;y<L_my;++y)
+    for(int x=L_x;x<L_mx;++x)
+        EngineData->SinglePointTrace(x,y);
 }

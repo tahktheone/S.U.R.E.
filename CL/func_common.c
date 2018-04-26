@@ -23,6 +23,20 @@ bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in
     };
 }
 
+
+__VTYPE3 DetermineTraceVectorSAA_R(int x,int y,__SURE_STRUCT SureCameraInfo* CameraInfo,uint* r,uint* seed){
+    __VTYPE3 dZ = CameraInfo->cam_vec;
+    __VTYPE3 dY = -CameraInfo->cam_upvec;
+    __VTYPE3 dX = cross(dZ,dY);
+    float mx = CameraInfo->m_amx;
+    float my = CameraInfo->m_amy;
+    __VTYPE rx = (MyRndFloat(r,seed)-0.5f);
+    __VTYPE ry = (MyRndFloat(r,seed)-0.5f);
+    __VTYPE kx = CameraInfo->xy_h*__DIVIDE(((__VTYPE)x+rx-__DIVIDE(mx,2.0f)),mx);
+    __VTYPE ky = CameraInfo->xy_h*__DIVIDE(((__VTYPE)y+ry-__DIVIDE(my,2.0f)),mx);
+    return __NORMALIZE(dZ+kx*dX+ky*dY);
+}
+
 __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr)
 {
     __VTYPE3 dZ = CameraInfo->cam_vec;
@@ -60,3 +74,10 @@ uint InitRandom(int *x,int *y){
     while(r>=SURE_R_RNDSIZE)r-=SURE_R_RNDSIZE;
     return r;
 }
+
+
+float MyRndFloat(uint* r,uint* seed){
+    *r = ( *r * 16807 + *seed ) % 2147483647;
+    return (float)(*r) * RND_DIVISOR;
+}
+

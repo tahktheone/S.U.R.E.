@@ -1,4 +1,7 @@
 
+#ifndef SUREDEFINESCPU_H
+#define SUREDEFINESCPU_H
+
 #define SURE_RLEVEL 100
 /*
 Отключается рассеивание средой <= 90
@@ -202,6 +205,48 @@ __GET_ADVMAP(map_px,map_py,id);
     };
 #endif
 
+#if SURE_RLEVEL<60
+#define SURE_RANDOMIZE_R(CNR) CNR = collision_normal;
+#else
+#define SURE_RANDOMIZE_R(CNR) \
+    if(DrawableCollided.dist_type==SURE_D_EQUAL){ \
+        __VTYPE3 RandomVector; \
+        RandomVector.x = MyRndFloat(&r,&seed); \
+        RandomVector.y = MyRndFloat(&r,&seed); \
+        RandomVector.z = MyRndFloat(&r,&seed); \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = __NORMALIZE(cross(collision_normal,RandomVector)); \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        __VTYPE3 RandomNormal; \
+            RandomNormal.x = MyRndFloat(&r,&seed)*2.0f-1.0f; \
+            RandomNormal.y = MyRndFloat(&r,&seed)*2.0f-1.0f; \
+        while((RandomNormal.x*RandomNormal.x+RandomNormal.y*RandomNormal.y)>1.0f){ \
+                RandomNormal.x = MyRndFloat(&r,&seed)*2.0f-1.0f; \
+                RandomNormal.y = MyRndFloat(&r,&seed)*2.0f-1.0f; \
+        }; \
+        RandomNormal.z = sqrt(1-RandomNormal.x*RandomNormal.x-RandomNormal.y*RandomNormal.y); \
+        CNR = collision_normal*RandomNormal.z+CollisionNormalOx*RandomNormal.x+CollisionNormalOy*RandomNormal.y; \
+        CNR = __NORMALIZE(CNR); \
+    }else if(DrawableCollided.dist_type==SURE_D_NORM){ \
+        __VTYPE3 RandomVector; \
+        RandomVector.x = MyRndFloat(&r,&seed); \
+        RandomVector.y = MyRndFloat(&r,&seed); \
+        RandomVector.z = MyRndFloat(&r,&seed); \
+        RandomVector = __NORMALIZE(RandomVector); \
+        __VTYPE3 CollisionNormalOy = __NORMALIZE(cross(collision_normal,RandomVector)); \
+        __VTYPE3 CollisionNormalOx = cross(CollisionNormalOy,collision_normal); \
+        __VTYPE RotationAngle = MyRndFloat(&r,&seed)*2.0*SURE_PI; \
+        __VTYPE RandomEqualX = MyRndFloat(&r,&seed); \
+        __VTYPE LeanAngle = erf(RandomEqualX)*DrawableCollided.dist_sigma+DrawableCollided.dist_m; \
+        CNR = collision_normal*cos(LeanAngle)+ \
+              CollisionNormalOx*cos(RotationAngle)*sin(LeanAngle)+ \
+              CollisionNormalOy*sin(RotationAngle)*sin(LeanAngle); \
+        CNR = __NORMALIZE(CNR); \
+    }else{ \
+        CNR = collision_normal; \
+    };
+#endif
+
 #include <QtCore/QtCore>
 #include <QtCore/QThread>
 #include <QtCore/QString>
@@ -281,3 +326,5 @@ double dot(my_double3,my_double3);
 uint mad24(uint,uint,uint);
 
 void SureMatrixToImage(float*,QImage*,int,int,int);
+
+#endif // SUREDEFINESCPU_H

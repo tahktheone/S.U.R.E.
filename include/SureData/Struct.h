@@ -76,7 +76,6 @@ struct SureOCLData{
     cl_kernel kernel_n;
 
     size_t sizes[2] = {1920,1080};
-    int g_workgroup_size = SURE_L_WGRPSIZE;
     // OpenCL штуки
     cl_command_queue cqCommandQue;
     cl_mem cmRGBmatrix;

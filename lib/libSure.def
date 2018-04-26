@@ -1,0 +1,486 @@
+EXPORTS
+    _Z10InitRandomPiS_ @1
+    _Z10MyRndFloatPjS_ @2
+    _Z10ObjCollideP10SureObjectS0_10my_double3S1_d @3
+    _Z15PhysCollideAABBP10SureObjectS0_ @4
+    _Z17PhysCollidePSMeshP10SureObjectS0_P8SureDataP17SurePhysCollision @5
+    _Z17SureMatrixToImagePfP6QImageiii @6
+    _Z18PhysCollidePSPlaneP10SureObjectS0_P17SurePhysCollision @7
+    _Z19PhysCollideMeshMeshP10SureObjectS0_P8SureDataP17SurePhysCollision @8
+    _Z19PhysCollidePSSphereP10SureObjectS0_P17SurePhysCollision @9
+    _Z20DetermineTraceVectoriiP14SureCameraInfo @10
+    _Z20PhysCollideMeshPlaneP10SureObjectS0_P8SureDataP17SurePhysCollision @11
+    _Z20RayAndSphereCollided10my_double3S_S_dPbPd @12
+    _Z21PhysCollideSphereMeshP10SureObjectS0_P8SureDataP17SurePhysCollision @13
+    _Z22GlobalVectorToRelativeP10SureObject10my_double3 @14
+    _Z22PhysCollideSpherePlaneP10SureObjectS0_P17SurePhysCollision @15
+    _Z22RelativeVectorToGlobalP10SureObject10my_double3 @16
+    _Z23DetermineTraceVectorSAAiiP14SureCameraInfoPfPj @17
+    _Z23PhysCollideSphereSphereP10SureObjectS0_P17SurePhysCollision @18
+    _Z23PhysPeflectSphereByEdge10my_double3S_S_P17SurePhysCollisionP10SureObjectS3_Pb @19
+    _Z24PhysPeflectSphereByPoint10my_double3S_P17SurePhysCollisionP10SureObjectS3_Pb @20
+    _Z25DetermineTraceVectorSAA_RiiP14SureCameraInfoPjS1_ @21
+    _Z27GlobalCoordinatesToRelativeP10SureObject10my_double3 @22
+    _Z27RelativeCoordinatesToGlobalP10SureObject10my_double3 @23
+    _Z3dot10cl_double4S_ @24
+    _Z3dot10my_double3S_ @25
+    _Z5cross10cl_double4S_ @26
+    _Z5cross10my_double3S_ @27
+    _Z5mad24jjj @28
+    _Z6CutRGBPf @29
+    _Z9normalize10cl_double4 @30
+    _Z9normalize10my_double3 @31
+    _ZN10SureObject4pushE10my_double3S0_d @32
+    _ZN10SureObject7MemFreeEv @33
+    _ZN10SureObject7velbyppE10my_double3 @34
+    _ZN10SureObject8align_p4Ev @35
+    _ZN10SureObjectC1Ev @36
+    _ZN10SureObjectC2Ev @37
+    _ZN10SureObjectD0Ev @38
+    _ZN10SureObjectD1Ev @39
+    _ZN10SureObjectD2Ev @40
+    _ZN10SureThread12SwitchKernelEv @41
+    _ZN10SureThread14RenderToMatrixEiiii @42
+    _ZN10SureThread14SourceFromFileEPKcPc @43
+    _ZN10SureThread15WriteModelToGPUEP13SureModelData @44
+    _ZN10SureThread17WriteTextureToGPUEi @45
+    _ZN10SureThread3runEv @46
+    _ZN10SureThread7oclInitEv @47
+    _ZN10SureThread8raytraceEiiii @48
+    _ZN10SureThread9oclDeleteEv @49
+    _ZN10SureThreadC1EP8SureData @50
+    _ZN10SureThreadC2EP8SureData @51
+    _ZN10SureThreadD0Ev @52
+    _ZN10SureThreadD1Ev @53
+    _ZN10SureThreadD2Ev @54
+    _ZN10SureWidget10leaveEventEP6QEvent @55
+    _ZN10SureWidget10paintEventEP11QPaintEvent @56
+    _ZN10SureWidget10wheelEventEP11QWheelEvent @57
+    _ZN10SureWidget11resizeEventEP12QResizeEvent @58
+    _ZN10SureWidget12DrawTraceLogEP12SureTraceLog @59
+    _ZN10SureWidget13DrawMeshLinesEP12SureDrawable @60
+    _ZN10SureWidget13keyPressEventEP9QKeyEvent @61
+    _ZN10SureWidget14mouseMoveEventEP11QMouseEvent @62
+    _ZN10SureWidget15keyReleaseEventEP9QKeyEvent @63
+    _ZN10SureWidget15mousePressEventEP11QMouseEvent @64
+    _ZN10SureWidget23DrawDebugSelectedObjectEP10SureObject @65
+    _ZN10SureWidget27DrawLineInGlobalCoordinatesE10my_double3S0_PS0_ @66
+    _ZN10SureWidget32ConvertCoordinatesGlobalToCameraE10my_double3PS0_Pb @67
+    _ZN10SureWidget8DrawMenuEv @68
+    _ZN10SureWidget8DrawOABBEP12SureDrawable @69
+    _ZN10SureWidgetC1EP8SureData @70
+    _ZN10SureWidgetC2EP8SureData @71
+    _ZN10SureWidgetD0Ev @72
+    _ZN10SureWidgetD1Ev @73
+    _ZN10SureWidgetD2Ev @74
+    _ZN14SureExitButton7OnClickEv @75
+    _ZN14SureExitButtonC1EP14SureMenuWindow @76
+    _ZN14SureExitButtonC2EP14SureMenuWindow @77
+    _ZN14SureExitButtonD0Ev @78
+    _ZN14SureExitButtonD1Ev @79
+    _ZN14SureExitButtonD2Ev @80
+    _ZN14SureMenuWindow10OnKeyPressEi @81
+    _ZN14SureMenuWindow7RebuildEv @82
+    _ZN14SureMenuWindowC1EP8SureData @83
+    _ZN14SureMenuWindowC2EP8SureData @84
+    _ZN14SureMenuWindowD0Ev @85
+    _ZN14SureMenuWindowD1Ev @86
+    _ZN14SureMenuWindowD2Ev @87
+    _ZN14SurePhysThread3runEv @88
+    _ZN14SurePhysThread9drawsceneEv @89
+    _ZN14SurePhysThreadC1EP8SureData @90
+    _ZN14SurePhysThreadC2EP8SureData @91
+    _ZN14SurePhysThreadD0Ev @92
+    _ZN14SurePhysThreadD1Ev @93
+    _ZN14SurePhysThreadD2Ev @94
+    _ZN15SureKeyListener10OnKeyPressEi @95
+    _ZN15SureKeyListenerC1EP8SureDatai @96
+    _ZN15SureKeyListenerC2EP8SureDatai @97
+    _ZN15SureKeyListenerD0Ev @98
+    _ZN15SureKeyListenerD1Ev @99
+    _ZN15SureKeyListenerD2Ev @100
+    _ZN15SureMenuElement7OnClickEv @101
+    _ZN15SureMenuElementC1EP14SureMenuWindow @102
+    _ZN15SureMenuElementC2EP14SureMenuWindow @103
+    _ZN15SureMenuElementD0Ev @104
+    _ZN15SureMenuElementD1Ev @105
+    _ZN15SureMenuElementD2Ev @106
+    _ZN16SureActionButton7OnClickEv @107
+    _ZN16SureActionButtonC1EP14SureMenuWindowi @108
+    _ZN16SureActionButtonC2EP14SureMenuWindowi @109
+    _ZN16SureActionButtonD0Ev @110
+    _ZN16SureActionButtonD1Ev @111
+    _ZN16SureActionButtonD2Ev @112
+    _ZN16SureMenuCheckbox7OnClickEv @113
+    _ZN16SureMenuCheckboxC1EPbP14SureMenuWindow @114
+    _ZN16SureMenuCheckboxC2EPbP14SureMenuWindow @115
+    _ZN16SureMenuCheckboxD0Ev @116
+    _ZN16SureMenuCheckboxD1Ev @117
+    _ZN16SureMenuCheckboxD2Ev @118
+    _ZN17SureControlButton7OnClickEv @119
+    _ZN17SureControlButtonC1EP14SureMenuWindowP11SureControl @120
+    _ZN17SureControlButtonC2EP14SureMenuWindowP11SureControl @121
+    _ZN17SureControlButtonD0Ev @122
+    _ZN17SureControlButtonD1Ev @123
+    _ZN17SureControlButtonD2Ev @124
+    _ZN17SureOptionsButton7OnClickEv @125
+    _ZN17SureOptionsButtonC1EP14SureMenuWindow @126
+    _ZN17SureOptionsButtonC2EP14SureMenuWindow @127
+    _ZN17SureOptionsButtonD0Ev @128
+    _ZN17SureOptionsButtonD1Ev @129
+    _ZN17SureOptionsButtonD2Ev @130
+    _ZN17SureOptionsWindow7RebuildEv @131
+    _ZN17SureOptionsWindowC1EP8SureData @132
+    _ZN17SureOptionsWindowC2EP8SureData @133
+    _ZN17SureOptionsWindowD0Ev @134
+    _ZN17SureOptionsWindowD1Ev @135
+    _ZN17SureOptionsWindowD2Ev @136
+    _ZN18SureControlsWindow7RebuildEv @137
+    _ZN18SureControlsWindowC1EP8SureData @138
+    _ZN18SureControlsWindowC2EP8SureData @139
+    _ZN18SureControlsWindowD0Ev @140
+    _ZN18SureControlsWindowD1Ev @141
+    _ZN18SureControlsWindowD2Ev @142
+    _ZN18SureMainMenuWindow10OnKeyPressEi @143
+    _ZN18SureMainMenuWindow7RebuildEv @144
+    _ZN18SureMainMenuWindowC1EP8SureData @145
+    _ZN18SureMainMenuWindowC2EP8SureData @146
+    _ZN18SureMainMenuWindowD0Ev @147
+    _ZN18SureMainMenuWindowD1Ev @148
+    _ZN18SureMainMenuWindowD2Ev @149
+    _ZN18SureMenuNumberEdit7OnClickEi @150
+    _ZN18SureMenuNumberEditC1EPv11EditingTypeP14SureMenuWindow @151
+    _ZN18SureMenuNumberEditC2EPv11EditingTypeP14SureMenuWindow @152
+    _ZN18SureMenuNumberEditD0Ev @153
+    _ZN18SureMenuNumberEditD1Ev @154
+    _ZN18SureMenuNumberEditD2Ev @155
+    _ZN23SureContolOptionsButton7OnClickEv @156
+    _ZN23SureContolOptionsButtonC1EP14SureMenuWindow @157
+    _ZN23SureContolOptionsButtonC2EP14SureMenuWindow @158
+    _ZN23SureContolOptionsButtonD0Ev @159
+    _ZN23SureContolOptionsButtonD1Ev @160
+    _ZN23SureContolOptionsButtonD2Ev @161
+    _ZN7QStringD1Ev @162
+    _ZN7SureGJK10ClearCoverEv @163
+    _ZN7SureGJK10SetIncoverEj @164
+    _ZN7SureGJK11ExpandCoverEj @165
+    _ZN7SureGJK11FindNextTNIEv @166
+    _ZN7SureGJK11SwitchCoverEv @167
+    _ZN7SureGJK12InitiateLoopEv @168
+    _ZN7SureGJK12LoopNextStepEv @169
+    _ZN7SureGJK12TIContains00Ev @170
+    _ZN7SureGJK13ClearNewCoverEv @171
+    _ZN7SureGJK13CoverExpandedEv @172
+    _ZN7SureGJK14CollisionFoundEv @173
+    _ZN7SureGJK14SetupMinkowskiEP10SureObjectS1_ @174
+    _ZN7SureGJK15ExpandCoverLoopEv @175
+    _ZN7SureGJK16SetCoverExpandedEv @176
+    _ZN7SureGJK17AddFaceToNewCoverEj @177
+    _ZN7SureGJK17AddFaceToNewCoverEjjj @178
+    _ZN7SureGJK17InitiateCoverLoopEv @179
+    _ZN7SureGJK17SetCollisionPointEv @180
+    _ZN7SureGJK18ExitLoop_CollisionEv @181
+    _ZN7SureGJK18GetCoverFaceNormalEj @182
+    _ZN7SureGJK19SetCollisionByCoverEv @183
+    _ZN7SureGJK20CheckCoverIterrationEv @184
+    _ZN7SureGJK20ExitLoop_NoCollisionEv @185
+    _ZN7SureGJK20GetFarestVertexByObjEP10SureObject10my_double3 @186
+    _ZN7SureGJK22GetMaximumDistanceTo00Ev @187
+    _ZN7SureGJK25CheckAndAddFaceToNewCoverEjj @188
+    _ZN7SureGJK25CheckAndAddFaceToNewCoverEjjj @189
+    _ZN7SureGJK25GetCollisionPointByObjectEP10SureObject10my_double3Pd @190
+    _ZN7SureGJK25IsCoverFaceVisibleByPointEjj @191
+    _ZN7SureGJK27FindFarestMinkowskiByVectorE10my_double3Pj @192
+    _ZN7SureGJK5ClearEv @193
+    _ZN7SureGJK8LoopExitEv @194
+    _ZN7SureGJK9SetEngineEP8SureData @195
+    _ZN7SureGJK9TNI_to_TIEv @196
+    _ZN7SureGJKC1EP8SureData @197
+    _ZN7SureGJKC1Ev @198
+    _ZN7SureGJKC2EP8SureData @199
+    _ZN7SureGJKC2Ev @200
+    _ZN7SureGJKD0Ev @201
+    _ZN7SureGJKD1Ev @202
+    _ZN7SureGJKD2Ev @203
+    _ZN7SureLog10AddBigTextEPKcS1_ @204
+    _ZN7SureLog11AddOCLErrorEiPKc @205
+    _ZN7SureLog18GetOpenCLErrorTextEiPc @206
+    _ZN7SureLog7AddLineEPKc @207
+    _ZN7SureLogC1EPKc @208
+    _ZN7SureLogC1ERKS_ @209
+    _ZN7SureLogC2EPKc @210
+    _ZN7SureLogC2ERKS_ @211
+    _ZN7SureLogD0Ev @212
+    _ZN7SureLogD1Ev @213
+    _ZN7SureLogD2Ev @214
+    _ZN7SureLogaSERKS_ @215
+    _ZN8SureData10GenTextureEPKci @216
+    _ZN8SureData10GetTextureEPKc @217
+    _ZN8SureData10LoadEngineEv @218
+    _ZN8SureData10MapTextureEii @219
+    _ZN8SureData11AddTraceLogEiib @220
+    _ZN8SureData11HandleInputEP19SureControllerInput @221
+    _ZN8SureData11LoadOptionsEPKc @222
+    _ZN8SureData11LoadTextureEPKc @223
+    _ZN8SureData11SaveOptionsEPKc @224
+    _ZN8SureData11Scene_floorEv @225
+    _ZN8SureData11Scene_golemEv @226
+    _ZN8SureData11Scene_tetrsEv @227
+    _ZN8SureData12DeleteObjectEj @228
+    _ZN8SureData12LoadControlsEPKc @229
+    _ZN8SureData12SaveControlsEPKc @230
+    _ZN8SureData13AssignControlEP19SureControllerInputP20SureControllerAction @231
+    _ZN8SureData13ExecuteActionEP20SureControllerActionP19SureControllerInput @232
+    _ZN8SureData13Scene_PolygonEv @233
+    _ZN8SureData13Scene_mirrorsEv @234
+    _ZN8SureData15Mesh_GenNormalsEii @235
+    _ZN8SureData15Scene_ManyTetrsEv @236
+    _ZN8SureData15SetNextTemplateEv @237
+    _ZN8SureData16DeleteObjectByIDEi @238
+    _ZN8SureData16GenerateParticleEP10SureObject10my_double3dS2_ @239
+    _ZN8SureData16ObjectNumberByIDEi @240
+    _ZN8SureData16SaveObjectToFileEP10SureObjectPKc @241
+    _ZN8SureData16SinglePointTraceEii @242
+    _ZN8SureData17Mesh_GenerateCubeEii @243
+    _ZN8SureData17Mesh_GenerateHullEiP10my_double3ii @244
+    _ZN8SureData17Mesh_GenerateTetrEii @245
+    _ZN8SureData17Scene_ManySpheresEv @246
+    _ZN8SureData17WriteObjectToFileEP6_iobufP10SureObject @247
+    _ZN8SureData18LoadObjectFromFileEPKc @248
+    _ZN8SureData18ReadObjectFromFileEP6_iobufi @249
+    _ZN8SureData18SetParticlesNumberEP10SureObjecti @250
+    _ZN8SureData19Mesh_GeneratePandusEii @251
+    _ZN8SureData19ObjCoordsToDrawableEi @252
+    _ZN8SureData20SetTemplate_DarkCubeEf @253
+    _ZN8SureData20SetTemplate_FogPlaneEv @254
+    _ZN8SureData20SetTemplate_GlowCubeEf @255
+    _ZN8SureData21GenerateParticleCloudEP10SureObjecti @256
+    _ZN8SureData21SetTemplate_EarthCubeEf @257
+    _ZN8SureData21SetTemplate_GlassCubeEf @258
+    _ZN8SureData21SetTemplate_GlowPlaneEv @259
+    _ZN8SureData22SetTemplate_DarkSphereEf @260
+    _ZN8SureData22SetTemplate_GlowSphereEf @261
+    _ZN8SureData23GetControllerActionNameEiPw @262
+    _ZN8SureData23SetDefaultRotationBasisEi @263
+    _ZN8SureData23SetTemplate_EarthSphereEf @264
+    _ZN8SureData23SetTemplate_GlassSphereEf @265
+    _ZN8SureData23SetTemplate_RegularCubeEv @266
+    _ZN8SureData23SetTemplate_RegularTetrEf @267
+    _ZN8SureData24CreateObjectFromTemplateEP10my_double3 @268
+    _ZN8SureData24SetTemplate_RegularPlaneEv @269
+    _ZN8SureData25SelectObjectByScreenTraceEii @270
+    _ZN8SureData25SetTemplate_RegularPandusEv @271
+    _ZN8SureData4StopEv @272
+    _ZN8SureData7AddMeshEiii @273
+    _ZN8SureData7ObjByIDEi @274
+    _ZN8SureData8GenModelEPKci @275
+    _ZN8SureData8GetModelEPKc @276
+    _ZN8SureData9AddVertexE10my_double3 @277
+    _ZN8SureData9AddVertexEddd @278
+    _ZN8SureData9LoadModelEPKc @279
+    _ZN8SureData9LoadSceneEPKc @280
+    _ZN8SureData9LoadStateEPKc @281
+    _ZN8SureData9SaveSceneEPKcPP10SureObjecti @282
+    _ZN8SureData9SaveStateEPKc @283
+    _ZN8SureData9Scene_boxEv @284
+    _ZN8SureData9SureFreadEPvyyP6_iobuf @285
+    _ZN8SureData9onLoadingEv @286
+    _ZN8SureData9onPhysicsEv @287
+    _ZN8SureDataC1Ev @288
+    _ZN8SureDataC2Ev @289
+    _ZN8SureDataD0Ev @290
+    _ZN8SureDataD1Ev @291
+    _ZN8SureDataD2Ev @292
+    _ZTI10SureObject @293 DATA
+    _ZTI10SureThread @294 DATA
+    _ZTI10SureWidget @295 DATA
+    _ZTI12QPaintDevice @296 DATA
+    _ZTI14SureExitButton @297 DATA
+    _ZTI14SureMenuWindow @298 DATA
+    _ZTI14SurePhysThread @299 DATA
+    _ZTI15SureKeyListener @300 DATA
+    _ZTI15SureMenuElement @301 DATA
+    _ZTI16SureActionButton @302 DATA
+    _ZTI16SureMenuCheckbox @303 DATA
+    _ZTI17SureControlButton @304 DATA
+    _ZTI17SureOptionsButton @305 DATA
+    _ZTI17SureOptionsWindow @306 DATA
+    _ZTI18SureControlsWindow @307 DATA
+    _ZTI18SureMainMenuWindow @308 DATA
+    _ZTI18SureMenuNumberEdit @309 DATA
+    _ZTI23SureContolOptionsButton @310 DATA
+    _ZTI7QObject @311 DATA
+    _ZTI7QThread @312 DATA
+    _ZTI7QWidget @313 DATA
+    _ZTI7SureGJK @314 DATA
+    _ZTI7SureLog @315 DATA
+    _ZTI8SureData @316 DATA
+    _ZTS10SureObject @317 DATA
+    _ZTS10SureThread @318 DATA
+    _ZTS10SureWidget @319 DATA
+    _ZTS12QPaintDevice @320 DATA
+    _ZTS14SureExitButton @321 DATA
+    _ZTS14SureMenuWindow @322 DATA
+    _ZTS14SurePhysThread @323 DATA
+    _ZTS15SureKeyListener @324 DATA
+    _ZTS15SureMenuElement @325 DATA
+    _ZTS16SureActionButton @326 DATA
+    _ZTS16SureMenuCheckbox @327 DATA
+    _ZTS17SureControlButton @328 DATA
+    _ZTS17SureOptionsButton @329 DATA
+    _ZTS17SureOptionsWindow @330 DATA
+    _ZTS18SureControlsWindow @331 DATA
+    _ZTS18SureMainMenuWindow @332 DATA
+    _ZTS18SureMenuNumberEdit @333 DATA
+    _ZTS23SureContolOptionsButton @334 DATA
+    _ZTS7QObject @335 DATA
+    _ZTS7QThread @336 DATA
+    _ZTS7QWidget @337 DATA
+    _ZTS7SureGJK @338 DATA
+    _ZTS7SureLog @339 DATA
+    _ZTS8SureData @340 DATA
+    _ZTV10SureObject @341 DATA
+    _ZTV10SureThread @342 DATA
+    _ZTV10SureWidget @343 DATA
+    _ZTV14SureExitButton @344 DATA
+    _ZTV14SureMenuWindow @345 DATA
+    _ZTV14SurePhysThread @346 DATA
+    _ZTV15SureKeyListener @347 DATA
+    _ZTV15SureMenuElement @348 DATA
+    _ZTV16SureActionButton @349 DATA
+    _ZTV16SureMenuCheckbox @350 DATA
+    _ZTV17SureControlButton @351 DATA
+    _ZTV17SureOptionsButton @352 DATA
+    _ZTV17SureOptionsWindow @353 DATA
+    _ZTV18SureControlsWindow @354 DATA
+    _ZTV18SureMainMenuWindow @355 DATA
+    _ZTV18SureMenuNumberEdit @356 DATA
+    _ZTV23SureContolOptionsButton @357 DATA
+    _ZTV7SureGJK @358 DATA
+    _ZTV7SureLog @359 DATA
+    _ZTV8SureData @360 DATA
+    _ZThn16_N10SureWidgetD0Ev @361
+    _ZThn16_N10SureWidgetD1Ev @362
+    _ZmIR10my_double3RKS_ @363
+    _Zmi10my_double39cl_float4 @364
+    _Zml10my_double3d @365
+    _Zmld10my_double3 @366
+    _Zmld9my_uchar3 @367
+    _Zng9cl_float4 @368
+    _ZpLR10my_double3RKS_ @369
+    _Zpl9cl_float410my_double3 @370
+    main @371
+
+IMPORTS
+
+    OpenCL.dll.clBuildProgram
+    OpenCL.dll.clCompileProgram
+    OpenCL.dll.clCreateBuffer
+    OpenCL.dll.clCreateCommandQueue
+    OpenCL.dll.clCreateCommandQueueWithProperties
+    OpenCL.dll.clCreateContext
+    OpenCL.dll.clCreateContextFromType
+    OpenCL.dll.clCreateFromGLBuffer
+    OpenCL.dll.clCreateFromGLRenderbuffer
+    OpenCL.dll.clCreateFromGLTexture
+    OpenCL.dll.clCreateFromGLTexture2D
+    OpenCL.dll.clCreateFromGLTexture3D
+    OpenCL.dll.clCreateImage
+    OpenCL.dll.clCreateImage2D
+    OpenCL.dll.clCreateImage3D
+    OpenCL.dll.clCreateKernel
+    OpenCL.dll.clCreateKernelsInProgram
+    OpenCL.dll.clCreatePipe
+    OpenCL.dll.clCreateProgramWithBinary
+    OpenCL.dll.clCreateProgramWithBuiltInKernels
+    OpenCL.dll.clCreateProgramWithSource
+    OpenCL.dll.clCreateSampler
+    OpenCL.dll.clCreateSamplerWithProperties
+    OpenCL.dll.clCreateSubBuffer
+    OpenCL.dll.clCreateSubDevices
+    OpenCL.dll.clCreateUserEvent
+    OpenCL.dll.clEnqueueAcquireGLObjects
+    OpenCL.dll.clEnqueueBarrier
+    OpenCL.dll.clEnqueueBarrierWithWaitList
+    OpenCL.dll.clEnqueueCopyBuffer
+    OpenCL.dll.clEnqueueCopyBufferRect
+    OpenCL.dll.clEnqueueCopyBufferToImage
+    OpenCL.dll.clEnqueueCopyImage
+    OpenCL.dll.clEnqueueCopyImageToBuffer
+    OpenCL.dll.clEnqueueFillBuffer
+    OpenCL.dll.clEnqueueFillImage
+    OpenCL.dll.clEnqueueMapBuffer
+    OpenCL.dll.clEnqueueMapImage
+    OpenCL.dll.clEnqueueMarker
+    OpenCL.dll.clEnqueueMarkerWithWaitList
+    OpenCL.dll.clEnqueueMigrateMemObjects
+    OpenCL.dll.clEnqueueNDRangeKernel
+    OpenCL.dll.clEnqueueNativeKernel
+    OpenCL.dll.clEnqueueReadBuffer
+    OpenCL.dll.clEnqueueReadBufferRect
+    OpenCL.dll.clEnqueueReadImage
+    OpenCL.dll.clEnqueueReleaseGLObjects
+    OpenCL.dll.clEnqueueSVMFree
+    OpenCL.dll.clEnqueueSVMMap
+    OpenCL.dll.clEnqueueSVMMemFill
+    OpenCL.dll.clEnqueueSVMMemcpy
+    OpenCL.dll.clEnqueueSVMUnmap
+    OpenCL.dll.clEnqueueTask
+    OpenCL.dll.clEnqueueUnmapMemObject
+    OpenCL.dll.clEnqueueWaitForEvents
+    OpenCL.dll.clEnqueueWriteBuffer
+    OpenCL.dll.clEnqueueWriteBufferRect
+    OpenCL.dll.clEnqueueWriteImage
+    OpenCL.dll.clFinish
+    OpenCL.dll.clFlush
+    OpenCL.dll.clGetCommandQueueInfo
+    OpenCL.dll.clGetContextInfo
+    OpenCL.dll.clGetDeviceIDs
+    OpenCL.dll.clGetDeviceInfo
+    OpenCL.dll.clGetEventInfo
+    OpenCL.dll.clGetEventProfilingInfo
+    OpenCL.dll.clGetExtensionFunctionAddress
+    OpenCL.dll.clGetExtensionFunctionAddressForPlatform
+    OpenCL.dll.clGetGLObjectInfo
+    OpenCL.dll.clGetGLTextureInfo
+    OpenCL.dll.clGetImageInfo
+    OpenCL.dll.clGetKernelArgInfo
+    OpenCL.dll.clGetKernelInfo
+    OpenCL.dll.clGetKernelWorkGroupInfo
+    OpenCL.dll.clGetMemObjectInfo
+    OpenCL.dll.clGetPipeInfo
+    OpenCL.dll.clGetPlatformIDs
+    OpenCL.dll.clGetPlatformInfo
+    OpenCL.dll.clGetProgramBuildInfo
+    OpenCL.dll.clGetProgramInfo
+    OpenCL.dll.clGetSamplerInfo
+    OpenCL.dll.clGetSupportedImageFormats
+    OpenCL.dll.clLinkProgram
+    OpenCL.dll.clReleaseCommandQueue
+    OpenCL.dll.clReleaseContext
+    OpenCL.dll.clReleaseDevice
+    OpenCL.dll.clReleaseEvent
+    OpenCL.dll.clReleaseKernel
+    OpenCL.dll.clReleaseMemObject
+    OpenCL.dll.clReleaseProgram
+    OpenCL.dll.clReleaseSampler
+    OpenCL.dll.clRetainCommandQueue
+    OpenCL.dll.clRetainContext
+    OpenCL.dll.clRetainDevice
+    OpenCL.dll.clRetainEvent
+    OpenCL.dll.clRetainKernel
+    OpenCL.dll.clRetainMemObject
+    OpenCL.dll.clRetainProgram
+    OpenCL.dll.clRetainSampler
+    OpenCL.dll.clSVMAlloc
+    OpenCL.dll.clSVMFree
+    OpenCL.dll.clSetCommandQueueProperty
+    OpenCL.dll.clSetEventCallback
+    OpenCL.dll.clSetKernelArg
+    OpenCL.dll.clSetKernelArgSVMPointer
+    OpenCL.dll.clSetKernelExecInfo
+    OpenCL.dll.clSetMemObjectDestructorCallback
+    OpenCL.dll.clSetUserEventStatus
+    OpenCL.dll.clUnloadCompiler
+    OpenCL.dll.clUnloadPlatformCompiler
+    OpenCL.dll.clWaitForEvents

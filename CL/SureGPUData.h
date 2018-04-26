@@ -94,9 +94,11 @@ struct SureGPUData {
 };
 
 bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
+__VTYPE3 DetermineTraceVectorSAA_R(int x,int y,__SURE_STRUCT SureCameraInfo* CameraInfo,uint* r,uint* seed);
 __VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
 uint InitRandom(int *x,int *y);
+float MyRndFloat(uint* r,uint* seed);
 
 #define SET_COLLISION \
     collision_found = true; \

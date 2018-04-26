@@ -56,7 +56,7 @@ P3.xyz = read_imagef(Normals,smpVertex,coords).xyz;
         map_uv.y = iy+id*SURE_R_TEXRES; \
         if(map_uv.x>(float)SURE_R_TEXRES)map_uv.x-=(float)SURE_R_TEXRES; \
         col_rgba = read_imageui(Textures,smpTex,map_uv); \
-        DrawableCollided.transp = 1.0f - native_divide(col_rgba.w,255.0f); \
+        DrawableCollided.transp = fma((float)col_rgba.w,-0.00392156862745098f,1.0f); \
         DrawableCollided.rgb.x = col_rgba.x; \
         DrawableCollided.rgb.y = col_rgba.y; \
         DrawableCollided.rgb.z = col_rgba.z; \
@@ -89,9 +89,6 @@ DrawableCollided.rgb.x = col_rgba.x; \
 DrawableCollided.rgb.y = col_rgba.y; \
 DrawableCollided.rgb.z = col_rgba.z; \
 if(DrawableCollided.transp>0.5f)DrawableCollided.dist_type=SURE_D_NORM;
-
-//DrawableCollided.transp = 1.0f - native_divide((float)col_rgba.w,255.0f);
-
 
 #define __GET_ADVMAP_UV(cm,id) \
 __VTYPE2 v1,v2,v0; \
@@ -180,37 +177,30 @@ void Trace(        __global float* rgbmatrix, // картинка, в котор
                    __read_only image2d_t MeshCLImg, // Mesh'ы
                    __read_only image2d_t UVMap, // мэппинг мешей на текстуры
                    __read_only image2d_t Normals // нормали
-                   )
+          )
 {
 // координаты обрабатываемой точки
-int x = get_global_id(0);
-int y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 // для чтения изображений:
-const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
-                            CLK_ADDRESS_NONE            |
-                            CLK_FILTER_NEAREST;
-const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
-                         CLK_ADDRESS_NONE            |
-                         CLK_FILTER_LINEAR;
-int2 coords;
-float2 map_uv;
-uint4 col_rgba;
-uint4 advmap;
-if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
+    const sampler_t smpVertex = CLK_NORMALIZED_COORDS_FALSE |
+                                CLK_ADDRESS_NONE            |
+                                CLK_FILTER_NEAREST;
+    const sampler_t smpTex = CLK_NORMALIZED_COORDS_FALSE |
+                             CLK_ADDRESS_NONE            |
+                             CLK_FILTER_LINEAR;
+    int2 coords;
+    float2 map_uv;
+    uint4 col_rgba;
+    uint4 advmap;
+    if(x>=GPUData->CameraInfo.m_amx||y>=GPUData->CameraInfo.m_amy)return; // не рисуем за перделами области
 // общая для CPU и GPU функция трассировки
 
-//TracePoint = collision_point;
 #define SET_TRACE_POINT_MINUS \
 TracePoint = collision_point;
-
-//intersect_dist-=SURE_R_DELTA_GPU_FIX; \
-//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
 
 #define SET_TRACE_POINT_PLUS \
 TracePoint = collision_point;
 
-//intersect_dist+=SURE_R_DELTA_GPU_FIX; \
-//TracePoint = fma(intersect_dist,TraceVector,TracePoint);
-
-#include <trace_common_t.c>
+#include <trace_common.c>
 }

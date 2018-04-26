@@ -107,10 +107,61 @@
 					<Add directory="D:/Qt/A_qt510_64/lib" />
 				</Linker>
 			</Target>
+			<Target title="Lib Nix">
+				<Option platforms="Unix;" />
+				<Option output="lib/Sure" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="lib" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-march=corei7-avx" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O3" />
+					<Add option="-std=c++11" />
+					<Add option="-fPIC" />
+					<Add directory="/usr/include/qt5/" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-fPIC -shared" />
+					<Add library="/usr/lib/x86_64-linux-gnu/libQt5Core.so" />
+					<Add library="/usr/lib/x86_64-linux-gnu/libQt5Widgets.so" />
+					<Add library="/usr/lib/x86_64-linux-gnu/libQt5Gui.so" />
+					<Add library="/usr/lib/x86_64-linux-gnu/libOpenCL.so.1" />
+				</Linker>
+			</Target>
+			<Target title="LibWin">
+				<Option platforms="Windows;" />
+				<Option output="lib/Sure" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="lib" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-march=corei7-avx" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O3" />
+					<Add option="-std=c++11" />
+					<Add option="-fopenmp -fPIC" />
+					<Add directory="include" />
+					<Add directory="D:/Qt/A_qt510_64/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-fPIC -shared -fopenmp -Wl,--stack,52428800" />
+					<Add library="Qt5Core" />
+					<Add library="Qt5Gui" />
+					<Add library="Qt5Widgets" />
+					<Add library="opencl" />
+					<Add directory="D:/Qt/A_qt510_64/lib" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-march=corei7" />
-			<Add option="-fPIC -fPIE -fopenmp -Wall" />
+			<Add option="-fPIC -fopenmp -Wall" />
 			<Add directory="./" />
 			<Add directory="./CL" />
 			<Add directory="./src" />
@@ -125,7 +176,8 @@
 			<Option compilerVar="CC" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="&lt;{~None~}&gt;" />
+			<Option target="Lib Nix" />
+			<Option target="LibWin" />
 		</Unit>
 		<Unit filename="CL/raytrace.cl" />
 		<Unit filename="CL/raytrace_d.cl" />
@@ -134,7 +186,8 @@
 			<Option compilerVar="CC" />
 			<Option compile="0" />
 			<Option link="0" />
-			<Option target="&lt;{~None~}&gt;" />
+			<Option target="Lib Nix" />
+			<Option target="LibWin" />
 		</Unit>
 		<Unit filename="CL/trace_common_d.c">
 			<Option compilerVar="CC" />

@@ -12,8 +12,8 @@
 #define SURE_RT_T       3
 #define SURE_RT_N       4
 
-#define SURE_L_WGRPSIZE 16
-#define SURE_WGRPSIZE 128
+#define SURE_LOCAL_WGRPSIZE 16
+#define SURE_GLOBAL_WGRPSIZE 128
 
 #define SURE_MAXRES_X 1920
 #define SURE_MAXRES_Y 1080
@@ -37,6 +37,8 @@
 #define SURE_R_MAXDISTANCE (10000.0f)
 #define SURE_R_FADELIMIT   (0.06f)
 #define SURE_R_RNDSIZE     12288
+
+#define RND_DIVISOR (1.0f/2147483647.0f)
 
 #define CLSIZE_VERTEX_DIM  4
 #define CLSIZE_MESH_DIM    4

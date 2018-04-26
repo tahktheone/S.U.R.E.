@@ -13,7 +13,7 @@ void SureData::LoadEngine(){
         Normals = new cl_float[CLSIZE_VERTEX*CLSIZE_MESH_DIM]; // 256*4 x 256
         rgbmatrix = new cl_float[SURE_MAXRES_X*SURE_MAXRES_Y*3];
         Drawables = new SureDrawable[SURE_DR_MAX];
-        Randomf = new cl_float[SURE_R_RNDSIZE];
+        RandomSeed = new cl_int[SURE_R_RNDSIZE];
         ModelsInfo = new SureModelData[SURE_R_MAXTEX];
         TexturesInfo = new SureTextureData[SURE_R_MAXTEX];
 
@@ -22,41 +22,34 @@ void SureData::LoadEngine(){
 
         Log = new SureLog("engine");
 
-        LoadTexture("parket");
-        LoadTexture("earth_adv");
-        LoadTexture("colstones");
-        LoadTexture("golem");
-        LoadTexture("ghost_dark");
-        LoadTexture("golem_adv");
-        LoadTexture("earth");
-        LoadTexture("test_adv");
-
-        LoadModel("test");
-
-        LoadModel("golem");
-        LoadModel("teapot");
-        LoadModel("monkey");
-        LoadModel("ghost_dark");
         GenModel("cube",0);
         GenModel("tetr",1);
         GenModel("pand",2);
 
     LoadControls("default");
+    LoadOptions("current");
+    //LoadState("initial");
     //Scene_box();
     //Scene_floor();
-    Scene_Polygon();
+    //Scene_Polygon();
     //Scene_mirrors();
     //Scene_ManyTetrs();
     //Scene_ManySpheres();
     //Scene_tetrs();
     //Scene_golem();
     // Шаблонный объект
+
+    // вызываем загрузку наследников:
+    onLoading();
+
     SetTemplate_DarkCube(10.0f);
     Loading = false;
 }
 
 SureData::~SureData()
 {
+    SaveOptions("current");
+    Log->AddLine("Выход из SURE...");
     if(MenuWindowsCounter>0)
     for(int i = 0;i<MenuWindowsCounter;++i)
         delete MenuWindows[i];
@@ -68,7 +61,7 @@ SureData::~SureData()
     delete Normals;
     delete rgbmatrix;
     delete Drawables;
-    delete Randomf;
+    delete RandomSeed;
     delete ModelsInfo;
     delete TexturesInfo;
     delete Log;
@@ -182,7 +175,6 @@ void SureData::WriteObjectToFile(FILE *f,SureObject *o)
 void SureData::SureFread(void* i_ptr,size_t i_s1,size_t i_s2,FILE* f)
 {
     if(fread(i_ptr,i_s1,i_s2,f)!=i_s2){
-        char LogLine[100];
         sprintf(LogLine,"Ошибка чтения файла");
         Log->AddLine(LogLine);
     };
@@ -301,7 +293,6 @@ int SureData::ReadObjectFromFile(FILE *f,int i_parent)
 void SureData::SaveObjectToFile(SureObject *o,const char *name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./objects/%s.SureObject",name);
     FILE *f = NULL;
     f = fopen(fname,"wb");
@@ -321,7 +312,6 @@ void SureData::SaveObjectToFile(SureObject *o,const char *name)
 int SureData::LoadObjectFromFile(const char *name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./objects/%s.SureObject",name);
     FILE *f = NULL;
     f = fopen(fname,"rb");
@@ -342,7 +332,6 @@ int SureData::LoadObjectFromFile(const char *name)
 void SureData::SaveState(const char *name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./%s.state",name);
     FILE *f = NULL;
     f = fopen(fname,"wb");
@@ -352,7 +341,7 @@ void SureData::SaveState(const char *name)
         return;
     };
 
-    int StateDataVersion = 1;
+    int StateDataVersion = 2;
     fwrite(&StateDataVersion,sizeof(int),1,f);
 
     fwrite(&cam_dx,sizeof(my_double3),1,f);
@@ -360,17 +349,16 @@ void SureData::SaveState(const char *name)
     fwrite(&r_iters,sizeof(cl_uchar),1,f);
     fwrite(&r_rechecks,sizeof(cl_uchar),1,f);
     fwrite(&r_backlight,sizeof(cl_float),1,f);
-    fwrite(&r_drawdebug,sizeof(int),1,f);
     fwrite(&r_type,sizeof(int),1,f);
     fwrite(&paused,sizeof(bool),1,f);
 
-    fwrite(&CameraInfo.cam_x,sizeof(cl_float3),1,f);
-    fwrite(&CameraInfo.cam_vec,sizeof(cl_float3),1,f);
-    fwrite(&CameraInfo.cam_upvec,sizeof(cl_float3),1,f);
-    fwrite(&CameraInfo.xy_h,sizeof(cl_float),1,f);
-    fwrite(&CameraInfo.m_amx,sizeof(cl_uint),1,f);
-    fwrite(&CameraInfo.m_amy,sizeof(cl_uint),1,f);
-    fwrite(&CameraInfo.subp_rnd,sizeof(cl_bool),1,f);
+    fwrite(&GPUData.CameraInfo.cam_x,sizeof(cl_float3),1,f);
+    fwrite(&GPUData.CameraInfo.cam_vec,sizeof(cl_float3),1,f);
+    fwrite(&GPUData.CameraInfo.cam_upvec,sizeof(cl_float3),1,f);
+    fwrite(&GPUData.CameraInfo.xy_h,sizeof(cl_float),1,f);
+    fwrite(&GPUData.CameraInfo.m_amx,sizeof(cl_uint),1,f);
+    fwrite(&GPUData.CameraInfo.m_amy,sizeof(cl_uint),1,f);
+    fwrite(&GPUData.CameraInfo.subp_rnd,sizeof(cl_bool),1,f);
 
     int mainObjs = 0;
     for(int o = 0;o<m_objects;++o)
@@ -390,7 +378,6 @@ void SureData::SaveState(const char *name)
 void SureData::LoadState(const char *name)
 {
     char fname[100];
-    char LogLine[200];
     sprintf(fname,"./%s.state",name);
     FILE *f = NULL;
     f = fopen(fname,"rb");
@@ -411,17 +398,20 @@ void SureData::LoadState(const char *name)
             SureFread(&r_iters,sizeof(cl_uchar),1,f);
             SureFread(&r_rechecks,sizeof(cl_uchar),1,f);
             SureFread(&r_backlight,sizeof(cl_float),1,f);
-            SureFread(&r_drawdebug,sizeof(int),1,f);
+
+            int drd = 0;
+            SureFread(&drd,sizeof(int),1,f);
+
             SureFread(&r_type,sizeof(int),1,f);
             SureFread(&paused,sizeof(bool),1,f);
 
-            SureFread(&CameraInfo.cam_x,sizeof(cl_float3),1,f);
-            SureFread(&CameraInfo.cam_vec,sizeof(cl_float3),1,f);
-            SureFread(&CameraInfo.cam_upvec,sizeof(cl_float3),1,f);
-            SureFread(&CameraInfo.xy_h,sizeof(cl_float),1,f);
-            SureFread(&CameraInfo.m_amx,sizeof(cl_uint),1,f);
-            SureFread(&CameraInfo.m_amy,sizeof(cl_uint),1,f);
-            SureFread(&CameraInfo.subp_rnd,sizeof(cl_bool),1,f);
+            SureFread(&GPUData.CameraInfo.cam_x,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.cam_vec,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.cam_upvec,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.xy_h,sizeof(cl_float),1,f);
+            SureFread(&GPUData.CameraInfo.m_amx,sizeof(cl_uint),1,f);
+            SureFread(&GPUData.CameraInfo.m_amy,sizeof(cl_uint),1,f);
+            SureFread(&GPUData.CameraInfo.subp_rnd,sizeof(cl_bool),1,f);
 
         int lv_objects = 0;
         SureFread(&lv_objects,sizeof(int),1,f);
@@ -435,9 +425,185 @@ void SureData::LoadState(const char *name)
         fclose(f);
         sprintf(LogLine,"Успешно загружено состояние %s",name);
         Log->AddLine(LogLine);
-    }else{ // if(StateDataVersion==2)...
+    }else if (StateDataVersion==2){
+        sprintf(LogLine,"Загружается состояние %s...",name);
+        Log->AddLine(LogLine);
+            SureFread(&cam_dx,sizeof(my_double3),1,f);
+            SureFread(&cam_dw,sizeof(my_double3),1,f);
+            SureFread(&r_iters,sizeof(cl_uchar),1,f);
+            SureFread(&r_rechecks,sizeof(cl_uchar),1,f);
+            SureFread(&r_backlight,sizeof(cl_float),1,f);
+            SureFread(&r_type,sizeof(int),1,f);
+            SureFread(&paused,sizeof(bool),1,f);
+
+            SureFread(&GPUData.CameraInfo.cam_x,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.cam_vec,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.cam_upvec,sizeof(cl_float3),1,f);
+            SureFread(&GPUData.CameraInfo.xy_h,sizeof(cl_float),1,f);
+            SureFread(&GPUData.CameraInfo.m_amx,sizeof(cl_uint),1,f);
+            SureFread(&GPUData.CameraInfo.m_amy,sizeof(cl_uint),1,f);
+            SureFread(&GPUData.CameraInfo.subp_rnd,sizeof(cl_bool),1,f);
+
+        int lv_objects = 0;
+        SureFread(&lv_objects,sizeof(int),1,f);
+        for(int o = 0;o<m_objects;++o)
+            objects[o].MemFree();
+        m_objects = 0;
+        for(int o = 0;o<lv_objects;++o)
+            ReadObjectFromFile(f,-1);
+
+        reset = true;
+        fclose(f);
+        sprintf(LogLine,"Успешно загружено состояние %s",name);
+        Log->AddLine(LogLine);
+    }else{ // if(StateDataVersion==3)...
         char LogString[100];
         sprintf(LogString,"Версия состояния №%i не поддерживается",StateDataVersion);
+        Log->AddLine(LogString);
+    };
+}
+
+
+void SureData::SaveScene(const char *name,SureObject** i_objects, int i_ObjCounter)
+{
+    char fname[100];
+    sprintf(fname,"./objects/%s.SureScene",name);
+    FILE *f = NULL;
+    f = fopen(fname,"wb");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается создать/заменить файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+
+    int SceneDataVersion = 1;
+    fwrite(&SceneDataVersion,sizeof(int),1,f);
+
+    fwrite(&i_ObjCounter,sizeof(int),1,f);
+    for(int o = 0;o<i_ObjCounter;++o)
+        WriteObjectToFile(f,i_objects[o]);
+
+    fclose(f);
+    sprintf(LogLine,"Успешно сохранеа сцена %s",name);
+    Log->AddLine(LogLine);
+}
+
+void SureData::LoadScene(const char *name)
+{
+    char fname[100];
+    sprintf(fname,"./objects/%s.SureScene",name);
+    FILE *f = NULL;
+    f = fopen(fname,"rb");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается открыть файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+
+    int SceneDataVersion = 0;
+    SureFread(&SceneDataVersion,sizeof(int),1,f);
+
+    if(SceneDataVersion==1){
+        sprintf(LogLine,"Загружается сцена %s...",name);
+        Log->AddLine(LogLine);
+
+        int lv_objects = 0;
+        SureFread(&lv_objects,sizeof(int),1,f);
+        for(int o = 0;o<lv_objects;++o)
+            ReadObjectFromFile(f,-1);
+
+        reset = true;
+        fclose(f);
+        sprintf(LogLine,"Успешно загружена сцена %s",name);
+        Log->AddLine(LogLine);
+
+    }else{ // if(StateDataVersion==2)...
+        char LogString[100];
+        sprintf(LogString,"Версия файла сцены №%i не поддерживается",SceneDataVersion);
+        Log->AddLine(LogString);
+    };
+}
+
+void SureData::SaveOptions(const char *name)
+{
+    char fname[100];
+    sprintf(fname,"./%s.SureOptions",name);
+    FILE *f = NULL;
+    f = fopen(fname,"wb");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается создать/заменить файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+
+    int OptionsDataVersion = 1;
+    fwrite(&OptionsDataVersion,sizeof(int),1,f);
+
+    fwrite(&r_type,sizeof(int),1,f);
+    fwrite(&r_iters,sizeof(cl_uchar),1,f);
+    fwrite(&r_rechecks,sizeof(cl_uchar),1,f);
+    fwrite(&r_backlight,sizeof(cl_float),1,f);
+    fwrite(&GPUData.CameraInfo.xy_h,sizeof(float),1,f);
+    fwrite(&GPUData.CameraInfo.subp_rnd,sizeof(bool),1,f);
+    fwrite(&GPUData.SAA,sizeof(int),1,f);
+    fwrite(&ImageScale,sizeof(int),1,f);
+    fwrite(&DrawDebugFPS,sizeof(bool),1,f);
+    fwrite(&DrawDebugTraces,sizeof(bool),1,f);
+    fwrite(&DrawDebugSelectedObject,sizeof(bool),1,f);
+    fwrite(&DrawDebugAllObjects,sizeof(bool),1,f);
+    fwrite(&DrawDebugMode,sizeof(bool),1,f);
+    fwrite(&DrawDebugPhysicsInfo,sizeof(bool),1,f);
+    fwrite(&DrawDebugCursorInfo,sizeof(bool),1,f);
+    fwrite(&DrawDebugPhysicsTetrs,sizeof(bool),1,f);
+
+    fclose(f);
+    sprintf(LogLine,"Настройки %s сохранены",name);
+    Log->AddLine(LogLine);
+}
+
+void SureData::LoadOptions(const char *name)
+{
+    char fname[100];
+    sprintf(fname,"./%s.SureOptions",name);
+    FILE *f = NULL;
+    f = fopen(fname,"rb");
+    if(f==NULL){
+        sprintf(LogLine,"Не удается открыть файл %s",fname);
+        Log->AddLine(LogLine);
+        return;
+    };
+
+    int OptionsDataVersion = 0;
+    SureFread(&OptionsDataVersion,sizeof(int),1,f);
+
+    if(OptionsDataVersion==1){
+        sprintf(LogLine,"Загружаем настройки %s...",name);
+        Log->AddLine(LogLine);
+
+        SureFread(&r_type,sizeof(int),1,f);
+        SureFread(&r_iters,sizeof(cl_uchar),1,f);
+        SureFread(&r_rechecks,sizeof(cl_uchar),1,f);
+        SureFread(&r_backlight,sizeof(cl_float),1,f);
+        SureFread(&GPUData.CameraInfo.xy_h,sizeof(float),1,f);
+        SureFread(&GPUData.CameraInfo.subp_rnd,sizeof(bool),1,f);
+        SureFread(&GPUData.SAA,sizeof(int),1,f);
+        SureFread(&ImageScale,sizeof(int),1,f);
+        SureFread(&DrawDebugFPS,sizeof(bool),1,f);
+        SureFread(&DrawDebugTraces,sizeof(bool),1,f);
+        SureFread(&DrawDebugSelectedObject,sizeof(bool),1,f);
+        SureFread(&DrawDebugAllObjects,sizeof(bool),1,f);
+        SureFread(&DrawDebugMode,sizeof(bool),1,f);
+        SureFread(&DrawDebugPhysicsInfo,sizeof(bool),1,f);
+        SureFread(&DrawDebugCursorInfo,sizeof(bool),1,f);
+        SureFread(&DrawDebugPhysicsTetrs,sizeof(bool),1,f);
+
+        reset = true;
+        fclose(f);
+        sprintf(LogLine,"Настройки %s загружены",name);
+        Log->AddLine(LogLine);
+    }else{ // if(OptionsDataVersion==2)...
+        char LogString[100];
+        sprintf(LogString,"Версия файла настроек №%i не поддерживается",OptionsDataVersion);
         Log->AddLine(LogString);
     };
 }
@@ -447,9 +613,10 @@ void SureData::Stop()
     ((QWidget*)widget)->close();
 }
 
-void SureData::SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float *Randomf)
+void SureData::SelectObjectByScreenTrace(int x,int y)
 {
     cl_uchar* Textures = TexturesData;
+    SureGPUData* GPUData = &this->GPUData;
     SelectedObject = -1;
     #define __SELECT_OBJECT
     #define SURE_RLEVEL 10
@@ -457,9 +624,10 @@ void SureData::SelectObjectByScreenTrace(int x,int y,SureGPUData *GPUData,float 
     #undef __SELECT_OBJECT
 }
 
-void SureData::AddTraceLog(int x,int y,SureGPUData *GPUData,float *Randomf,bool OnlyVisible)
+void SureData::AddTraceLog(int x,int y,bool OnlyVisible)
 {
     cl_uchar* Textures = TexturesData;
+    SureGPUData* GPUData = &this->GPUData;
     int Iters = OnlyVisible?50000:1;
 
     for(int iter=0;iter<Iters;++iter){
@@ -478,12 +646,16 @@ void SureData::AddTraceLog(int x,int y,SureGPUData *GPUData,float *Randomf,bool 
         TraceLogsCount=0;
 }
 
-void SureData::SinglePointTrace(int x,int y,SureGPUData *GPUData,float *Randomf,float *rgbmatrix)
+void SureData::SinglePointTrace(int x,int y)
 {
     cl_uchar* Textures = TexturesData;
-    #define SURE_RLEVEL 100
+    SureGPUData* GPUData = &this->GPUData;
+    #define SURE_RLEVEL 10
     #include <trace_common.c>
 }
+
+void SureData::onLoading(){}
+void SureData::onPhysics(){}
 
 #include <SureData/Controls.cpp>
 #include <SureData/Generate.cpp>

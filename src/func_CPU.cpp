@@ -635,34 +635,40 @@ bool PhysCollideMeshMesh(SureObject* o1,SureObject* o2,SureData* EngineData,Sure
     return CollisionFound;
 }
 
+void CutRGB(float* SetRGB){
+    if(SetRGB[0]>255){SetRGB[0]=255;}if(SetRGB[0]<0){SetRGB[0]=0;};
+    if(SetRGB[1]>255){SetRGB[1]=255;}if(SetRGB[1]<0){SetRGB[1]=0;};
+    if(SetRGB[2]>255){SetRGB[2]=255;}if(SetRGB[2]<0){SetRGB[2]=0;};
+}
+
 void SureMatrixToImage(float* rgbmatrix,QImage* image,int mx,int my,int i_scale){
     int mx_scaled = mx/i_scale;
     int my_scaled = my/i_scale;
-    float lv_max = 0;
+    float lv_mul = 0;
     float lv_med = 0;
     for(int y=0;y<my_scaled;++y)
     for(int x=0;x<mx_scaled;++x){
         int k = y*SURE_MAXRES_X*3+x*3;
-        lv_max = rgbmatrix[k] > lv_max ? rgbmatrix[k] : lv_max;
-        lv_max = rgbmatrix[k+1] > lv_max ? rgbmatrix[k+1] : lv_max;
-        lv_max = rgbmatrix[k+2] > lv_max ? rgbmatrix[k+2] : lv_max;
         lv_med += rgbmatrix[k] + rgbmatrix[k+1] + rgbmatrix[k+2];
     };
     lv_med /= mx_scaled*my_scaled*3;
-    lv_max /= (lv_max/lv_med)*150.0;
+    lv_mul = 130.0 / lv_med;
+    // итоговая формула для яркости точки = ( ТекущЯркость / ( CредняяЯркость * 1.8 ) ) * 255 =>
+    //                                    =  ТекущЯркость * ( 130 / СредняяЯркость )
 
     uint32_t *l_img = (uint32_t*)image->bits();
     #pragma omp parallel for schedule(static,8)
     for(int y=0;y<my_scaled;++y)
     for(int x=0;x<mx_scaled;++x){
         int k = y*SURE_MAXRES_X*3+x*3;
-        float CurrentRGB[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
+        float CurrentRGB[3] = {rgbmatrix[k]*lv_mul,rgbmatrix[k+1]*lv_mul,rgbmatrix[k+2]*lv_mul};
         if(x<(mx_scaled-1)){k = y*SURE_MAXRES_X*3+(x+1)*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_X[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
+        float NextRGB_X[3] = {rgbmatrix[k]*lv_mul,rgbmatrix[k+1]*lv_mul,rgbmatrix[k+2]*lv_mul};
         if(y<(my_scaled-1)){k = (y+1)*SURE_MAXRES_X*3+x*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_Y[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
+        float NextRGB_Y[3] = {rgbmatrix[k]*lv_mul,rgbmatrix[k+1]*lv_mul,rgbmatrix[k+2]*lv_mul};
         if((x<(mx_scaled-1))&&(y<(my_scaled-1))){k = (y+1)*SURE_MAXRES_X*3+(x+1)*3;}else{k = y*SURE_MAXRES_X*3+x*3;};
-        float NextRGB_XY[3] = {rgbmatrix[k]/lv_max,rgbmatrix[k+1]/lv_max,rgbmatrix[k+2]/lv_max};
+        float NextRGB_XY[3] = {rgbmatrix[k]*lv_mul,rgbmatrix[k+1]*lv_mul,rgbmatrix[k+2]*lv_mul};
+        CutRGB(CurrentRGB); CutRGB(NextRGB_X); CutRGB(NextRGB_Y); CutRGB(NextRGB_XY);
         for(int sy = 0;sy<i_scale;++sy)
         for(int sx = 0;sx<i_scale;++sx){
             float SetRGB[3] = {  (CurrentRGB[0]*(float)(i_scale-sx)*(float)(i_scale-sy)
@@ -677,9 +683,6 @@ void SureMatrixToImage(float* rgbmatrix,QImage* image,int mx,int my,int i_scale)
                                 + NextRGB_X[2]*(float)(sx)*(float)(i_scale-sy)
                                 + NextRGB_Y[2]*(float)(i_scale-sx)*(float)(sy)
                                 + NextRGB_XY[2]*(float)(sx)*(float)(sy)) / (i_scale*i_scale)};
-            if(SetRGB[0]>255){SetRGB[0]=255;}if(SetRGB[0]<0){SetRGB[0]=0;};
-            if(SetRGB[1]>255){SetRGB[1]=255;}if(SetRGB[1]<0){SetRGB[1]=0;};
-            if(SetRGB[2]>255){SetRGB[2]=255;}if(SetRGB[2]<0){SetRGB[2]=0;};
             uchar *SetPixel = (uchar*)(&l_img[(y*i_scale+sy)*mx+(x*i_scale+sx)]);
             *SetPixel = (uchar)SetRGB[2];++SetPixel;
             *SetPixel = (uchar)SetRGB[1];++SetPixel;

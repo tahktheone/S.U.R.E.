@@ -1,8 +1,10 @@
 
-void SureData::LoadModel(const char* name)
+int SureData::LoadModel(const char* name)
 {
 
     char filename[100];
+
+    int result = -1;
 
     sprintf(filename,"./models/%s.obj",name);
     FILE *fl = fopen(filename,"r");
@@ -290,14 +292,16 @@ void SureData::LoadModel(const char* name)
 
     sprintf(ModelsInfo[cur_models].name,"%s",name);
     ModelsInfo[cur_models].toupdate = true;
-
+    result = cur_models;
     cur_models++;
+    return result;
 }
 
-void SureData::LoadTexture(const char* name)
+int SureData::LoadTexture(const char* name)
 {
     QImage img;
     QColor lv_pix;
+    int result = -1;
     char fname[50];
     sprintf(fname,"./maps/%s.png",name);
     if(!img.load(fname))
@@ -377,8 +381,10 @@ void SureData::LoadTexture(const char* name)
         };
         TexturesInfo[cur_textures].toupdate = true;
         sprintf(TexturesInfo[cur_textures].name,"%s",name);
+        result = cur_textures;
         cur_textures++;
     };
+    return result;
 }
 
 int SureData::GetModel(const char* name)
@@ -392,6 +398,8 @@ int SureData::GetModel(const char* name)
         if(ModelsInfo[i].name[c]!=name[c])
             result=-1;
     };
+    if(result<0)
+        result = LoadModel(name);
     return result;
 }
 
@@ -406,6 +414,8 @@ int SureData::GetTexture(const char* name)
         if(TexturesInfo[i].name[c]!=name[c])
             result=-1;
     };
+    if(result<0)
+        result = LoadTexture(name);
     return result;
 }
 
