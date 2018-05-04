@@ -5,12 +5,17 @@ struct SureParticle
     double Size = 1.0;
 };
 
+enum class SureLinkType {Simple,OneSideDamper,Damper};
+
 struct SureLink
 {
-    SureObject* o1;
-    SureObject* o2;
+    int Object1;
+    int Object2;
     double l;
-    double k;
+    double k = 0.5;
+    my_double3 Object1Dmper = {0,0,1};
+    my_double3 Object2Dmper = {0,0,1};
+    SureLinkType type = SureLinkType::Simple;
 };
 
 struct SureTextureData

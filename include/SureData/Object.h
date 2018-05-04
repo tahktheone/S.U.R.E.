@@ -7,6 +7,7 @@ class SureObject
 
     int external_id;
     int ParentID = -1;
+    int CollideExcludeID = -1;
     my_double3 X;  //Координаты центра
     my_double3 ox; //Локальная ось x
     my_double3 oy; //Локальная ось y
@@ -14,7 +15,6 @@ class SureObject
     my_double3 X_byparent;  //Координаты центра
     my_double3 ox_byparent; //Локальная ось x
     my_double3 oy_byparent; //Локальная ось y
-    //my_double3 oz_byparent; //Нормаль (Локальная ось z)  - вычисляемая, cross(ox,oy)
     double lx; // длина
     double ly; // ширина
     double lz; // высота
@@ -32,10 +32,6 @@ class SureObject
     my_double3 p2o;
     my_double3 p3o;
     my_double3 p4o;
-    my_double3 v1;
-    my_double3 v2;
-    my_double3 v3;
-    my_double3 v4;
     int ModelID_collider;
     char ModelName_collider[20];
     int ModelID_drawable;
@@ -77,10 +73,12 @@ class SureObject
                   p2o.x=p2.x;p2o.y=p2.y;p2o.z=p2.z;
                   p3o.x=p3.x;p3o.y=p3.y;p3o.z=p3.z;
                   p4o.x=p4.x;p4o.y=p4.y;p4o.z=p4.z;
-                  v1.x=0;v1.y=0;v1.z=0;
-                  v2.x=0;v2.y=0;v2.z=0;
-                  v3.x=0;v3.y=0;v3.z=0;
-                  v4.x=0;v4.y=0;v4.z=0;
+    }
+    void stop(){
+        p1o = p1;
+        p2o = p2;
+        p3o = p3;
+        p4o = p4;
     }
     void push(my_double3 pp,my_double3 pv,double pd)
     {
@@ -145,7 +143,10 @@ class SureObject
         //movebyp4();
     }
     void next_tick(){
-        v1 = p1-p1o; v2 = p2-p2o; v3 = p3-p3o; v4 = p4-p4o;
+        my_double3 v1 = p1-p1o;
+        my_double3 v2 = p2-p2o;
+        my_double3 v3 = p3-p3o;
+        my_double3 v4 = p4-p4o;
         // Затухание
         v1 = v1 - v1*0.001;
         v2 = v2 - v2*0.001;
@@ -187,6 +188,19 @@ class SureObject
             p3+=d3;
             p4+=d4;
         //}; Iters
+    }
+    void teleport(my_double3 i_X){
+        // перемещение без участя физики
+        my_double3 MoveVec = i_X - X;
+        p1+=MoveVec;
+        p2+=MoveVec;
+        p3+=MoveVec;
+        p4+=MoveVec;
+        p1o+=MoveVec;
+        p2o+=MoveVec;
+        p3o+=MoveVec;
+        p4o+=MoveVec;
+        movebyp4();
     }
     void movebyp4(){
         align_p4();

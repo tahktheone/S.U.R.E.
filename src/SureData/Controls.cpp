@@ -204,37 +204,37 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
         };// Поворот направо
         case SUREACTION_MINUSITERS:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_iters -= 2;
+            GPUData.r_maxiters -= 2;
             reset = true;
         break;
         };// (Графика) Итерации-
         case SUREACTION_PLUSITERS:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_iters += 2;
+            GPUData.r_maxiters += 2;
             reset = true;
         break;
         };// (Графика) Итерации+
         case SUREACTION_MINUSRECHECKS:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_rechecks -= 2;
+            GPUData.r_rechecks -= 2;
             reset = true;
         break;
         };// (Графика) Пересчеты-
         case SUREACTION_PLUSRECHECKS:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_rechecks += 2;
+            GPUData.r_rechecks += 2;
             reset = true;
         break;
         };// (Графика) Пересчеты+
         case SUREACTION_MINUSBACKLIGHT:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_backlight -= 0.5;
+            GPUData.r_backlight -= 0.5;
             reset = true;
         break;
         };// (Графика) Подсветка-
         case SUREACTION_PLUSBACKLIGHT:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            r_backlight += 0.5;
+            GPUData.r_backlight += 0.5;
             reset = true;
         break;
         };// (Графика) Подсветка+
@@ -296,19 +296,9 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
             };
         break;
         };// Пауза
-        case SUREACTION_SAVESTATE:{
-            if(i_input->type==SUREINPUT_KEYUP)break;
-            SaveState("initial");
-        break;
-        };// Сохр всё
-        case SUREACTION_LOADSTATE:{
-            if(i_input->type==SUREINPUT_KEYUP)break;
-            LoadState("initial");
-        break;
-        };// Загр всё
         case SUREACTION_DELETESELECTED:{
             if(i_input->type==SUREINPUT_KEYUP)break;
-            DeleteObject(SelectedObject);
+            DeleteObjectByID(SelectedObject);
             reset = true;
         break;
         };// Удалить объект
@@ -389,6 +379,61 @@ void SureData::ExecuteAction(SureControllerAction* i_action,SureControllerInput*
             reset = true;
             break;
         }; //SUREACTION_TOGGLESAA
+        case SUREACTION_TOGGLETEMPLATE:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            SetNextTemplate();
+            reset = true;
+            break;
+        };
+        case SUREACTION_CREATEBYTEMPLATE:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            ActionThrowTemplateObject();
+            reset = true;
+            break;
+        };
+        case SUREACTION_ADDTRACE_VISIBLE:{
+            AddTraceLog(i_input->x,i_input->y,true);
+            break;
+        };
+        case SUREACTION_ADDTRACE_ANY:{
+            AddTraceLog(i_input->x,i_input->y,false);
+            break;
+        };
+        case SUREACTION_SELECTANDLINK:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            int OldID = SelectedObject;
+            SelectObjectByScreenTrace(i_input->x,i_input->y);
+            if(OldID>=0)
+            if(SelectedObject>=0){
+                links[m_links].Object1 = OldID;
+                links[m_links].Object2 = SelectedObject;
+                my_double3 Vec = ObjByID(OldID)->X - ObjByID(SelectedObject)->X;
+                links[m_links].l = __LENGTH(Vec);
+                m_links++;
+            };
+            break;
+        };
+        case SUREACTION_SELECTOBJECT:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            SelectObjectByScreenTrace(i_input->x,i_input->y);
+            break;
+        };
+        case SUREACTION_SAVELAST5:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            SureObject* Last5Objects[5];
+            Last5Objects[0] = &objects[m_objects-1];
+            Last5Objects[1] = &objects[m_objects-2];
+            Last5Objects[2] = &objects[m_objects-3];
+            Last5Objects[3] = &objects[m_objects-4];
+            Last5Objects[4] = &objects[m_objects-5];
+            SaveScene("last5",Last5Objects,5);
+            break;
+        };
+        case SUREACTION_LOADLAST5:{
+            if(i_input->type==SUREINPUT_KEYUP)break;
+            LoadScene("last5");
+            break;
+        };
         default:
             break;
     }; //switch(i_action->type)
@@ -417,12 +462,9 @@ void SureData::GetControllerActionName(int i_action,wchar_t *e_name){
     if(i_action==SUREACTION_PLUSRECHECKS)swprintf(e_name,40,L"(Графика) Пересчеты+");
     if(i_action==SUREACTION_MINUSBACKLIGHT)swprintf(e_name,40,L"(Графика) Подсветка-");
     if(i_action==SUREACTION_PLUSBACKLIGHT)swprintf(e_name,40,L"(Графика) Подсветка+");
-    //if(i_action==SUREACTION_DECRASEDEBUG)swprintf(e_name,40,L"Отладочная информация");
     if(i_action==SUREACTION_SCREENSHOT)swprintf(e_name,40,L"Скриншот");
     if(i_action==SUREACTION_TOGGLEMOUSEMOVE)swprintf(e_name,40,L"Управление мышью");
     if(i_action==SUREACTION_TOGGLEPAUSE)swprintf(e_name,40,L"Пауза");
-    if(i_action==SUREACTION_SAVESTATE)swprintf(e_name,40,L"Сохр всё");
-    if(i_action==SUREACTION_LOADSTATE)swprintf(e_name,40,L"Загр всё");
     if(i_action==SUREACTION_DELETESELECTED)swprintf(e_name,40,L"Удалить объект");
     if(i_action==SUREACTION_TOGGLEMODE)swprintf(e_name,40,L"Режим отрисовки");
     if(i_action==SUREACTION_MENUSCROLLUP)swprintf(e_name,40,L"Меню: листать вверх");
@@ -432,4 +474,13 @@ void SureData::GetControllerActionName(int i_action,wchar_t *e_name){
     if(i_action==SUREACTION_MINUSSCALE)swprintf(e_name,40,L"(Графика) Разрешение+");
     if(i_action==SUREACTION_PLUSRAYS)swprintf(e_name,40,L"(Графика) Лучи+");
     if(i_action==SUREACTION_MINUSRAYS)swprintf(e_name,40,L"(Графика) Лучи-");
+    if(i_action==SUREACTION_TOGGLETEMPLATE)swprintf(e_name,40,L"Переключить шаблон");
+    if(i_action==SUREACTION_CREATEBYTEMPLATE)swprintf(e_name,40,L"Запустить шаблонный объект");
+    if(i_action==SUREACTION_ADDTRACE_VISIBLE)swprintf(e_name,40,L"Трассировка(только видимые)");
+    if(i_action==SUREACTION_ADDTRACE_ANY)swprintf(e_name,40,L"Трассировка(все)");
+    if(i_action==SUREACTION_SELECTOBJECT)swprintf(e_name,40,L"Выбрать объект");
+    if(i_action==SUREACTION_SELECTANDLINK)swprintf(e_name,40,L"Связать объект");
+    if(i_action==SUREACTION_SAVELAST5)swprintf(e_name,40,L"Сохранить 5 объектов");
+    if(i_action==SUREACTION_LOADLAST5)swprintf(e_name,40,L"Загрузить 5 объектов");
+
 }

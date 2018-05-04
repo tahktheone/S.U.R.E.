@@ -472,6 +472,7 @@ void SureData::SetNextTemplate(){
 }
 
 void SureData::SetTemplate_GlassSphere(float Radius){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -499,6 +500,7 @@ void SureData::SetTemplate_GlassSphere(float Radius){
 }
 
 void SureData::SetTemplate_EarthSphere(float Radius){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -526,6 +528,7 @@ void SureData::SetTemplate_EarthSphere(float Radius){
 }
 
 void SureData::SetTemplate_DarkSphere(float Radius){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -553,6 +556,7 @@ void SureData::SetTemplate_DarkSphere(float Radius){
 }
 
 void SureData::SetTemplate_DarkCube(float SideLen){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -586,6 +590,7 @@ void SureData::SetTemplate_DarkCube(float SideLen){
 }
 
 void SureData::SetTemplate_GlassCube(float SideLen){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -619,6 +624,7 @@ void SureData::SetTemplate_GlassCube(float SideLen){
 }
 
 void SureData::SetTemplate_EarthCube(float SideLen){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -653,6 +659,7 @@ void SureData::SetTemplate_EarthCube(float SideLen){
 }
 
 void SureData::SetTemplate_GlowCube(float SideLen){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -669,7 +676,7 @@ void SureData::SetTemplate_GlowCube(float SideLen){
     TemplateObject.ly = SideLen; // ширина
     TemplateObject.lz = SideLen; // высота
     TemplateObject.lp = SideLen*1.7f;
-    TemplateObject.drawable.radiance = 1.0f;
+    TemplateObject.drawable.radiance = 250;
     sprintf(TemplateObject.ModelName_drawable,"cube");
     TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
     sprintf(TemplateObject.ModelName_collider,"cube");
@@ -686,6 +693,7 @@ void SureData::SetTemplate_GlowCube(float SideLen){
 }
 
 void SureData::SetTemplate_RegularCube(){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -719,6 +727,7 @@ void SureData::SetTemplate_RegularCube(){
 }
 
 void SureData::SetTemplate_RegularPandus(){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -752,6 +761,7 @@ void SureData::SetTemplate_RegularPandus(){
 }
 
 void SureData::SetTemplate_RegularTetr(float SideLen){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -785,6 +795,7 @@ void SureData::SetTemplate_RegularTetr(float SideLen){
 }
 
 void SureData::SetTemplate_GlowSphere(float Radius){
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -797,7 +808,7 @@ void SureData::SetTemplate_GlowSphere(float Radius){
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_SPHERE;
-    TemplateObject.drawable.radiance = 1.0;
+    TemplateObject.drawable.radiance = 250;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
     TemplateObject.lx = Radius;
     TemplateObject.lp = Radius*1.7;
@@ -813,6 +824,7 @@ void SureData::SetTemplate_GlowSphere(float Radius){
 
 void SureData::SetTemplate_GlowPlane()
 {
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -825,7 +837,7 @@ void SureData::SetTemplate_GlowPlane()
     TemplateObject.collidable = true;
     TemplateObject.drawable.sided = false;
     TemplateObject.type = SURE_OBJ_PLANE;
-    TemplateObject.drawable.radiance = 1.0;
+    TemplateObject.drawable.radiance = 250;
     TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
     TemplateObject.lx = 10.0;
     TemplateObject.ly = 10.0;
@@ -842,6 +854,7 @@ void SureData::SetTemplate_GlowPlane()
 
 void SureData::SetTemplate_RegularPlane()
 {
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;
@@ -871,6 +884,7 @@ void SureData::SetTemplate_RegularPlane()
 
 void SureData::SetTemplate_FogPlane()
 {
+    TemplateObject.CollideExcludeID = -1;
     TemplateObject.ox.x = 1;TemplateObject.ox.y = 0;TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0;TemplateObject.oy.y = 1;TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0;TemplateObject.oz.y = 0;TemplateObject.oz.z = 1;

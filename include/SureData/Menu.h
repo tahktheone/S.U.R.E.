@@ -14,7 +14,7 @@ class SureMenuElement{
         virtual void OnClick();
 };
 
-enum class EditingType {Int,Double,Bool};
+enum class EditingType {Int,Double,Bool,Float};
 
 class SureMenuNumberEdit: public SureMenuElement{
     public:
@@ -88,6 +88,7 @@ class SureMenuWindow{
         int ScrollPosition = 0;
 
         virtual void OnKeyPress(int key);
+        virtual void OnClick(int key);
         virtual void Rebuild();
 };
 
@@ -106,6 +107,7 @@ class SureKeyListener: public SureMenuWindow{
 
         int Action = 0;
         void OnKeyPress(int key);
+        void OnClick(int key);
 };
 
 class SureControlsWindow: public SureMenuWindow{

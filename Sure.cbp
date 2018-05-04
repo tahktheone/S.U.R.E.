@@ -211,6 +211,7 @@
 		<Unit filename="include/SureLog.h" />
 		<Unit filename="include/SurePhysThread.h" />
 		<Unit filename="include/SureThread.h" />
+		<Unit filename="include/SureTruck.h" />
 		<Unit filename="include/SureWidget.h" />
 		<Unit filename="src/SureData.cpp" />
 		<Unit filename="src/SureData/Controls.cpp">
@@ -244,6 +245,7 @@
 		<Unit filename="src/SureLog.cpp" />
 		<Unit filename="src/SurePhysThread.cpp" />
 		<Unit filename="src/SureThread.cpp" />
+		<Unit filename="src/SureTruck.cpp" />
 		<Unit filename="src/SureWidget.cpp" />
 		<Unit filename="src/func_CPU.cpp">
 			<Option compile="0" />

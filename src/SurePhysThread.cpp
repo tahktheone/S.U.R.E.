@@ -81,26 +81,36 @@ void SurePhysThread::run()
                 if(EngineData->objects[i].ParentID>=0)
                     EngineData->objects[i].align_byparent(EngineData->ObjByID(EngineData->objects[i].ParentID));
 
-                // Оработка связей -- пока не используется
-                /*
+                // Перемешаем линки в случайном порядке
+                // Если этого не сделать, все будет "плыть" в сторону связей с более низкими ID
+                int *RandomLinksSequence = (int *)malloc(sizeof(int)*(EngineData->m_links + 1));
+                for(int i = 0;i<EngineData->m_links;++i){RandomLinksSequence[i]=i;};
                 for(int i = 0;i<EngineData->m_links;++i){
-                    SureObject* o1 = EngineData->links[i].o1;
-                    SureObject* o2 = EngineData->links[i].o2;
-                    my_double3 pd = o1->X-o2->X;
-                    double d = (EngineData->links[i].l-__LENGTH(pd))*EngineData->links[i].k;
-                    pd = __NORMALIZE(pd);
-                    if(!o1->movable){
-                        o2->push(o2->X,pd,-d);
-                    }
-                    else if(!o2->movable){
-                        o1->push(o1->X,pd,d);
-                    }
-                    else{
-                        o1->push(o1->X,pd,d*0.5);
-                        o2->push(o2->X,pd,-d*0.5);
-                    }; // проверка на movable
+                    int RandomNumber = int((float)EngineData->m_links*((float)rand()/(float)RAND_MAX)-0.49f);
+                    int LocalBuffer = RandomLinksSequence[i];
+                    RandomLinksSequence[i]=RandomLinksSequence[RandomNumber];
+                    RandomLinksSequence[RandomNumber]=LocalBuffer;
                 };
-                */
+
+                // Оработка связей
+                for(int li = 0;li<EngineData->m_links;++li){
+                    int i = RandomLinksSequence[li];
+                    if(EngineData->links[i].type==SureLinkType::Simple){
+                        SureObject* o1 = EngineData->ObjByID(EngineData->links[i].Object1);
+                        SureObject* o2 = EngineData->ObjByID(EngineData->links[i].Object2);
+                        my_double3 pd = o1->X-o2->X;
+                        double d = (EngineData->links[i].l-__LENGTH(pd))*EngineData->links[i].k;
+                        pd = __NORMALIZE(pd);
+                        float k1 = o2->movable ? o2->mass / (o1->mass + o2->mass) : 1.0f;
+                        float k2 = o1->movable ? o1->mass / (o1->mass + o2->mass) : 1.0f;
+                        if(o1->movable)
+                            o1->push(o1->X,pd,d*k1);
+                        if(o2->movable)
+                            o2->push(o2->X,pd,-d*k2);
+                    }; // link.type = simple
+                }; // link'и
+
+                free(RandomLinksSequence);
 
                 #pragma omp parallel for schedule(dynamic)
                 for(int i = 0;i<TotalObjects;++i) // для всех объектов
@@ -116,10 +126,17 @@ void SurePhysThread::run()
                     // объект i, объект j, оба collidable,
                     // оба либо не являются частью составных,
                     // либо являются частями разных составных
-                    SurePhysCollision Collision;
-                    bool CollisionFound = false;
                     SureObject* lv_o1 = &EngineData->objects[i];
                     SureObject* lv_o2 = &EngineData->objects[j];
+
+                    // только если объекты не "исключенные" друг для друга:
+                    if(lv_o1->CollideExcludeID==lv_o2->external_id)continue;
+                    if(lv_o2->CollideExcludeID==lv_o1->external_id)continue;
+                    if((lv_o1->CollideExcludeID==lv_o2->ParentID)&&(lv_o2->ParentID>=0))continue;
+                    if((lv_o2->CollideExcludeID==lv_o1->ParentID)&&(lv_o1->ParentID>=0))continue;
+
+                    SurePhysCollision Collision;
+                    bool CollisionFound = false;
 
                      // шарик с шариком
                     if(lv_o1->type==SURE_OBJ_SPHERE&&lv_o2->type==SURE_OBJ_SPHERE)
@@ -299,9 +316,9 @@ void SurePhysThread::drawscene()
     //while(EngineData->GPULock){ /* Ждем */};
     //EngineData->GPULock = true;
 
-    EngineData->GPUData.r_maxiters = EngineData->r_iters;
-    EngineData->GPUData.r_rechecks = EngineData->r_rechecks;
-    EngineData->GPUData.r_backlight = EngineData->r_backlight;
+    //EngineData->GPUData.r_maxiters = EngineData->r_iters;
+    //EngineData->GPUData.r_rechecks = EngineData->r_rechecks;
+    //EngineData->GPUData.r_backlight = EngineData->r_backlight;
     if(EngineData->reset)EngineData->GPUData.toreset=true;
     EngineData->reset = false;
 
@@ -321,13 +338,13 @@ void SurePhysThread::drawscene()
     EngineData->Drawables[i].oz.s[0] = 0; //Локальная ось x
     EngineData->Drawables[i].oz.s[1] = 0;
     EngineData->Drawables[i].oz.s[2] = 1;
-    EngineData->Drawables[i].lx = 5.0; // длина
-    EngineData->Drawables[i].ly = 1.0; // ширина
-    EngineData->Drawables[i].lz = 1.0; // высота
+    EngineData->Drawables[i].lx = SURE_R_MAXDISTANCE; // длина
+    EngineData->Drawables[i].ly = SURE_R_MAXDISTANCE; // ширина
+    EngineData->Drawables[i].lz = SURE_R_MAXDISTANCE; // высота
     EngineData->Drawables[i].type = SURE_DR_NONE; // форма
     EngineData->Drawables[i].radiance = 0.0; // свечение
     EngineData->Drawables[i].transp = 1.5; // прозрачность
-    EngineData->Drawables[i].transp_i = 1.1; // прозрачность
+    EngineData->Drawables[i].transp_i = SURE_R_AIRTRANSP; // прозрачность
     EngineData->Drawables[i].refr = 1.0; // Коэффициент преломления
     EngineData->Drawables[i].dist_type = SURE_D_EQUAL; // тип рандомизации
     EngineData->Drawables[i].dist_sigma = 1.0; // sigma рандомизации
@@ -335,6 +352,7 @@ void SurePhysThread::drawscene()
     EngineData->Drawables[i].rgb.s[0] = 250; // цвет
     EngineData->Drawables[i].rgb.s[1] = 250;
     EngineData->Drawables[i].rgb.s[2] = 250;
+    EngineData->Drawables[i].map_id = EngineData->EnviromentMap;
     EngineData->Drawables[i].sided = true;
     EngineData->GPUData.m_drawables++;
 

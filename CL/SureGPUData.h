@@ -88,16 +88,14 @@ struct SureGPUData {
     cl_uchar toreset = true; // сброс кадра -- фаза 1
     cl_uchar r_maxiters = 20; // глубина анализа рендера
     cl_uchar r_rechecks = 20; // качество рендера
-    cl_float r_backlight = 0.5;
+    cl_float r_backlight = 0.9; // яркость освещения
     cl_int SAA = 1; // Количество субпикселей на пиксель
 #endif // GPU
 };
 
 bool RayAndSphereCollided(__VTYPE3 tp,__VTYPE3 tv,__VTYPE3 o,__VTYPE r, bool *in,__VTYPE* id);
 __VTYPE3 DetermineTraceVectorSAA_R(int x,int y,__SURE_STRUCT SureCameraInfo* CameraInfo,uint* r,uint* seed);
-__VTYPE3 DetermineTraceVectorSAA(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo,__SURE_DECLARE_RANDOM float* Randomf,uint* rr);
 __VTYPE3 DetermineTraceVector(int x,int y,__SURE_STRUCT SureCameraInfo *CameraInfo);
-uint InitRandom(int *x,int *y);
 float MyRndFloat(uint* r,uint* seed);
 
 #define SET_COLLISION \

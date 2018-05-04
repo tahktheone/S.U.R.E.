@@ -459,9 +459,20 @@ void SureData::DeleteObjectByID(int i_ID)
 void SureData::DeleteObject(uint i_object)
 {
     if(i_object>=(uint)m_objects)return;
+    int LocalExtID = objects[i_object].external_id;
     objects[i_object].MemFree();
     m_objects--;
     objects[i_object] = objects[m_objects];
+    for(int il=m_links-1;il>=0;--il)
+    if((links[il].Object1==LocalExtID)||(links[il].Object2==LocalExtID)){
+        DeleteLink(il);
+    };
+}
+
+void SureData::DeleteLink(uint i_link){
+    if(i_link>=(uint)m_links)return;
+    m_links--;
+    links[i_link] = links[m_links];
 }
 
 uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
@@ -485,6 +496,7 @@ uint SureData::CreateObjectFromTemplate(__VTYPE3* i_X)
     objects[i].oy_byparent = TemplateObject.oy_byparent;
     objects[i].movable = TemplateObject.movable;
     objects[i].collidable = TemplateObject.collidable;
+    objects[i].CollideExcludeID = TemplateObject.CollideExcludeID;
    // objects[i].drawable = TemplateObject.drawable;
 
         objects[i].drawable.X  = objects[i].X;

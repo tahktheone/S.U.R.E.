@@ -5,6 +5,7 @@ class SureObject;
 class SureMenuWindow;
 class SureData;
 class SureWidget;
+class SureTruck;
 
 #include <SureData/Defines.h>
 #include <SureData/Struct.h>
@@ -34,15 +35,12 @@ class SureData{
         my_double3 cam_dx = my_double3{0,0,0};
         my_double3 cam_dw = my_double3{0,0,0};
         int ImageScale = 4;
-        cl_uchar r_iters = 10;
-        cl_uchar r_rechecks = 10;
-        cl_float r_backlight = 0.5;
         int r_type = SURE_RT_D;
+        int EnviromentMap = -1;
 
         bool reset = true; // сброс кадра
         bool paused = true; // Пауза физики
         bool mousemove = false;
-        //bool GPULock = false;
 
         SureDrawable *Drawables;
         cl_int *RandomSeed;
@@ -64,13 +62,11 @@ class SureData{
         cl_uint cur_models = 0;
         cl_uint cur_textures = 0;
 
-        void SaveState(const char *);
-        void LoadState(const char *);
         void SaveScene(const char *,SureObject** i_objects, int i_ObjCounter);
         void LoadScene(const char *);
         void SaveOptions(const char *);
         void LoadOptions(const char *);
-        void WriteObjectToFile(FILE *f,SureObject *o);
+        void WriteObjectToFile(FILE *f,SureObject *o,int i_exclude);
         int ReadObjectFromFile(FILE *f,int i_parent);
         void SaveObjectToFile(SureObject *o,const char *fname);
         int LoadObjectFromFile(const char *fname);
@@ -93,6 +89,7 @@ class SureData{
         void SinglePointTrace(int x,int y);
         uint CreateObjectFromTemplate(__VTYPE3* i_X); // создать объект из TemplateObject
         void DeleteObject(uint);
+        void DeleteLink(uint);
         void DeleteObjectByID(int);
         uint ObjectNumberByID(int);
         SureObject *ObjByID(int); // Объект по внешнему айдишнику
@@ -113,6 +110,7 @@ class SureData{
         void SaveControls(const char* name);
         void LoadControls(const char* name);
         void GetControllerActionName(int i_action,wchar_t *e_name);
+        void ActionThrowTemplateObject();
 
         // Стандартные объекты
         int TemplateIndex = 0;
@@ -160,11 +158,13 @@ class SureData{
         bool DrawDebugPhysicsInfo = false;
         bool DrawDebugCursorInfo = false;
         bool DrawDebugPhysicsTetrs = false;
+        bool DrawDebugLinks = false;
 
         SureTraceLog TraceLogs[50];
         uint TraceLogsCount = 0;
         int SelectedObject = -1;
 
+        SureTruck* Test_Truck;
 
     protected:
     private:
@@ -177,7 +177,7 @@ class SureData{
         void Scene_box(); // коробка со светящимся потолком
         void Scene_floor(); // Пол и круглая лампа
         void Scene_mirrors(); // Пол и зеркала
-        void Scene_tetrs(); // Пол и светильник -- тетраэдры
+        void Scene_vechicle();
         void Scene_golem();
         void Scene_ManyTetrs();
         void Scene_ManySpheres();

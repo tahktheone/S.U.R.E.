@@ -24,7 +24,7 @@ __VTYPE3 X;
     TemplateObject.movable = false;
     TemplateObject.collidable = true;
     TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
-    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250;
     TemplateObject.drawable.rgb.s[2] = 200;
@@ -118,11 +118,11 @@ __VTYPE3 X;
     // пол
     TemplateObject.collidable = true;
     TemplateObject.type = SURE_OBJ_PLANE;
-    TemplateObject.lx = 60.0;
-    TemplateObject.ly = 60.0;
-    TemplateObject.lz = 1.0;
+    TemplateObject.lx = 300.0;
+    TemplateObject.ly = 300.0;
+    TemplateObject.lz = 10.0;
     TemplateObject.drawable.type = SURE_DR_SQUARE; // форма
-    X.x = 0; X.y = 0; X.z = 0.0f;
+    X.x = 0; X.y = 0; X.z = 0;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
@@ -136,15 +136,15 @@ __VTYPE3 X;
     CreateObjectFromTemplate(&X); // пол
 
     TemplateObject.type = SURE_OBJ_SPHERE;
-    TemplateObject.lx = 70.0;
+    TemplateObject.lx = 1000.0;
     TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
-    X.x = 90; X.y = 90; X.z = 150;
+    X.x = 900; X.y = 900; X.z = 1500;
     TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
     TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
     TemplateObject.drawable.map_id = -1;
     TemplateObject.drawable.advmap_id = -1;
-    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.radiance = 255; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250; // цвет
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
@@ -165,7 +165,7 @@ __VTYPE3 X;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
     TemplateObject.drawable.map_id = -1;
     TemplateObject.drawable.advmap_id = -1;
-    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250; // цвет
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
@@ -184,7 +184,7 @@ __VTYPE3 X;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
     TemplateObject.drawable.map_id = GetTexture("colstones");
     TemplateObject.drawable.advmap_id = GetTexture("test_adv");
-    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.dist_type = SURE_D_NORM;
     TemplateObject.drawable.dist_sigma = 0.3;
     TemplateObject.drawable.dist_m = 0;
@@ -225,7 +225,7 @@ __VTYPE3 X;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
     TemplateObject.drawable.map_id = -1;
     TemplateObject.drawable.advmap_id = -1;
-    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250; // цвет
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
@@ -290,7 +290,7 @@ __VTYPE3 X;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
     TemplateObject.drawable.map_id = -1;
     TemplateObject.drawable.advmap_id = -1;
-    TemplateObject.drawable.radiance = 1.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.rgb.s[0] = 250; // цвет
     TemplateObject.drawable.rgb.s[1] = 250; // цвет
     TemplateObject.drawable.rgb.s[2] = 230; // цвет
@@ -313,7 +313,7 @@ __VTYPE3 X;
     TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
     TemplateObject.drawable.map_id = GetTexture("colstones");
     TemplateObject.drawable.advmap_id = GetTexture("test_adv");
-    TemplateObject.drawable.radiance = 0.0; // свечение
+    TemplateObject.drawable.radiance = 250; // свечение
     TemplateObject.drawable.dist_type = SURE_D_NORM;
     TemplateObject.drawable.dist_sigma = 1.5;
     TemplateObject.drawable.dist_m = 0;
@@ -344,98 +344,21 @@ __VTYPE3 X;
 
 }
 
-void SureData::Scene_tetrs() // Пол и лампа
-{
+void SureData::Scene_vechicle() {
+    __VTYPE3 X;
 
-__VTYPE3 X;
-
-    TemplateObject.type = SURE_OBJ_MESH;
-    TemplateObject.drawable.advmap_id = -1;
-    TemplateObject.drawable.map_id = GenTexture("scells",SURE_GENTEX_UNTRANSP);
-    X.x = 0; X.y = 0; X.z = -155;
-    TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
-    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
-    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
-
-    //TemplateObject.oz.x = 0.1; TemplateObject.ox.y = -0.2; TemplateObject.ox.z = -0.9;
-    //TemplateObject.oz = __NORMALIZE(TemplateObject.oz);
-    //TemplateObject.oy = __NORMALIZE(PenVec(TemplateObject.oz));
-    //TemplateObject.ox = cross(TemplateObject.oz,TemplateObject.ox);
-
-    TemplateObject.lx = 600.0;
-    TemplateObject.ly = 600.0;
-    TemplateObject.lz = 100.0;
-    TemplateObject.lp = 100.0;
-    TemplateObject.movable = false;
+    SetTemplate_RegularCube();
+    TemplateObject.lx = 20;
+    TemplateObject.ly = 10;
+    TemplateObject.lz = 10;
+    TemplateObject.movable = true;
     TemplateObject.collidable = true;
-    TemplateObject.drawable.sided = false;
-    TemplateObject.drawable.type = SURE_DR_MESH; // форма
-    TemplateObject.drawable.radiance = 0.0; // свечение
-    TemplateObject.drawable.dist_type = SURE_D_NORM;
-    TemplateObject.drawable.dist_m = 0;
-    TemplateObject.drawable.dist_sigma = 3.0f;
-    sprintf(TemplateObject.ModelName_collider,"tetr");
-    TemplateObject.ModelID_collider = GetModel(TemplateObject.ModelName_collider);
-    sprintf(TemplateObject.ModelName_drawable,"tetr");
-    TemplateObject.ModelID_drawable = GetModel(TemplateObject.ModelName_drawable);
-    TemplateObject.drawable.refr = 1.01; // Коэффициент преломления
-    TemplateObject.drawable.dist_type = SURE_D_EQUAL; // тип рандомизации
-    TemplateObject.drawable.dist_sigma = 1.0f; // sigma рандомизации
+    X.x = 0;
+    X.y = 0;
+    X.z = 13;
+    int MainVechicleID = CreateObjectFromTemplate(&X);
 
-
-    CreateObjectFromTemplate(&X);   //пол
-
-
-    TemplateObject.type = SURE_OBJ_MESH;
-    TemplateObject.drawable.map_id = -1;
-    X.x = 0; X.y = 0; X.z = 200;
-    TemplateObject.ox.x = 0; TemplateObject.ox.y = 1; TemplateObject.ox.z = 0;
-    TemplateObject.oy.x = 1; TemplateObject.oy.y = 0; TemplateObject.oy.z = 0;
-    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
-    TemplateObject.lx = 160.0;
-    TemplateObject.ly = 160.0;
-    TemplateObject.lz = 30.0;
-    TemplateObject.movable = false;
-    TemplateObject.collidable = true;
-    TemplateObject.drawable.type = SURE_DR_MESH; // форма
-    TemplateObject.drawable.radiance = 1.0; // свечение
-    TemplateObject.drawable.rgb.s[0] = 250; // цвет
-    TemplateObject.drawable.rgb.s[1] = 250;
-    TemplateObject.drawable.rgb.s[2] = 200;
-  CreateObjectFromTemplate(&X); // свет
-
-    TemplateObject.type = SURE_OBJ_SPHERE;
-    TemplateObject.lx = 50.0;
-    TemplateObject.ly = 50.0;
-    TemplateObject.lz = 10.0;
-    TemplateObject.drawable.type = SURE_DR_SPHERE; // форма
-    //sprintf(TemplateObject.ModelName_collider,"tetr");
-    TemplateObject.ModelID_collider = -1;//GetModel(TemplateObject.ModelName_collider);
-    //sprintf(TemplateObject.ModelName_drawable,"tetr");
-    TemplateObject.ModelID_drawable = -1;//GetModel(TemplateObject.ModelName_drawable);
-    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
-    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
-    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = 1;
-    TemplateObject.drawable.map_id = -1; //GetTexture("colstones");
-    TemplateObject.drawable.advmap_id = -1; //GetTexture("test_adv");
-    TemplateObject.drawable.radiance = 0.0; // свечение
-    TemplateObject.drawable.refr = 1.1f;
-    TemplateObject.drawable.transp = 0.99f;
-    TemplateObject.drawable.dist_type = SURE_D_NORM;
-    TemplateObject.drawable.dist_sigma = 0.01f;
-    TemplateObject.drawable.dist_m = 0.0;
-    TemplateObject.drawable.rgb.s[0] = 150.0f; // цвет
-    TemplateObject.drawable.rgb.s[1] = 150.0f; // цвет
-    TemplateObject.drawable.rgb.s[2] = 240.0f; // цвет
-
-    X.x = -100; X.y = 0; X.z = 0;
-    TemplateObject.ox.x = 1; TemplateObject.ox.y = 0; TemplateObject.ox.z = 0;
-    TemplateObject.oy.x = 0; TemplateObject.oy.y = 1; TemplateObject.oy.z = 0;
-    TemplateObject.oz.x = 0; TemplateObject.oz.y = 0; TemplateObject.oz.z = -1;
-    //CreateObjectFromTemplate(&X);
-
-         CreateObjectFromTemplate(&X);
-
+    Test_Truck = new SureTruck(this,MainVechicleID);
 
 }
 

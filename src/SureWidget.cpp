@@ -9,6 +9,7 @@ SureWidget::SureWidget(SureData* i_engine)
     int LWidth = 800;
     int LHeight = 450;
     EngineData->CurrentWidth=LWidth;
+    EngineData->CurrentWidth=LWidth;
     EngineData->CurrentHeight=LHeight;
     resize(LWidth,LHeight);
 
@@ -139,18 +140,19 @@ void SureWidget::DrawMeshLines(SureDrawable *lv_dr)
         __GET_VERTEX(LocalVertex1,MeshData.x);
         __GET_VERTEX(LocalVertex2,MeshData.y);
         __GET_VERTEX(LocalVertex3,MeshData.z);
-        __VTYPE3 GlobalVertex1 = EngineData->objects[EngineData->SelectedObject].drawable.X
-             + LocalVertex1.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
-             + LocalVertex1.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
-             + LocalVertex1.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
-        __VTYPE3 GlobalVertex2 = EngineData->objects[EngineData->SelectedObject].drawable.X
-             + LocalVertex2.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
-             + LocalVertex2.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
-             + LocalVertex2.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
-        __VTYPE3 GlobalVertex3 = EngineData->objects[EngineData->SelectedObject].drawable.X
-             + LocalVertex3.x*EngineData->objects[EngineData->SelectedObject].drawable.ox*EngineData->objects[EngineData->SelectedObject].drawable.lx
-             + LocalVertex3.y*EngineData->objects[EngineData->SelectedObject].drawable.oy*EngineData->objects[EngineData->SelectedObject].drawable.ly
-             + LocalVertex3.z*EngineData->objects[EngineData->SelectedObject].drawable.oz*EngineData->objects[EngineData->SelectedObject].drawable.lz;
+        SureObject* LocalSelectedObject = EngineData->ObjByID(EngineData->SelectedObject);
+        __VTYPE3 GlobalVertex1 = LocalSelectedObject->drawable.X
+             + LocalVertex1.x*LocalSelectedObject->drawable.ox*LocalSelectedObject->drawable.lx
+             + LocalVertex1.y*LocalSelectedObject->drawable.oy*LocalSelectedObject->drawable.ly
+             + LocalVertex1.z*LocalSelectedObject->drawable.oz*LocalSelectedObject->drawable.lz;
+        __VTYPE3 GlobalVertex2 = LocalSelectedObject->drawable.X
+             + LocalVertex2.x*LocalSelectedObject->drawable.ox*LocalSelectedObject->drawable.lx
+             + LocalVertex2.y*LocalSelectedObject->drawable.oy*LocalSelectedObject->drawable.ly
+             + LocalVertex2.z*LocalSelectedObject->drawable.oz*LocalSelectedObject->drawable.lz;
+        __VTYPE3 GlobalVertex3 = LocalSelectedObject->drawable.X
+             + LocalVertex3.x*LocalSelectedObject->drawable.ox*LocalSelectedObject->drawable.lx
+             + LocalVertex3.y*LocalSelectedObject->drawable.oy*LocalSelectedObject->drawable.ly
+             + LocalVertex3.z*LocalSelectedObject->drawable.oz*LocalSelectedObject->drawable.lz;
         DrawLineInGlobalCoordinates(GlobalVertex1,GlobalVertex2,CameraBasis);
         DrawLineInGlobalCoordinates(GlobalVertex2,GlobalVertex3,CameraBasis);
         DrawLineInGlobalCoordinates(GlobalVertex3,GlobalVertex1,CameraBasis);
@@ -251,7 +253,7 @@ void SureWidget::DrawDebugSelectedObject(SureObject *o)
                 break;
                 default:
                 break;
-            }; // switch (EngineData->objects[EngineData->SelectedObject].drawable.type){
+            }; // switch (LocalSelectedObject->drawable.type){
         }; // объект -- не SURE_OBJ_PS
 }
 
@@ -348,9 +350,9 @@ void SureWidget::paintEvent(QPaintEvent * event)
             sprintf(TextString,"CPU(OpenMP)");
         };
         painter.drawText(5,45,TextString);
-        sprintf(TextString,"It=%d R=%d",EngineData->r_iters,EngineData->r_rechecks);
+        sprintf(TextString,"It=%d R=%d",EngineData->GPUData.r_maxiters,EngineData->GPUData.r_rechecks);
         painter.drawText(EngineData->CurrentWidth-100,15,TextString);
-        sprintf(TextString,"Backlight=%.1f",EngineData->r_backlight);
+        sprintf(TextString,"Backlight=%.1f",EngineData->GPUData.r_backlight);
         painter.drawText(EngineData->CurrentWidth-100,45,TextString);
     };
 
@@ -373,25 +375,36 @@ void SureWidget::paintEvent(QPaintEvent * event)
         painter.drawText(5,EngineData->CurrentHeight-15,TextString);
     };
 
-    if((EngineData->DrawDebugSelectedObject)&&(!EngineData->mousemove))
-    if(EngineData->MenuWindowsCounter==0){
+    if(EngineData->DrawDebugSelectedObject)
+    if(EngineData->MenuWindowsCounter==0)
+    if(EngineData->SelectedObject>=0){
         painter.setPen(Qt::blue);
-        int x = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
-        int y = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
-        EngineData->SelectObjectByScreenTrace(x,y);
         sprintf(TextString,"SelectedObject = %i",EngineData->SelectedObject);
         painter.drawText(5,EngineData->CurrentHeight-5,TextString);
     };
 
     // Обводим выбранный объект
     if((EngineData->DrawDebugSelectedObject)
-       &&(EngineData->SelectedObject>=0)
-       &&(EngineData->SelectedObject<EngineData->m_objects))
-       DrawDebugSelectedObject(&EngineData->objects[EngineData->SelectedObject]);
+       &&(EngineData->SelectedObject>=0))
+       DrawDebugSelectedObject(EngineData->ObjByID(EngineData->SelectedObject));
 
     if(EngineData->DrawDebugAllObjects)
     for(int objid = 0;objid<EngineData->m_objects;++objid)
        DrawDebugSelectedObject(&EngineData->objects[objid]);
+
+    if(EngineData->DrawDebugLinks){
+        my_double3 CameraBasis[3];
+        CameraBasis[1] = -EngineData->GPUData.CameraInfo.cam_upvec;
+        CameraBasis[2] = EngineData->GPUData.CameraInfo.cam_vec;
+        CameraBasis[0] = cross(CameraBasis[2],CameraBasis[1]);
+        for(int il=0;il<EngineData->m_links;++il){
+            painter.setPen(Qt::yellow);
+            SureLink* LocalLink = &EngineData->links[il];
+            SureObject* o1 = EngineData->ObjByID(LocalLink->Object1);
+            SureObject* o2 = EngineData->ObjByID(LocalLink->Object2);
+            DrawLineInGlobalCoordinates(o1->X,o2->X,CameraBasis);
+        };
+    };
 
     // Рисуем иннерциоиды
     if(EngineData->DrawDebugPhysicsTetrs)
@@ -636,6 +649,7 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
 {
     if(EngineData->MenuWindowsCounter>0){ // Открыто меню
         SureMenuWindow* CurrentWindow = EngineData->MenuWindows[EngineData->MenuWindowsCounter - 1];
+        CurrentWindow->OnClick(event->button());
         for(int i = 0;i< CurrentWindow->ElementsCounter;++i)
         if(CurrentWindow->Elements[i]->selected){
             if(CurrentWindow->Elements[i]->type==SUREWINDOW_NUMBEREDIT){
@@ -661,30 +675,12 @@ void SureWidget::mousePressEvent(QMouseEvent *event)
             };
         };// (CurrentWindow->Elements[i]->selected)
     }else{
-        if(EngineData->mousemove){
-            if (event->button() == Qt::LeftButton) {
-                EngineData->TemplateObject.ox = EngineData->GPUData.CameraInfo.cam_vec;
-                EngineData->TemplateObject.oz = EngineData->GPUData.CameraInfo.cam_upvec;
-                EngineData->TemplateObject.oy = cross(EngineData->GPUData.CameraInfo.cam_vec,EngineData->GPUData.CameraInfo.cam_upvec);
-                __VTYPE3 X = EngineData->GPUData.CameraInfo.cam_x;
-                uint o = EngineData->CreateObjectFromTemplate(&X);
-                EngineData->ObjByID(o)->push(EngineData->ObjByID(o)->X,EngineData->GPUData.CameraInfo.cam_vec,3.0);
-            };
-            if (event->button() == Qt::RightButton) {
-                EngineData->SetNextTemplate();
-                EngineData->reset = true;
-            };
-        }else{ // if mousemove
-            if (event->button() == Qt::LeftButton) {
-                int Localx = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
-                int Localy = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
-                EngineData->AddTraceLog(Localx,Localy,true);
-            }; // (event->button() == Qt::LeftButton)
-            if (event->button() == Qt::RightButton) {
-                int Localx = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
-                int Localy = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
-                EngineData->AddTraceLog(Localx,Localy,false);
-            }; // (event->button() == Qt::LeftButton)
-        }; // if !mousemove
+        SureControllerAction Action;
+        SureControllerInput Input;
+        Input.type = SUREINPUT_MBUTDOWN;
+        Input.key = event->button();
+        Input.x = QWidget::mapFromGlobal(QCursor::pos()).x()/EngineData->ImageScale;
+        Input.y = QWidget::mapFromGlobal(QCursor::pos()).y()/EngineData->ImageScale;
+        EngineData->HandleInput(&Input);
     }; // Меню не открыто
 } // mousePressEvent

@@ -58,15 +58,26 @@ void SureMenuNumberEdit::OnClick(int i_type){
             int *IntNumber = (int*)EditingNumber;
             *IntNumber -= 1;
         };
+        if(NumberType==EditingType::Float){
+            float *FloatNumber = (float*)EditingNumber;
+            *FloatNumber -= 0.1f;
+        };
     };
     if(i_type == 1){
          if(NumberType==EditingType::Int){
             int *IntNumber = (int*)EditingNumber;
             *IntNumber += 1;
         };
+        if(NumberType==EditingType::Float){
+            float *FloatNumber = (float*)EditingNumber;
+            *FloatNumber += 0.1f;
+        };
     };
     if(NumberType==EditingType::Int){
         swprintf(text,40,L"%i",(*(int*)EditingNumber));
+    };
+    if(NumberType==EditingType::Float){
+        swprintf(text,40,L"%.1f",(*(float*)EditingNumber));
     };
 }
 
@@ -157,6 +168,18 @@ void SureKeyListener::OnKeyPress(int key)
     delete this;
 }
 
+void SureKeyListener::OnClick(int key){
+    SureControllerAction a;
+    a.type = Action;
+    SureControllerInput i;
+    i.type = SUREINPUT_MBUTDOWN;
+    i.key = key;
+    Engine->AssignControl(&i,&a);
+    ((SureControlsWindow*)Engine->MenuWindows[Engine->MenuWindowsCounter-2])->Rebuild();
+    --Engine->MenuWindowsCounter;
+    delete this;
+}
+
 SureControlsWindow::SureControlsWindow(SureData* i_engine):SureMenuWindow(i_engine)
 {
 
@@ -184,16 +207,26 @@ void SureControlsWindow::Rebuild()
         int k = 0;
 
         for(int j=0;j<Engine->ControlsCounter;++j)
-        if(Engine->Controls[j].Action.type==i)
-        if(Engine->Controls[j].Input.type==SUREINPUT_KEYDOWN){
-            Elements[ElementsCounter] = new SureControlButton(this,&Engine->Controls[j]);
-            NewElement = Elements[ElementsCounter++];
-            NewElement->x = 240+(k++)*110;
-            NewElement->y = 10 + (i-1)*30;
-            NewElement->height = 20;
-            NewElement->width = 100;
-            swprintf(NewElement->text,40,L"%lc (%i)",(wchar_t)Engine->Controls[j].Input.key,Engine->Controls[j].Input.key);
-        }; // все Controls для Action
+        if(Engine->Controls[j].Action.type==i){
+            if(Engine->Controls[j].Input.type==SUREINPUT_KEYDOWN){
+                Elements[ElementsCounter] = new SureControlButton(this,&Engine->Controls[j]);
+                NewElement = Elements[ElementsCounter++];
+                NewElement->x = 240+(k++)*110;
+                NewElement->y = 10 + (i-1)*30;
+                NewElement->height = 20;
+                NewElement->width = 100;
+                swprintf(NewElement->text,40,L"%lc (%i)",(wchar_t)Engine->Controls[j].Input.key,Engine->Controls[j].Input.key);
+            }; // все Controls для Action
+            if(Engine->Controls[j].Input.type==SUREINPUT_MBUTDOWN){
+                Elements[ElementsCounter] = new SureControlButton(this,&Engine->Controls[j]);
+                NewElement = Elements[ElementsCounter++];
+                NewElement->x = 240+(k++)*110;
+                NewElement->y = 10 + (i-1)*30;
+                NewElement->height = 20;
+                NewElement->width = 100;
+                swprintf(NewElement->text,40,L"Mouse %i",Engine->Controls[j].Input.key);
+            };
+        };
     };// все Actions
 }
 
@@ -279,6 +312,25 @@ void SureOptionsWindow::Rebuild()
     NewElement->y = h;
     NewElement->height = 20;
     NewElement->width = 200;
+    swprintf(NewElement->text,40,L"Подсветка:");
+
+    Elements[ElementsCounter] = new SureMenuNumberEdit((void*)&Engine->GPUData.r_backlight,EditingType::Float,this);
+    NewElement = Elements[ElementsCounter++];
+    NewElement->x = 240;
+    NewElement->y = h;
+    NewElement->height = 20;
+    NewElement->width = 150;
+    swprintf(NewElement->text,40,L"%.1f",Engine->GPUData.r_backlight);
+
+    h = h + 30;
+
+    Elements[ElementsCounter] = new SureMenuElement(this);
+    NewElement = Elements[ElementsCounter++];
+    NewElement->type = SUREWINDOW_LABEL;
+    NewElement->x = 20;
+    NewElement->y = h;
+    NewElement->height = 20;
+    NewElement->width = 200;
     swprintf(NewElement->text,40,L"Анти-алиасинг:");
 
     Elements[ElementsCounter] = new SureMenuCheckbox((bool*)&Engine->GPUData.CameraInfo.subp_rnd,(SureMenuWindow*)this);
@@ -326,6 +378,7 @@ void SureOptionsWindow::Rebuild()
     ADD_OPTIONS_CHECKBOX(L"Информация о рендере:",&Engine->DrawDebugMode);
     ADD_OPTIONS_CHECKBOX(L"Физика:",&Engine->DrawDebugPhysicsInfo);
     ADD_OPTIONS_CHECKBOX(L"Курсор:",&Engine->DrawDebugCursorInfo);
+    ADD_OPTIONS_CHECKBOX(L"Связи:",&Engine->DrawDebugLinks);
     ADD_OPTIONS_CHECKBOX(L"Инерциоиды:",&Engine->DrawDebugPhysicsTetrs);
 
 }
@@ -366,6 +419,8 @@ void SureMainMenuWindow::Rebuild()
     swprintf(NewElement->text,40,L"Выход");
 
 }
+
+void SureMenuWindow::OnClick(int key){ }
 
 SureExitButton::SureExitButton(SureMenuWindow* i_parent):SureMenuElement(i_parent){type = SUREWINDOW_BUTTON;}
 SureExitButton::~SureExitButton(){}

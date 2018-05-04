@@ -15,6 +15,7 @@
     while(ri>=SURE_R_RNDSIZE)ri-=SURE_R_RNDSIZE;
     uint seed = RandomSeed[ri];
     uint r = ( (x+y+1) * 16807 + seed ) % 2147483647;
+    r = ( r * 16807 + seed ) % 2147483647;
 
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
@@ -92,7 +93,7 @@
 
                     __VTYPE3 VectorToCenter = TracePoint-DrawableIter->X;
                     __VTYPE B = dot(VectorToCenter,TraceVector);
-                    __VTYPE C = __MAD(-DrawableIter->lx,DrawableIter->lx,dot(VectorToCenter,VectorToCenter));
+                    __VTYPE C = __MAD(- DrawableIter->lx,DrawableIter->lx,dot(VectorToCenter,VectorToCenter));
                     __VTYPE D = __MAD(B,B,-C);
                     __VTYPE2 t;
 
@@ -245,7 +246,6 @@
                 }; // Квадрат
                 case SURE_DR_MESH:
                 {
-
                     __VTYPE3 LocalTraceVector;
                     LocalTraceVector.x = dot(TraceVector,DrawableIter->ox);
                     LocalTraceVector.y = dot(TraceVector,DrawableIter->oy);
@@ -400,6 +400,41 @@
             }; // switch(DrawableIter->type)
         };// Цикл по Drawables
 
+        // Подсветка от окружения
+        float EnvSize = SURE_R_MAXDISTANCE * 0.5f;
+        __VTYPE B = dot(TracePoint,TraceVector);
+        __VTYPE C = __MAD(-EnvSize,EnvSize,dot(TracePoint,TracePoint));
+        __VTYPE D = __MAD(B,B,-C);
+        __VTYPE2 t;
+        if(D>0.0f){
+            __VTYPE kd = __SQRT(D);
+            __VTYPE t1 = -B+kd;
+            __VTYPE t2 = -B-kd;
+            t.y = __SURE_MAX(t1,t2);
+            if(t.y<intersect_dist){
+                intersect_dist = t.y;
+                collision_found = true;
+                DrawableCollided.radiance = 255.0f*GPUData->r_backlight;
+                if(Drawables[0].map_id>=0){
+                    __VTYPE3 UVCoordinates;
+                    __VTYPE3 LocalCoordinates = __NORMALIZE(__MAD(intersect_dist,TraceVector,TracePoint));
+                    UVCoordinates.y = __MAD(0.5f,-LocalCoordinates.z,0.5f);
+                    if(LocalCoordinates.x>0.0f){
+                        UVCoordinates.x = __MAD(atan2(LocalCoordinates.y,LocalCoordinates.x),M_1_PI_F,0.5f);
+                    }else{
+                        LocalCoordinates = -LocalCoordinates;
+                        UVCoordinates.x = __MAD(atan2(LocalCoordinates.y,LocalCoordinates.x),M_1_PI_F,1.5f);
+                    };
+                    UVCoordinates.x *= 0.5f;
+                    UVCoordinates.x *= SURE_R_TEXRES;
+                    UVCoordinates.y *= SURE_R_TEXRES;
+                    __GET_TEXTURE(UVCoordinates.x,
+                                  UVCoordinates.y,
+                                  Drawables[0].map_id);
+                };
+            };
+        };
+
         // Тут мы прошлись по всем Drawables и нашли (или нет) с чем пересекается луч.
         #if SURE_RLEVEL>90
         // Добавлем рассеивание средой
@@ -430,7 +465,7 @@
             int FoundID = -1;
             for(int oid = 0;oid<m_objects;++oid)
             if(objects[oid].DrawableGPUID>=FoundDrawable){
-                FoundID = oid;
+                FoundID = objects[oid].external_id;
                 oid=m_objects;
             };
             SelectedObject = FoundID;
@@ -438,16 +473,17 @@
         break;
         #endif // __SELECT_OBJECT
 
-        if(DrawableCollided.radiance>0.0f)
+        if(DrawableCollided.radiance>0)
         {
+            float LRadiance = (float)DrawableCollided.radiance * 0.003921569f;
             #if SURE_RLEVEL<60
-                TraceColor.x += 255.0f*TraceFade.x*DrawableCollided.rgb.__XX;
-                TraceColor.y += 255.0f*TraceFade.y*DrawableCollided.rgb.__YY;
-                TraceColor.z += 255.0f*TraceFade.z*DrawableCollided.rgb.__ZZ;
+                TraceColor.x += LRadiance*255.0f*TraceFade.x*DrawableCollided.rgb.__XX;
+                TraceColor.y += LRadiance*255.0f*TraceFade.y*DrawableCollided.rgb.__YY;
+                TraceColor.z += LRadiance*255.0f*TraceFade.z*DrawableCollided.rgb.__ZZ;
             #else
-                TraceColor.x += TraceFade.x*DrawableCollided.rgb.__XX;
-                TraceColor.y += TraceFade.y*DrawableCollided.rgb.__YY;
-                TraceColor.z += TraceFade.z*DrawableCollided.rgb.__ZZ;
+                TraceColor.x += LRadiance*TraceFade.x*DrawableCollided.rgb.__XX;
+                TraceColor.y += LRadiance*TraceFade.y*DrawableCollided.rgb.__YY;
+                TraceColor.z += LRadiance*TraceFade.z*DrawableCollided.rgb.__ZZ;
             #endif // SURE_RLEVEL<60
             #ifdef __LOGGING
                 TraceLog->Items[TraceLog->ItemsCount].Fade = TraceFade;
@@ -620,9 +656,8 @@
     #ifndef __LOGGING
     #ifndef __SELECT_OBJECT
     // если точка черная -- освещаем ее "глобальным" холодным светом -- это дает подсветку теней
-    if((TraceColor.x+TraceColor.y+TraceColor.z)==0){
+    if((TraceColor.x+TraceColor.y+TraceColor.z)==0)
         TraceColor = __MAD(TraceFade,GPUData->r_backlight,TraceColor);
-    };
 
     uint d = y*SURE_MAXRES_X*3+x*3;
     rgbmatrix[d++] += TraceColor.x;

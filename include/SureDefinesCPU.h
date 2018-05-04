@@ -32,8 +32,8 @@
 #define __SURE_UCHAR4 my_uchar4
 #define __SURE_UINT4 my_uchar4
 #define __SURE_VINT4 my_int4
-#define __SURE_MIN(A,B) (A<B?A:B)
-#define __SURE_MAX(A,B) (A>B?A:B)
+#define __SURE_MIN(A,B) ((A)<(B)?(A):(B))
+#define __SURE_MAX(A,B) ((A)>(B)?(A):(B))
 #define __SQRT(A) sqrt(A)
 #define M_1_PI_F 0.318309886183790671538f
 #define __LENGTH(A) sqrt(A.x*A.x+A.y*A.y+A.z*A.z)
